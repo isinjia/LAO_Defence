@@ -384,8 +384,10 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 .card b { font-size: 17px; }
 .card .pct { font-family: var(--en); font-weight: 900; font-style: italic; font-size: 34px; line-height: 1; color: var(--c); }
 .card .lv { font-family: var(--en); font-weight: 700; font-size: 22px; }
-.card .eff { font-size: 13px; color: var(--mut); }
-.card .cost { align-self: stretch; margin-top: 8px; padding: 8px 0; background: rgba(0, 0, 0, 0.45); font-family: var(--en); font-weight: 700; font-size: 16px;
+.card .eff { font-size: 13px; color: var(--mut); margin-bottom: 8px; }
+/* the price sits on the card's floor: a two-line description must not push one card's button below its neighbours' */
+.card .eff { flex: none; }
+.card .cost { align-self: stretch; margin-top: auto; padding: 8px 0; background: rgba(0, 0, 0, 0.45); font-family: var(--en); font-weight: 700; font-size: 16px;
   display: flex; align-items: center; justify-content: center; gap: 5px; }
 .card .cost .ri { width: 18px; height: 18px; background: #ffce04; -webkit-mask: var(--s-i_gear) center / contain no-repeat; mask: var(--s-i_gear) center / contain no-repeat; }
 .card .cost .rt { width: 24px; height: 18px; background: var(--s-i_tuna) center / contain no-repeat; }
