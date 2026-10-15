@@ -2224,7 +2224,7 @@
     // tutorial: screen rects of a cell / the whole field, and its practice enemies
     cellRect: (i) => screenRect(lay.cells[i].x - BAL.cell / 2, lay.cells[i].y + BAL.cell / 2, lay.cells[i].x + BAL.cell / 2, lay.cells[i].y - BAL.cell / 2),
     fieldRect: () => screenRect(-lay.hw - 0.6, lay.hh + 0.6, lay.hw + 0.6, -lay.hh - 0.6),
-    tutSpawn: () => { const e = spawnEnemy('normal', NORMALS[0]); e.hp = e.maxHp = BAL.hp(1) * 0.6; return e; },
+    tutSpawn: (k = 1) => { const e = spawnEnemy('normal', NORMALS[0]); e.hp = e.maxHp = BAL.hp(1) * k; return e; },
     tutClear: () => G.enemies.forEach((e) => { if (e.alive) kill(e); }),
     debugAdd: (id) => addUnit(DATA.unit[id]),
     debugMuzzle: (u, n = 1) => muzzle(u, n),

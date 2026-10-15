@@ -86,8 +86,9 @@
       TUT.frame(); eq(TUT.step, 2, 'merge step');
       GAME.merge(G().cells.findIndex((c) => c.units.length === 3)); TUT.frame();
       GAME.swapCells(G().cells.findIndex((c) => c.units.length), G().cells.findIndex((c) => !c.units.length)); TUT.frame();
-      for (let k = 0; k < 80 && TUT.step === 4; k++) { GAME.simulate(0.5, false); TUT.frame(); }
-      eq(TUT.step, 5, 'enemy step cleared');
+      for (let k = 0; k < 120 && document.querySelector('#tut .tnext').hidden; k++) { GAME.simulate(0.5, false); TUT.frame(); }
+      eq(TUT.step, 4, 'enemy step holds after clearing'); eq(document.querySelector('#tut .tnext').hidden, false, 'next shown once cleared');
+      nx(); TUT.frame(); eq(TUT.step, 5, 'next leaves the enemy step');
       nx(); TUT.frame(); GAME.upgrade('atk'); TUT.frame();
       for (let k = 0; k < 20 && TUT.active; k++) { nx(); TUT.frame(); }
       eq(started, true, 'main game started'); eq(G().tut, null, 'tutorial state'); eq(G().wave, 0, 'wave'); eq(G().gold, DATA.BAL.startGold, 'gold');

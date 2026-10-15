@@ -56,12 +56,15 @@
         },
         tick: () => {
           const t = G().tut;
-          if (t.sent < 4 && G().time >= t.nextAt) { GAME.tutSpawn(); t.sent++; t.nextAt = G().time + 0.8; }
-          if (G().time - t.t0 > 30) GAME.tutClear(); // a squad that cannot reach them: don't hold the player here
+          // spaced out along the path (not one overlapping clump) and tough enough to watch them go down one by one
+          if (t.sent < 4 && G().time >= t.nextAt) { GAME.tutSpawn(1.6); t.sent++; t.nextAt = G().time + 1.8; }
+          if (G().time - t.t0 > 40) GAME.tutClear(); // a squad that cannot reach them: don't hold the player here
         },
         target: () => GAME.fieldRect(),
         done: () => G().tut.sent >= 4 && G().kills - G().tut.k0 >= 4,
+        hold: true, // cleared: say so and wait for 다음 instead of jumping ahead the instant the last one falls
         text: () => T('적이 테두리 경로를 따라 이동합니다. 유닛은 사거리 안의 적을 <b>자동으로 공격</b>합니다. 적을 모두 막아내세요. ({0}/4)', Math.min(4, G().kills - G().tut.k0)),
+        doneText: () => T('<b>적 4기를 모두 막아냈습니다!</b> 웨이브마다 이렇게 적이 몰려옵니다.'),
       },
       { target: () => rectOf('#enemyBox'), text: () => T('필드의 적이 <b>100기</b>가 되면 작전 실패입니다. 적 개체 수를 항상 확인하세요.') },
       {
@@ -127,14 +130,17 @@
     if (G().paused) return;
     const s = steps[idx];
     if (s.tick) s.tick();
-    if (s.done && s.done()) { go(idx + 1); return; }
+    if (s.done && !s.cleared && s.done()) {
+      if (!s.hold) { go(idx + 1); return; }
+      s.cleared = true; SFX.play('clear', 0.6); // a held step shows its result and waits for 다음
+    }
     const hole = layout(s.target ? s.target() : null);
     const p = ov.querySelector('.tpanel');
     p.querySelector('.tstep').textContent = `TUTORIAL ${idx + 1} / ${steps.length}`;
-    const html = s.text();
+    const html = s.cleared && s.doneText ? s.doneText() : s.text();
     if (p._h !== html) { p._h = html; p.querySelector('.ttx').innerHTML = html; }
     const nx = p.querySelector('.tnext');
-    nx.hidden = !!s.done;
+    nx.hidden = !!s.done && !s.cleared;
     nx.textContent = s.next ? s.next() : T('다음');
     // the panel sits on the side away from the lit area
     const below = !hole || (hole[1] + hole[3]) / 2 < innerHeight * 0.5;
