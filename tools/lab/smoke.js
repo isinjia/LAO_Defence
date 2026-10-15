@@ -26,6 +26,16 @@
       GAME.summon(); eq(G().gold, g - c, 'gold'); eq(nUnits(), 1, 'units');
     });
 
+    test('summons fill the board from the bottom-right, row by row', () => {
+      fresh();
+      const L = GAME.lay.cells, order = L.map((c, k) => k).sort((a, b) => (L[a].y - L[b].y) || (L[b].x - L[a].x));
+      const ranged = DATA.UNITS.filter((u) => u.tier === 0 && u.type !== 'melee').slice(0, 4);
+      ranged.forEach((d) => GAME.debugAdd(d.id));
+      const got = ranged.map((d) => GAME.findCellOf(d.id));
+      eq(got.join(), order.slice(0, 4).join(), 'cells in fill order');
+      eq(L[got[0]].y <= Math.min(...L.map((c) => c.y)) + 0.01 && L[got[0]].x >= Math.max(...L.map((c) => c.x)) - 0.01, true, 'first unit in the bottom-right cell');
+    });
+
     test('merge: 3 of a kind -> one unit of the next rank, selected', () => {
       fresh(); G().gold = 1e6;
       const id = DATA.UNITS.find((u) => u.tier === 0).id;

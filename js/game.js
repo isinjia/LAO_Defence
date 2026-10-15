@@ -441,14 +441,20 @@
   // a cell next to the path (the middle row's inner cells are ~3.7 away from it)
   function isOuter(i) { const r = Math.floor(i / BAL.cols), c = i % BAL.cols; return r !== 1 || c === 0 || c === BAL.cols - 1; }
   function stackMax(def) { return def.tier === 4 ? 1 : 3; }
+  // cell indices bottom row first, right to left within a row (world y up, x right; follows the current orientation)
+  function fillOrder() {
+    return lay.cells.map((c, k) => k).sort((a, b) => (lay.cells[a].y - lay.cells[b].y) || (lay.cells[b].x - lay.cells[a].x));
+  }
 
   function findSlot(def, prefer) {
     let i = G.cells.findIndex((c) => c.units.length && c.units[0].def.id === def.id && c.units.length < stackMax(def));
     if (i >= 0) return i;
     if (prefer != null && prefer >= 0 && !G.cells[prefer].units.length) return prefer;
-    const empty = G.cells.map((c, k) => (c.units.length ? -1 : k)).filter((k) => k >= 0);
-    if (def.type === 'melee') { const outer = empty.filter(isOuter); if (outer.length) return pick(outer); }
-    return empty.length ? pick(empty) : -1;
+    // new units fill the board in a fixed order as seen on screen: the bottom row from the right, then the row above
+    // (portrait 3x6 or landscape 6x3 alike); melee units take the first outer cell in that order so they reach the path
+    const empty = fillOrder().filter((k) => !G.cells[k].units.length);
+    if (def.type === 'melee') { const outer = empty.find(isOuter); if (outer != null) return outer; }
+    return empty.length ? empty[0] : -1;
   }
 
   function addUnit(def, prefer, fromX, fromY) {

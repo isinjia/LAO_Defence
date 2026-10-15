@@ -162,7 +162,8 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
   clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%); animation: nextIn 0.25s ease-out; }
 .nextw[hidden] { display: none; }
 .nextw b { font-family: var(--en); font-weight: 900; font-style: italic; font-size: 15px; letter-spacing: 1px; }
-.nextw span { width: 16px; height: 14px; background: #111; clip-path: polygon(0 0, 50% 50%, 50% 0, 100% 50%, 50% 100%, 50% 50%, 0 100%); }
+/* « : the next wave walks left from the bottom-right portal */
+.nextw span { width: 16px; height: 14px; background: #111; clip-path: polygon(100% 0, 50% 50%, 50% 0, 0 50%, 50% 100%, 50% 50%, 100% 100%); }
 .nextw:hover { filter: brightness(1.15); }
 .nextw:active { transform: scale(0.94); }
 @keyframes nextIn { from { opacity: 0; transform: translateX(12px); } }
