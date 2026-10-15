@@ -52,6 +52,7 @@
     el.btnMythic.onclick = () => toggleDrawer('mythic');
     el.btnSpeed.onclick = () => { const G = GAME.G; G.speed = G.speed >= 3 ? 1 : G.speed + 1; SFX.play('click'); update(true); };
     el.btnAuto.onclick = () => toggleAuto();
+    $('#btnUltMode').onclick = () => toggleUltMode();
     el.btnSound.onclick = () => { SFX.setMuted(!SFX.userMuted); saveOpts(); update(true); };
     el.btnPause.onclick = () => togglePause();
     el.btnSettings.onclick = () => toggleDrawer('settings');
@@ -237,11 +238,22 @@
   function saveOpts() {
     try { localStorage.setItem('lao_rd_opts', JSON.stringify({ ...GAME.G.opt, fps30: GAME.G.opt.fps30 && !GAME.autoFps30, bgm: SFX.getVolume('bgm'), sfx: SFX.getVolume('sfx'), mute: SFX.userMuted, q: GAME.quality.auto ? 'auto' : GAME.quality.level })); } catch (e) { /* ignore */ }
   }
+  // ultimate auto / manual: an on-field switch (shown once an SSS is on the board), kept between battles
+  function toggleUltMode() {
+    const o = GAME.G.opt;
+    o.autoUlt = !o.autoUlt;
+    SFX.play('click');
+    toast(o.autoUlt ? T('궁극기 자동: 게이지가 차면 바로 발동합니다') : T('궁극기 수동: 게이지가 차면 ULT 버튼을 누르세요'), o.autoUlt ? '' : 'gem');
+    saveOpts();
+    ultReady();
+    update(true);
+  }
+
   function toggleAuto() {
     const o = GAME.G.opt;
     o.auto = !o.auto;
     SFX.play('click');
-    toast(o.auto ? T('AUTO 진행: 소환 · 합성 · 조합 · 강화를 자동으로 합니다') : T('AUTO 해제'), o.auto ? 'gem' : '');
+    toast(o.auto ? T('AUTO 진행: 소환 · 합성 · 강화를 자동으로 합니다') : T('AUTO 해제'), o.auto ? 'gem' : '');
     saveOpts();
     update(true);
   }
@@ -305,7 +317,6 @@
           <div class="row2"><span>${T('배경음')}</span><input type="range" min="0" max="100" value="${pct('bgm')}" data-vol="bgm" aria-label="${T('배경음 볼륨')}"><b class="val">${pct('bgm')}</b></div>
           <div class="row2"><span>${T('효과음')}</span><input type="range" min="0" max="100" value="${pct('sfx')}" data-vol="sfx" aria-label="${T('효과음 볼륨')}"><b class="val">${pct('sfx')}</b></div>
           <div class="row2"><span>${T('음소거')}</span>${seg('mute', SFX.userMuted, T('켜기'), T('끄기'))}</div>` : `
-          <div class="row2"><span>${T('궁극기')}</span>${seg('autoUlt', o.autoUlt, T('자동'), T('수동'))}<small>${T('수동: 게이지가 차면 버튼 · Q')}</small></div>
           <div class="row2"><span>${T('데미지 숫자')}</span>${seg('dmg', o.dmg, T('표시'), T('숨김'))}<small>${T('원작 데미지 폰트')}</small></div>
           <div class="row2"><span>${T('화면 흔들림')}</span>${seg('shake', o.shake, T('켜기'), T('끄기'))}<small>${T('보스·폭발 연출')}</small></div>
           <div class="row2"><span>${T('그래픽 품질')}</span><div class="seg" data-opt="quality">${['auto', 0, 1, 2].map((v) => `<button class="${(v === 'auto' ? GAME.quality.auto : !GAME.quality.auto && GAME.quality.level === v) ? 'on' : ''}" data-v="${v}">${v === 'auto' ? T('자동') : T(GAME.quality.names[v])}</button>`).join('')}</div><small>${GAME.quality.auto ? T('현재 {0}', T(GAME.quality.names[GAME.quality.level])) : ''}</small></div>
@@ -470,6 +481,20 @@
     set('afford', el.btnSummon, G.gold >= cost ? 'summon' : 'summon poor', 'className');
     set('speed', el.speedTx, 'x' + G.speed);
     set('speedc', el.btnSpeed, G.speed > 1 ? 'act on' : 'act', 'className');
+    // the ultimate switch: only once an SSS stands on the board
+    const hasSSS = G.phase === 'play' && G.cells.some((c) => c.units.length && c.units[0].def.ult);
+    const um = hasSSS ? (G.opt.autoUlt ? 'a' : 'm') : '';
+    if (cache.ultMode !== um) {
+      cache.ultMode = um;
+      const b = $('#btnUltMode');
+      b.hidden = !um;
+      if (um) {
+        b.className = um === 'm' ? 'manual' : '';
+        b.setAttribute('aria-pressed', um === 'a');
+        b.querySelector('.um').innerHTML = `<small>${T('궁극기')}</small><b>${um === 'a' ? T('자동') : T('수동')}</b>`;
+      }
+      el.ultBar.classList.toggle('withMode', !!um);
+    }
     if (cache.auto !== G.opt.auto) { cache.auto = G.opt.auto; el.btnAuto.className = 'act' + (G.opt.auto ? ' on' : ''); el.btnAuto.setAttribute('aria-pressed', G.opt.auto); }
     set('sound', el.btnSound, SFX.muted ? 'rbtn off' : 'rbtn', 'className');
     set('pause', el.btnPause, G.paused ? 'rbtn on' : 'rbtn', 'className');
@@ -664,10 +689,10 @@
     return T('모든 목표 달성! 최고 기록을 갱신해 보세요');
   }
 
-  // ready ultimates as buttons over the field (manual mode); AUTO / auto-ult fire them by themselves
+  // ready ultimates as buttons over the field (manual mode, AUTO or not); auto-ult fires them by itself
   function ultReady() {
     if (!el.ultBar) return;
-    const list = GAME.readyUlts();
+    const list = GAME.G.opt.autoUlt ? [] : GAME.readyUlts(); // auto mode fires them on the next attack: no buttons
     const key = list.map((u) => u.def.id + u.cell).join();
     if (key === el.ultBar._k) return;
     el.ultBar._k = key;

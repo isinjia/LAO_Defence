@@ -1371,10 +1371,11 @@
     const d = u.def;
     if (!d.ult) return;
     // a full gauge held in manual mode (or restored from a save) still fires once auto is switched on
-    if (u.mana >= 100) { if (G.opt.autoUlt || G.opt.auto || G.labUlt) castUlt(u, e); return; }
+    // the 궁극기 setting alone decides: AUTO leaves a manual player's ultimates to them
+    if (u.mana >= 100) { if (G.opt.autoUlt || G.labUlt) castUlt(u, e); return; }
     u.mana = Math.min(100, u.mana + d.mana * k * G.buff.mana);
     if (u.mana >= 100) {
-      if (G.opt.autoUlt || G.opt.auto || G.labUlt) castUlt(u, e);
+      if (G.opt.autoUlt || G.labUlt) castUlt(u, e);
       else { UI.ultReady(); SFX.play('charge', 0.5); }
     }
   }
@@ -1588,7 +1589,7 @@
   function step(dt) {
     G.time += dt;
     if (G.won) { G.winT -= dt; if (G.winT <= 0) endGame(true); return; }
-    // AUTO: the player's own toggle (summon / merge / craft / upgrade; never sells units or bets tuna)
+    // AUTO: the player's own toggle (summon / merge / upgrade; never crafts SSS, sells units or bets tuna)
     if (G.opt.auto && G.phase === 'play') {
       G.autoT = (G.autoT || 0) - dt;
       if (G.autoT <= 0) { G.autoT = 0.4; autoplay(false); }
@@ -2196,8 +2197,9 @@
     return out;
   }
   // sell: the balance bot may sell weak singles to make room; the player's AUTO never does
+  // (nor does it craft SSS: which recipe to spend the parts on is the player's call)
   function autoplay(sell = true) {
-    RECIPES.forEach((r, i) => { if (canCraft(r)) craft(i, true); });
+    if (sell) RECIPES.forEach((r, i) => { if (canCraft(r)) craft(i, true); });
     G.cells.forEach((c, i) => { if (c.units.length === 3 && c.units[0].def.tier < 3) merge(i, true); });
     if (G.reward && G.time - (G.rewardAt || 0) > 6) autoReward(true);
     const [best, bv] = bestUpgrade();

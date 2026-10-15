@@ -163,6 +163,18 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 @keyframes nextIn { from { opacity: 0; transform: translateX(-12px); } }
 /* ready ultimates (manual mode) */
 #ultBar { position: absolute; left: max(10px, env(safe-area-inset-left)); bottom: 10px; z-index: 4; display: flex; gap: 6px; }
+#ultBar.withMode { left: calc(max(10px, env(safe-area-inset-left)) + 82px); }
+/* ultimate auto / manual switch (bottom-left of the field, beside the ULT buttons) */
+#btnUltMode { position: absolute; left: max(10px, env(safe-area-inset-left)); bottom: 10px; z-index: 4; width: 74px; height: 58px; padding: 0;
+  display: grid; place-items: center; background: rgba(8, 10, 14, 0.82); border: 1px solid rgba(127, 240, 255, 0.55); border-left: 3px solid #7ff0ff; color: #dff9ff; }
+#btnUltMode[hidden] { display: none; }
+#btnUltMode .um { display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
+#btnUltMode small { font-size: 11px; color: #9fb4c0; }
+#btnUltMode b { font-size: 17px; font-weight: 700; color: #7ff0ff; }
+#btnUltMode.manual { border-color: rgba(255, 204, 0, 0.7); border-left-color: var(--y); }
+#btnUltMode.manual b { color: var(--y); }
+#btnUltMode:active { transform: scale(0.96); }
+@media (max-width: 720px) { #btnUltMode { width: 64px; height: 48px; } #btnUltMode b { font-size: 15px; } #ultBar.withMode { left: calc(max(10px, env(safe-area-inset-left)) + 70px); } }
 #ultBar button { position: relative; width: 58px; height: 58px; padding: 0; background: none; animation: ultPulse 0.9s ease-in-out infinite alternate; }
 #ultBar .hx { width: 58px; height: 58px; }
 #ultBar b { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); padding: 0 5px; font-family: var(--en); font-weight: 900; font-size: 12px; color: #111; background: #7ff0ff; }
