@@ -99,6 +99,25 @@
       eq(started, true, 'main game started'); eq(G().tut, null, 'tutorial state'); eq(G().wave, 0, 'wave'); eq(G().gold, DATA.BAL.startGold, 'gold');
     });
 
+    test('tutorial: a tap anywhere is 다음, and never reaches the lit control', () => {
+      TUT.run(() => GAME.newGame());
+      TUT.frame(); eq(TUT.step, 0, 'welcome');
+      document.querySelector('#tut .tcatch').click(); TUT.frame(); eq(TUT.step, 1, 'a tap on the screen advanced');
+      eq(document.querySelector('#tut .tcatch').hidden, true, 'no catcher on an action step');
+      for (let k = 0; k < 3; k++) GAME.summon();
+      TUT.frame(); GAME.merge(G().cells.findIndex((c) => c.units.length === 3)); TUT.frame();
+      GAME.swapCells(G().cells.findIndex((c) => c.units.length), G().cells.findIndex((c) => !c.units.length)); TUT.frame();
+      for (let k = 0; k < 120 && document.querySelector('#tut .tnext').hidden; k++) { GAME.simulate(0.5, false); TUT.frame(); }
+      document.querySelector('#tut .tpanel').click(); TUT.frame(); eq(TUT.step, 5, 'a tap on the panel advanced');
+      // an info step lighting a real button (조합): what sits under a finger there is the catcher, not the button
+      document.querySelector('#tut .tcatch').click(); TUT.frame(); eq(TUT.step, 6, 'upgrade step');
+      GAME.upgrade('atk'); TUT.frame(); TUT.frame(); eq(TUT.step, 7, 'the 조합 info step'); // one frame advances, the next lays it out
+      const r = document.querySelector('#btnMythic').getBoundingClientRect();
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      eq(!!(hit && hit.classList.contains('tcatch')), true, 'the lit button is covered while waiting for 다음');
+      TUT.skip();
+    });
+
     test('tutorial: skip starts the battle at once', () => {
       let started = false;
       TUT.run(() => { started = true; GAME.newGame(); });

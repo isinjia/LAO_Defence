@@ -31,7 +31,7 @@
   }
 
   function init() {
-    ['waveNum', 'waveName', 'waveTime', 'waveBar', 'enemyBar', 'enemyNum', 'gold', 'gems', 'btnSpeed', 'speedTx', 'btnAuto', 'btnSound', 'btnPause',
+    ['waveNum', 'waveName', 'waveTime', 'waveBar', 'enemyBar', 'enemyNum', 'gold', 'gems', 'btnSpeed', 'speedTx', 'btnAuto', 'btnPause',
       'btnSummon', 'summonCost', 'btnGamble', 'btnUpgrade', 'btnMythic', 'odds', 'drawer', 'modal', 'popup', 'toasts',
       'banner', 'numLayer', 'announce', 'bossBar', 'bossName', 'bossHp', 'bossTime', 'bossImg', 'title', 'result', 'enemyBox',
       'pauseOv', 'btnSettings', 'btnNext', 'diffSel', 'bestRec', 'ultBar', 'reward', 'aidMini'].forEach((k) => { el[k] = document.getElementById(k); });
@@ -52,7 +52,6 @@
     el.btnMythic.onclick = () => toggleDrawer('mythic');
     el.btnSpeed.onclick = () => { const G = GAME.G; G.speed = G.speed >= 3 ? 1 : G.speed + 1; SFX.play('click'); update(true); };
     el.btnAuto.onclick = () => toggleAuto();
-    el.btnSound.onclick = () => { SFX.setMuted(!SFX.userMuted); saveOpts(); update(true); };
     el.btnPause.onclick = () => togglePause();
     el.btnSettings.onclick = () => toggleDrawer('settings');
     $('#btnPauseSet').onclick = () => toggleDrawer('settings');
@@ -82,7 +81,10 @@
     window.addEventListener('keydown', (e) => {
       if (askDone) { if (e.code === 'Escape') askDone(false); else if (e.code === 'Enter') { e.preventDefault(); askDone(document.activeElement !== $('#askNo')); } return; }
       // tutorial: only the keys its current step teaches (Space on the summon step, M on the merge step)
-      if (window.TUT && TUT.active && !GAME.G.paused && !TUT.allows(e.code)) { if (e.code === 'Space') e.preventDefault(); return; }
+      if (window.TUT && TUT.active && !GAME.G.paused && !TUT.allows(e.code)) {
+        if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!e.repeat && TUT.canNext()) TUT.next(e); } // Space / Enter = 다음
+        return;
+      }
       if (GAME.G.phase !== 'play') { if ((e.code === 'Enter' || e.code === 'Space') && !el.title.hidden) { e.preventDefault(); start(!!GAME.savedRun() && !GAME.G.daily); } return; } // with a saved run the key continues it
       if (e.code === 'Escape') {
         if (drawer) closeDrawer();
@@ -171,7 +173,30 @@
     return better;
   }
 
+  // fullscreen (prefixed calls for older WebKit); the request must come from a tap, which a dialog button is
+  const fsOk = () => !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  const fsOn = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  function setFullscreen(v) {
+    const d = document, de = d.documentElement;
+    const go = v ? (de.requestFullscreen ? de.requestFullscreen({ navigationUI: 'hide' }) : de.webkitRequestFullscreen && de.webkitRequestFullscreen())
+      : (d.exitFullscreen ? d.exitFullscreen() : d.webkitExitFullscreen && d.webkitExitFullscreen());
+    return Promise.resolve(go).catch(() => {});
+  }
+  // once per session, at the first battle start: offer fullscreen (not when already in it, unsupported, or installed)
+  let fsAsked = false;
+  try { fsAsked = sessionStorage.getItem('lao_rd_fs_asked') === '1'; } catch (e) { /* ignore */ }
+  const installed = () => !!(window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches)) || navigator.standalone;
+
   function start(resume) {
+    if (!fsAsked && fsOk() && !fsOn() && !installed() && !/[?&](lab|smoke)=/.test(location.search)) {
+      fsAsked = true;
+      try { sessionStorage.setItem('lao_rd_fs_asked', '1'); } catch (e) { /* ignore */ }
+      ask(T('전체 화면'), T('전체 화면으로 플레이할까요? 설정의 화면 탭에서 언제든 바꿀 수 있습니다.'), T('전체 화면으로')).then((ok) => {
+        if (ok) setFullscreen(true);
+        start(resume);
+      });
+      return;
+    }
     reward(null);
     if (el.ultBar) { el.ultBar.innerHTML = ''; el.ultBar._k = ''; el.ultBar._list = []; }
     el.title.hidden = true;
@@ -298,8 +323,7 @@
       const seg = (key, val, a, b) => `<div class="seg" data-opt="${key}"><button class="${val ? 'on' : ''}" data-v="1">${a}</button><button class="${val ? '' : 'on'}" data-v="0">${b}</button></div>`;
       const tab = setTab;
       // 화면 first (fullscreen, quality: what players look for), then sound and language
-      const fsOk = document.fullscreenEnabled || document.webkitFullscreenEnabled;
-      const fsOn = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      const fsCan = fsOk(), fsIs = fsOn();
       h += winHead(T('설정'), T('화면 · 사운드 · 언어')) + `<div class="wb"><div class="set">
         <div class="tabs"><button class="tab ${tab === 'game' ? 'on' : ''}" data-tab="game">${T('화면')}</button><button class="tab ${tab === 'sound' ? 'on' : ''}" data-tab="sound">${T('사운드')}</button><button class="tab ${tab === 'lang' ? 'on' : ''}" data-tab="lang">${T('언어')}</button></div>
         <div class="rows">${tab === 'lang' ? `
@@ -307,7 +331,7 @@
           <div class="row2"><span>${T('배경음')}</span><input type="range" min="0" max="100" value="${pct('bgm')}" data-vol="bgm" aria-label="${T('배경음 볼륨')}"><b class="val">${pct('bgm')}</b></div>
           <div class="row2"><span>${T('효과음')}</span><input type="range" min="0" max="100" value="${pct('sfx')}" data-vol="sfx" aria-label="${T('효과음 볼륨')}"><b class="val">${pct('sfx')}</b></div>
           <div class="row2"><span>${T('음소거')}</span>${seg('mute', SFX.userMuted, T('켜기'), T('끄기'))}</div>` : `
-          <div class="row2"><span>${T('전체 화면')}</span>${fsOk ? seg('fs', fsOn, T('켜기'), T('끄기')) : `<small>${T('이 브라우저는 전체 화면을 지원하지 않습니다. 브라우저 메뉴의 [홈 화면에 추가]로 설치하면 전체 화면으로 실행됩니다.')}</small>`}</div>
+          <div class="row2"><span>${T('전체 화면')}</span>${fsCan ? seg('fs', fsIs, T('켜기'), T('끄기')) : `<small>${T('이 브라우저는 전체 화면을 지원하지 않습니다. 브라우저 메뉴의 [홈 화면에 추가]로 설치하면 전체 화면으로 실행됩니다.')}</small>`}</div>
           <div class="row2"><span>${T('데미지 숫자')}</span>${seg('dmg', o.dmg, T('표시'), T('숨김'))}<small>${T('원작 데미지 폰트')}</small></div>
           <div class="row2"><span>${T('화면 흔들림')}</span>${seg('shake', o.shake, T('켜기'), T('끄기'))}<small>${T('보스·폭발 연출')}</small></div>
           <div class="row2"><span>${T('그래픽 품질')}</span><div class="seg" data-opt="quality">${['auto', 0, 1, 2].map((v) => `<button class="${(v === 'auto' ? GAME.quality.auto : !GAME.quality.auto && GAME.quality.level === v) ? 'on' : ''}" data-v="${v}">${v === 'auto' ? T('자동') : T(GAME.quality.names[v])}</button>`).join('')}</div><small>${GAME.quality.auto ? T('현재 {0}', T(GAME.quality.names[GAME.quality.level])) : ''}</small></div>
@@ -346,13 +370,7 @@
     el.drawer.querySelectorAll('[data-opt] button').forEach((b) => {
       b.onclick = () => {
         const k = b.parentElement.dataset.opt, v = +b.dataset.v;
-        if (k === 'fs') {
-          const d = document, de = d.documentElement; // older WebKit only has the prefixed calls
-          const go = v ? (de.requestFullscreen ? de.requestFullscreen({ navigationUI: 'hide' }) : de.webkitRequestFullscreen && de.webkitRequestFullscreen())
-            : (d.exitFullscreen ? d.exitFullscreen() : d.webkitExitFullscreen && d.webkitExitFullscreen());
-          Promise.resolve(go).catch(() => {}).then(() => setTimeout(renderDrawer, 100));
-          return;
-        }
+        if (k === 'fs') { setFullscreen(!!v).then(() => setTimeout(renderDrawer, 100)); return; }
         if (k === 'quality') GAME.setQuality(b.dataset.v === 'auto' ? GAME.quality.level : v, b.dataset.v === 'auto' ? 'auto' : 'manual');
         else if (k === 'mute') SFX.setMuted(!!v);
         else if (k === 'speed') GAME.G.speed = v;
@@ -479,7 +497,6 @@
     set('speedc', el.btnSpeed, G.speed > 1 ? 'act on' : 'act', 'className');
     skills();
     if (cache.auto !== G.opt.auto) { cache.auto = G.opt.auto; el.btnAuto.className = 'act' + (G.opt.auto ? ' on' : ''); el.btnAuto.setAttribute('aria-pressed', G.opt.auto); }
-    set('sound', el.btnSound, SFX.muted ? 'rbtn off' : 'rbtn', 'className');
     set('pause', el.btnPause, G.paused ? 'rbtn on' : 'rbtn', 'className');
     // derived values only when their inputs change (this runs every frame)
     const wantN = GAME.wantedParts().length, pityLeft = BAL.pity - (G.pity || 0);

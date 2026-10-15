@@ -89,18 +89,33 @@
     ov = document.createElement('div');
     ov.id = 'tut';
     ov.hidden = true;
-    ov.innerHTML = '<div class="tb"></div><div class="tb"></div><div class="tb"></div><div class="tb"></div><div class="tring"></div>' +
+    // .tcatch: on a step that waits for 다음, a see-through layer over everything (the lit control too) turns any tap into 다음
+    ov.innerHTML = '<div class="tb"></div><div class="tb"></div><div class="tb"></div><div class="tb"></div><div class="tring"></div><div class="tcatch" hidden></div>' +
       '<div class="tpanel" role="dialog" aria-live="polite"><div class="thead"><div class="tstep"></div><button class="tskip"></button></div><div class="ttx"></div>' +
-      '<div class="tbtns"><button class="btn tnext"></button></div></div>';
+      '<div class="tbtns"><span class="thint"></span><button class="btn tnext"></button></div></div>';
     document.body.appendChild(ov);
-    ov.querySelector('.tskip').onclick = () => { SFX.play('click'); finish(false); };
-    ov.querySelector('.tnext').onclick = () => { SFX.play('click'); go(idx + 1); };
+    ov.querySelector('.tskip').onclick = (e) => { e.stopPropagation(); SFX.play('click'); finish(false); };
+    ov.querySelector('.tcatch').onclick = next;
+    ov.querySelector('.tpanel').onclick = next; // the 다음 button is inside the panel
     return ov;
+  }
+
+  // a step that waits for 다음: info steps, and a held step once cleared
+  const canNext = () => { const s = steps[idx]; return !!s && (!s.done || !!s.cleared); };
+  let guardUntil = 0;
+  function next(e) {
+    if (!active || !canNext() || G().paused) return false;
+    // a real tap right after a step changed is the tail of the last one (a double tap): don't skip unread text
+    if ((!e || e.isTrusted !== false) && performance.now() < guardUntil) return false;
+    SFX.play('click');
+    go(idx + 1);
+    return true;
   }
 
   function go(i) {
     const cur = steps[idx];
     if (cur && cur.exit && i !== idx) cur.exit();
+    guardUntil = performance.now() + 400;
     idx = i;
     if (idx >= steps.length) { finish(true); return; }
     const s = steps[idx];
@@ -142,9 +157,12 @@
     const html = s.cleared && s.doneText ? s.doneText() : s.text();
     if (p._h !== html) { p._h = html; p.querySelector('.ttx').innerHTML = html; }
     const nx = p.querySelector('.tnext');
-    nx.hidden = !!s.done && !s.cleared;
+    nx.hidden = !canNext();
     p.querySelector('.tbtns').hidden = nx.hidden; // no empty button row: the panel stays as short as it can
+    ov.querySelector('.tcatch').hidden = nx.hidden; // waiting for 다음: a tap anywhere is 다음
+    p.classList.toggle('tap', !nx.hidden);
     nx.textContent = s.next ? s.next() : T('다음');
+    p.querySelector('.thint').textContent = T('화면 아무 곳이나 눌러도 넘어갑니다');
     // the panel sits on the side away from the lit area; on the field steps it docks over the (locked) footer so the
     // whole path, where the enemies walk, stays in view
     const below = !hole || (hole[1] + hole[3]) / 2 < innerHeight * 0.5;
@@ -183,6 +201,7 @@
     get active() { return active; },
     // keys the current step needs (Space to summon, M to merge); everything else waits
     allows: (code) => !!(steps[idx] && steps[idx].keys && steps[idx].keys.includes(code)),
+    next, canNext, // Space / Enter on a step that waits for 다음
     skip: () => { if (active) finish(false); },
     frame, // one update without waiting for a display frame (smoke tests, hidden previews)
     get step() { return idx; },
