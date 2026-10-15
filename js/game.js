@@ -358,9 +358,13 @@
     return u;
   }
 
+  // parts of an original rig the game leaves out (still in the data, never drawn): Hela's summoned mechs, which her
+  // attack clip brings in, do not fit this game's chain-lightning attack
+  const RIG_HIDE = { hela: /^(Meca_\d+|Summons)$/ };
   function attachSD(u) {
     const c = SD.create(u.def.id);
     if (!c) return;
+    if (RIG_HIDE[u.def.id] && c.hideNodes) c.hideNodes(RIG_HIDE[u.def.id]);
     const t = SD.template(u.def.id);
     const k = SD_K;
     c.root.scale.set(k, k, 1);

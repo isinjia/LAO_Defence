@@ -629,6 +629,7 @@
       this.S = new Float32Array(N * 3);
       this.A = new Uint8Array(N);
       this.EA = new Uint8Array(N);
+      this.off = null; // nodes forced off for this instance (hideNodes): they and their subtree never draw
       this.W = new Float32Array(N * 12);
       const R = tpl.rends.length;
       this.rEn = new Uint8Array(R);
@@ -844,14 +845,23 @@
       }
     }
 
-    // world matrices (3x4, column-major) for every node
+    // keep nodes whose name matches re (and everything under them) hidden whatever the clips say
+    // (a game-side choice, e.g. Hela's summoned mechs in her attack clip); returns how many nodes matched
+    hideNodes(re) {
+      const nodes = this.tpl.data.nodes;
+      this.off = this.off || new Uint8Array(this.tpl.N);
+      let n = 0;
+      for (let i = 0; i < nodes.length; i++) if (re.test(nodes[i].n)) { this.off[i] = 1; n++; }
+      return n;
+    }
+
     // world matrices (3x4, column-major) for nodes [from, to); every node is evaluated so
     // inactive transforms still have valid poses (Unity keeps them updated too)
     worldPass(from = 0, to = this.tpl.N) {
       const tp = this.tpl, P = tp.parent, T = this.T, Q = this.Q, S = this.S, W = this.W;
       for (let i = from; i < to; i++) {
         const p = P[i];
-        this.EA[i] = this.A[i] && (p < 0 || this.EA[p]) ? 1 : 0;
+        this.EA[i] = this.A[i] && (p < 0 || this.EA[p]) && !(this.off && this.off[i]) ? 1 : 0;
         const x = Q[i * 4], y = Q[i * 4 + 1], z = Q[i * 4 + 2], w = Q[i * 4 + 3];
         const sx = S[i * 3], sy = S[i * 3 + 1], sz = S[i * 3 + 2];
         const x2 = x + x, y2 = y + y, z2 = z + z;
