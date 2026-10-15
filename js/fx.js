@@ -418,6 +418,31 @@
     setTimeout0(0.3, () => particle({ x, y, life: 0.4, size: 0.3, size1: 2.2, color: 0xffffff, tex: tex.glow, alpha: 0.9 }));
   }
 
+  // a merge: the three gather into the cell, then the new unit bursts out of it (bigger with the rank, so the eye
+  // finds where it landed): flash, a double shock ring, a pillar of light, a star, sparks and a rising sparkle column
+  function mergeReveal(x, y, tier, color) {
+    mergeFx(x, y, color);
+    const k = [1, 1.15, 1.35, 1.65, 2][tier] || 1;
+    setTimeout0(0.3, () => {
+      particle({ x, y, life: 0.5, size: 0.6, size1: 3.6 * k, color: 0xffffff, tex: tex.glow, alpha: 1 });
+      particle({ x, y, life: 0.7, size: 1, size1: 2.8 * k, color, tex: tex.glow, alpha: 0.85 });
+      ring(x, y, 0.2, 2.6 * k, color, 0.55, 1);
+      setTimeout0(0.12, () => ring(x, y, 0.3, 3.6 * k, 0xffffff, 0.6, 0.7));
+      particle({ x, y: y + 2.4 * k, life: 0.75, size: 1.1 * k, size1: 0.3, color, tex: tex.beam, aspect: 7, alpha: 0.95, fadeIn: 0.05 });
+      particle({ x, y, life: 0.8, size: 1.2, size1: 3.2 * k, color: 0xffffff, tex: tex.cross, spin: 2.5, alpha: 0.9 });
+      sparks(x, y, color, 20 + tier * 10, 3.5 + tier, 0.18, 0.8);
+      sparks(x, y, 0xffffff, 10, 2.5, 0.12, 0.6);
+      let t = 0;
+      tickers.push((dt) => {
+        t += dt;
+        if (Math.random() < 0.8) particle({ x: x + rnd(-0.6, 0.6), y: y + rnd(-0.4, 0.3), vy: rnd(2.5, 4.5), life: 0.6, size: 0.16, size1: 0, color: Math.random() < 0.5 ? color : 0xffffff, tex: tex.dot });
+        return t < 0.8;
+      });
+      if (tier >= 2) flash(color, tier >= 3 ? 0.3 : 0.15);
+      if (tier >= 3) shake(0.15);
+    });
+  }
+
   function deathFx(x, y, boss) {
     particle({ x, y, life: 0.5, size: boss ? 2 : 0.6, size1: boss ? 5 : 1.4, color: 0xff3355, tex: tex.glow, alpha: 0.7 });
     particle({ x, y, life: 0.6, size: boss ? 2.5 : 0.7, size1: boss ? 4 : 1.2, color: 0x444a55, frames: sheets.smoke, alpha: 0.5, normal: true, order: L.FX - 1 });
@@ -579,7 +604,7 @@
 
   window.FX = {
     L, tex, init, update, clear, particle, sprite, kill, setTex, setBudget, draw: drawParticles, sparks, hit, explosion, ring, lightning, beam, slash, flame, wave, frost, holy,
-    trail, muzzle, muzzleFlash, summonBurst, mergeFx, deathFx, goldPop, meteor, pillar, orbital, thunderBolt, freezeAll,
+    trail, muzzle, muzzleFlash, summonBurst, mergeFx, mergeReveal, deathFx, goldPop, meteor, pillar, orbital, thunderBolt, freezeAll,
     shake, flash, later: setTimeout0, state, rnd,
   };
 })();

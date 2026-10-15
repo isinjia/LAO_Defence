@@ -542,15 +542,19 @@
     const c = lay.cells[i];
     cell.units.forEach(removeUnit);
     cell.units = [];
-    FX.mergeFx(c.x, c.y, TIERS[tier].hex);
     const def = pickRank(tier, 'merge');
     const at = addUnit(def, i, c.x, c.y);
+    // the reveal happens where the new unit landed (it may join a matching stack elsewhere: a streak shows the trip)
+    const lc = lay.cells[at >= 0 ? at : i];
+    if (lc !== c) { FX.mergeFx(c.x, c.y, TIERS[tier].hex); FX.beam(c.x, c.y, lc.x, lc.y, 0.16, TIERS[tier].hex, 0.4); }
+    FX.mergeReveal(lc.x, lc.y, tier, TIERS[tier].hex);
     SFX.play(tier >= 3 ? 'rankUpSS' : 'rankUp');
     if (!quiet) buzz(tier >= 3 ? [14, 50, 14, 50, 30] : [12, 40, 12]);
     if (G.tut) G.tut.merged = true;
     if (tier >= 2) UI.announce(def, T('{0}급 합성!', TIERS[tier].name));
+    // the selection window closes after a merge (the new unit is shown by its reveal, not by a popup)
     if (quiet) keepSelection();
-    else { G.selected = at; UI.onSelect(); } // the cell the merged unit actually joined
+    else { G.selected = -1; UI.closePopup(); }
     UI.update(true);
   }
 

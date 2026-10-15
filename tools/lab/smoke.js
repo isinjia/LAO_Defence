@@ -43,7 +43,8 @@
       const i = GAME.findCellOf(id); eq(G().cells[i].units.length, 3, 'stack');
       GAME.merge(i);
       eq(nUnits(), 1, 'units after merge');
-      const sel = G().cells[G().selected]; eq(!!(sel && sel.units.length && sel.units[0].def.tier === 1), true, 'selected cell holds the merged rank-A unit');
+      eq(G().cells.some((c) => c.units.length && c.units[0].def.tier === 1), true, 'a rank-A unit came out');
+      eq(G().selected, -1, 'nothing selected after the merge'); eq(document.getElementById('popup').hidden, true, 'the unit window closed');
     });
 
     test('pause blocks summon / upgrade / ult', () => {
