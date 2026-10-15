@@ -182,18 +182,14 @@
       : (d.exitFullscreen ? d.exitFullscreen() : d.webkitExitFullscreen && d.webkitExitFullscreen());
     return Promise.resolve(go).catch(() => {});
   }
-  // once per session, at the first battle start: offer fullscreen (not when already in it, unsupported, or installed)
-  let fsAsked = false;
-  try { fsAsked = sessionStorage.getItem('lao_rd_fs_asked') === '1'; } catch (e) { /* ignore */ }
+  // every battle start (new, retry, continue) that is not already fullscreen offers it (not when unsupported or installed)
   const installed = () => !!(window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches)) || navigator.standalone;
 
-  function start(resume) {
-    if (!fsAsked && fsOk() && !fsOn() && !installed() && !/[?&](lab|smoke)=/.test(location.search)) {
-      fsAsked = true;
-      try { sessionStorage.setItem('lao_rd_fs_asked', '1'); } catch (e) { /* ignore */ }
+  function start(resume, fsDone) {
+    if (!fsDone && fsOk() && !fsOn() && !installed() && !/[?&](lab|smoke)=/.test(location.search)) {
       ask(T('전체 화면'), T('전체 화면으로 플레이할까요? 설정의 화면 탭에서 언제든 바꿀 수 있습니다.'), T('전체 화면으로')).then((ok) => {
         if (ok) setFullscreen(true);
-        start(resume);
+        start(resume, true);
       });
       return;
     }
