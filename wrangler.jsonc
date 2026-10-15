@@ -1,10 +1,14 @@
 // Cloudflare Workers static-asset deploy (Workers Builds runs `npx wrangler deploy` on every push to main).
-// The repository root is served as-is; .assetsignore keeps the git history, dev tools and notes out of it.
+// The build step (tools/build_dist.mjs) copies only the game files into dist/ and minifies / mangles the game's own
+// scripts, so the served code is hard to read; the repository keeps the readable source.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lao-defence",
   "compatibility_date": "2026-10-12",
+  "build": {
+    "command": "node tools/build_dist.mjs"
+  },
   "assets": {
-    "directory": "."
+    "directory": "./dist"
   }
 }

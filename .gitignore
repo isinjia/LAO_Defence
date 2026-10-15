@@ -10,6 +10,11 @@ tools/ui_ref/guid_index.json
 tools/_unused_sfx_wav/
 *.log
 
+# Cloudflare deploy build output (tools/build_dist.mjs) and its tooling
+dist/
+node_modules/
+.wrangler/
+
 # Python / OS / editor
 __pycache__/
 *.pyc
