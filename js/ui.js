@@ -52,7 +52,6 @@
     el.btnMythic.onclick = () => toggleDrawer('mythic');
     el.btnSpeed.onclick = () => { const G = GAME.G; G.speed = G.speed >= 3 ? 1 : G.speed + 1; SFX.play('click'); update(true); };
     el.btnAuto.onclick = () => toggleAuto();
-    $('#btnUltMode').onclick = () => toggleUltMode();
     el.btnSound.onclick = () => { SFX.setMuted(!SFX.userMuted); saveOpts(); update(true); };
     el.btnPause.onclick = () => togglePause();
     el.btnSettings.onclick = () => toggleDrawer('settings');
@@ -174,7 +173,7 @@
 
   function start(resume) {
     reward(null);
-    if (el.ultBar) { el.ultBar.innerHTML = ''; el.ultBar._k = ''; }
+    if (el.ultBar) { el.ultBar.innerHTML = ''; el.ultBar._k = ''; el.ultBar._list = []; }
     el.title.hidden = true;
     el.result.hidden = true;
     el.pauseOv.hidden = true;
@@ -184,7 +183,7 @@
     if (!GAME.G.daily) GAME.clearRun(); // a fresh start replaces the cut-short run (daily runs are never saved: leave it)
     renderTitle();
     // every new operation opens with the guided tutorial (skippable), then the real battle starts on a clean field
-    const begin = () => { reward(null); if (el.ultBar) { el.ultBar.innerHTML = ''; el.ultBar._k = ''; } closeDrawer(); closePopup(); GAME.newGame(); };
+    const begin = () => { reward(null); if (el.ultBar) { el.ultBar.innerHTML = ''; el.ultBar._k = ''; el.ultBar._list = []; } closeDrawer(); closePopup(); GAME.newGame(); };
     if (window.TUT && !/[?&](lab|smoke)=/.test(location.search)) TUT.run(begin); else begin();
   }
 
@@ -238,17 +237,6 @@
   function saveOpts() {
     try { localStorage.setItem('lao_rd_opts', JSON.stringify({ ...GAME.G.opt, fps30: GAME.G.opt.fps30 && !GAME.autoFps30, bgm: SFX.getVolume('bgm'), sfx: SFX.getVolume('sfx'), mute: SFX.userMuted, q: GAME.quality.auto ? 'auto' : GAME.quality.level })); } catch (e) { /* ignore */ }
   }
-  // ultimate auto / manual: an on-field switch (shown once an SSS is on the board), kept between battles
-  function toggleUltMode() {
-    const o = GAME.G.opt;
-    o.autoUlt = !o.autoUlt;
-    SFX.play('click');
-    toast(o.autoUlt ? T('궁극기 자동: 게이지가 차면 바로 발동합니다') : T('궁극기 수동: 게이지가 차면 ULT 버튼을 누르세요'), o.autoUlt ? '' : 'gem');
-    saveOpts();
-    ultReady();
-    update(true);
-  }
-
   function toggleAuto() {
     const o = GAME.G.opt;
     o.auto = !o.auto;
@@ -268,7 +256,6 @@
       if (o.mute) SFX.setMuted(true);
       if (o.q != null && o.q !== 'auto') GAME.setQuality(+o.q, 'manual');
       if (o.diff != null) GAME.G.opt.diff = Math.max(0, Math.min(2, +o.diff));
-      GAME.G.opt.autoUlt = o.autoUlt !== false; // automatic unless the player chose manual
     } catch (e) { /* ignore */ }
   }
 
@@ -490,20 +477,7 @@
     set('afford', el.btnSummon, G.gold >= cost ? 'summon' : 'summon poor', 'className');
     set('speed', el.speedTx, 'x' + G.speed);
     set('speedc', el.btnSpeed, G.speed > 1 ? 'act on' : 'act', 'className');
-    // the ultimate switch: only once an SSS stands on the board
-    const hasSSS = G.phase === 'play' && G.cells.some((c) => c.units.length && c.units[0].def.ult);
-    const um = hasSSS ? (G.opt.autoUlt ? 'a' : 'm') : '';
-    if (cache.ultMode !== um) {
-      cache.ultMode = um;
-      const b = $('#btnUltMode');
-      b.hidden = !um;
-      if (um) {
-        b.className = um === 'm' ? 'manual' : '';
-        b.setAttribute('aria-pressed', um === 'a');
-        b.querySelector('.um').innerHTML = `<small>${T('궁극기')}</small><b>${um === 'a' ? T('자동') : T('수동')}</b>`;
-      }
-      el.ultBar.classList.toggle('withMode', !!um);
-    }
+    skills();
     if (cache.auto !== G.opt.auto) { cache.auto = G.opt.auto; el.btnAuto.className = 'act' + (G.opt.auto ? ' on' : ''); el.btnAuto.setAttribute('aria-pressed', G.opt.auto); }
     set('sound', el.btnSound, SFX.muted ? 'rbtn off' : 'rbtn', 'className');
     set('pause', el.btnPause, G.paused ? 'rbtn on' : 'rbtn', 'className');
@@ -539,14 +513,20 @@
       if (!b) { b = e; kind = e.enraged ? 'berserk' : 'elite'; }
     }
     if (b) {
-      el.bossBar.hidden = false;
       set('bcls', el.bossBar, kind === 'boss' ? '' : kind, 'className');
       const tag = kind === 'berserk' ? 'BERSERK' : b.kind === 'elite' ? 'ELITE' : 'BOSS';
       set('bname', el.bossName, `<small>${tag}</small>${b.name}${b.shieldT > 0 ? `<span class="shield">SHIELD</span>` : ''}`, 'innerHTML');
       if (cache.bimg !== b.img) { cache.bimg = b.img; el.bossImg.style.backgroundImage = `url(${window.IMG['e_' + b.img] || ''})`; }
       gauge(el.bossHp, b.hp / b.maxHp);
       set('btime', el.bossTime, kind === 'berserk' ? '×' + GAME.enemyWeight(b) : Math.ceil(kind === 'elite' ? b.lifeT : G.bossT) + 's');
-    } else el.bossBar.hidden = true;
+    } else {
+      // no boss on the field: the panel stays (the HUD never changes height) and names the next boss
+      const nw = Math.min(BAL.lastWave, (Math.floor(G.wave / 10) + 1) * 10), nb = DATA.bossFor(nw);
+      set('bcls', el.bossBar, 'idle', 'className');
+      set('bname', el.bossName, `<small>NEXT BOSS</small>${nb.name}`, 'innerHTML');
+      if (cache.bimg !== nb.img) { cache.bimg = nb.img; el.bossImg.style.backgroundImage = `url(${window.IMG['e_' + nb.img] || ''})`; }
+      set('btime', el.bossTime, T('{0}웨이브', nw));
+    }
 
     if ((++tick % 10) === 0 || force) {
       if (drawer && drawer !== 'mythic') {
@@ -698,16 +678,40 @@
     return T('모든 목표 달성! 최고 기록을 갱신해 보세요');
   }
 
-  // ready ultimates as buttons over the field (manual mode, AUTO or not); auto-ult fires them by itself
-  function ultReady() {
-    if (!el.ultBar) return;
-    const list = GAME.G.opt.autoUlt ? [] : GAME.readyUlts(); // auto mode fires them on the next attack: no buttons
-    const key = list.map((u) => u.def.id + u.cell).join();
-    if (key === el.ultBar._k) return;
-    el.ultBar._k = key;
-    el.ultBar.innerHTML = list.map((u, i) => `<button data-i="${i}" title="${T('궁극기 · {0}', u.def.ultName)}">${hex(u.def)}<b>ULT</b></button>`).join('');
-    el.ultBar.querySelectorAll('button').forEach((b) => { b.onclick = () => GAME.castUlt(list[+b.dataset.i]); });
+  // SSS ultimates as cooldown buttons in the footer (not floating over the field): one per SSS on the board. The
+  // dark veil over the portrait shrinks clockwise as the gauge charges; full, the button lights up (ULT) and a tap fires it
+  function skills(force) {
+    const G = GAME.G, bar = el.ultBar;
+    if (!bar) return;
+    const list = [];
+    if (G.phase === 'play') G.cells.forEach((c) => c.units.forEach((u) => { if (u.def.ult && !u.dead) list.push(u); }));
+    const key = list.map((u) => u.def.id + '@' + u.cell).join();
+    if (force || key !== bar._k) {
+      bar._k = key; bar._list = list;
+      bar.hidden = !list.length;
+      bar.innerHTML = list.map((u, i) => `<button class="sk" data-i="${i}" title="${T('궁극기 · {0}', u.def.ultName)}">${hex(u.def)}<span class="cd"></span><b>ULT</b></button>`).join('');
+      bar.querySelectorAll('.sk').forEach((b) => {
+        b.onclick = () => {
+          const u = bar._list[+b.dataset.i];
+          if (!u) return;
+          if (u.mana >= 100) GAME.castUlt(u);
+          else { SFX.play('fail', 0.5); b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); } // still charging
+        };
+      });
+    }
+    bar._list.forEach((u, i) => {
+      const b = bar.children[i];
+      if (!b) return;
+      const p = Math.min(100, Math.floor(u.mana / 2) * 2); // 2% steps: the style is only written when it moves
+      if (b._p === p) return;
+      b._p = p;
+      b.style.setProperty('--p', p / 100);
+      b.classList.toggle('ready', p >= 100);
+      b.setAttribute('aria-label', `${u.def.name} · ${T('궁극기 · {0}', u.def.ultName)} ${p}%`);
+    });
   }
+  // a charge completed, a cast, or the board changed: rebuild the buttons
+  function ultReady() { skills(true); }
   // a boss fell in time: pick one boon (the game keeps running)
   function reward(list) {
     if (!el.reward) return;

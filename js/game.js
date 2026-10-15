@@ -74,7 +74,8 @@
     gold: 0, gems: 0, wave: 0, waveT: 0, spawnLeft: 0, spawnT: 0, bossT: 0, boss: null,
     cells: [], enemies: [], corpses: [], projs: [], bfx: [], sfx: [], summons: 0, upg: { low: 0, mid: 0, high: 0, luck: 0 },
     kills: 0, time: 0, selected: -1, owned: new Set(), dmgBy: {},
-    opt: { shake: true, dmg: true, haptic: true, fps30: false, auto: false, autoUlt: true }, // settings screen (+ the AUTO toggle)
+    // settings screen (+ the AUTO toggle); ultimates are the player's (cooldown buttons): autoUlt is for the bots / tests
+    opt: { shake: true, dmg: true, haptic: true, fps30: false, auto: false, autoUlt: false },
   };
 
   // ── textures ───────────────────────────────────────────
@@ -1370,8 +1371,7 @@
   function charge(u, e, k) {
     const d = u.def;
     if (!d.ult) return;
-    // a full gauge held in manual mode (or restored from a save) still fires once auto is switched on
-    // the 궁극기 setting alone decides: AUTO leaves a manual player's ultimates to them
+    // players fire ultimates from the SSS cooldown buttons (or Q); only the balance bots / tests auto-cast
     if (u.mana >= 100) { if (G.opt.autoUlt || G.labUlt) castUlt(u, e); return; }
     u.mana = Math.min(100, u.mana + d.mana * k * G.buff.mana);
     if (u.mana >= 100) {
@@ -2066,6 +2066,8 @@
     window.addEventListener('resize', resizeSoon);
     window.addEventListener('orientationchange', resizeSoon);
     if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeSoon);
+    // the stage also changes size without the window doing so (the SSS skill row joins the footer, the HUD wraps)
+    if (window.ResizeObserver) new ResizeObserver(resizeSoon).observe(stageEl);
     document.addEventListener('visibilitychange', () => { if (document.hidden && G.phase === 'play' && !G.paused) UI.togglePause(true); });
     bindInput();
     SFX.preload();

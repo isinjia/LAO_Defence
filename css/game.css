@@ -101,7 +101,7 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 .res .sep { width: 2px; height: 22px; background: rgba(255, 255, 255, 0.12); margin: 0 4px; }
 
 /* round grey icon buttons (battle option row) */
-.rbtn { position: relative; width: 46px; height: 46px; margin-left: 4px; border-radius: 50%; display: grid; place-items: center;
+.rbtn { position: relative; width: 46px; height: 46px; flex: none; margin-left: 4px; border-radius: 50%; display: grid; place-items: center;
   background: radial-gradient(circle at 50% 40%, rgba(160, 160, 160, 0.55), rgba(110, 110, 110, 0.45)); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.5);
   transition: transform 0.08s, background 0.15s; }
 .rbtn:hover { background: radial-gradient(circle at 50% 40%, rgba(190, 190, 190, 0.65), rgba(120, 120, 120, 0.55)); }
@@ -135,21 +135,27 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
   text-shadow: 0 0 10px var(--c); will-change: transform, opacity; }
 @keyframes ultIn { 0% { opacity: 0; transform: translate(-30%, -100%); } 14% { opacity: 1; transform: translate(-50%, -100%); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -150%); } }
 
-/* boss panel: enemy info (Square-frame_1 on black) */
-#bossBar { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: min(560px, 86%); display: flex; align-items: center; gap: 12px; padding: 8px 14px 9px 8px;
-  background: rgba(0, 0, 0, 0.62); border: 2px solid transparent; border-image: var(--s-sqframe) 6 14 fill / 6px 14px; pointer-events: none; z-index: 3; }
-#bossBar[hidden] { display: none; }
-#bossBar .bimg { width: 52px; height: 52px; background: #000 center / cover no-repeat; border: 1px solid rgba(255, 255, 255, 0.3); flex: none; }
+/* boss / elite panel: a HUD box like the round / enemy boxes (never over the field). Between bosses it is .idle and
+   names the next boss; with a boss or elite on the field it shows its portrait, clock and HP */
+#top .spacer { display: none; } /* the boss panel takes the spare width instead */
+#bossBar { position: relative; flex: 1 1 260px; min-width: 150px; max-width: 520px; height: 50px; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 6px;
+  background: var(--hudbg); border: 1px solid rgba(143, 146, 148, 0.55); clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%); }
+#bossBar .bimg { width: 38px; height: 38px; margin-left: 10px; background: #000 center / cover no-repeat; border: 1px solid rgba(255, 255, 255, 0.3); flex: none; }
 #bossBar .bmain { flex: 1; min-width: 0; }
-#bossBar .row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-#bossName { font-size: 20px; color: var(--y); }
-#bossName small { font-family: var(--en); font-weight: 700; font-size: 12px; color: #ff6a4d; letter-spacing: 2px; margin-right: 8px; vertical-align: 2px; }
-#bossTime { font-family: var(--en); font-weight: 700; font-size: 18px; color: #ff6a4d; }
-#bossBar .gauge { height: 12px; }
+#bossBar .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 5px; white-space: nowrap; }
+#bossName { font-size: 15px; color: var(--y); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#bossName small { font-family: var(--en); font-weight: 700; font-size: 11px; color: #ff6a4d; letter-spacing: 2px; margin-right: 6px; }
+#bossTime { font-family: var(--en); font-weight: 700; font-size: 15px; color: #ff6a4d; flex: none; }
+#bossBar .gauge { height: 8px; }
 #bossBar.elite #bossName small { color: #ff9a2a; }
 #bossBar.berserk { animation: berserk 0.8s ease-in-out infinite alternate; }
 @keyframes berserk { to { background-color: rgba(120, 0, 0, 0.7); } }
-#bossBar .shield { color: #7fdcff; font-size: 13px; margin-left: 8px; }
+#bossBar .shield { color: #7fdcff; font-size: 12px; margin-left: 6px; }
+#bossBar.idle .bimg { opacity: 0.45; filter: grayscale(1); }
+#bossBar.idle #bossName { color: #c9d2da; font-size: 13px; }
+#bossBar.idle #bossName small { color: var(--mut); }
+#bossBar.idle #bossTime { color: var(--mut); font-size: 13px; }
+#bossBar.idle .gauge { visibility: hidden; }
 /* call the next wave early: floats over the field (top-left), never part of the HUD layout */
 .nextw { position: absolute; left: max(10px, env(safe-area-inset-left)); top: 10px; z-index: 4; height: 34px; padding: 0 16px 0 12px; gap: 8px;
   display: flex; align-items: center; background: linear-gradient(180deg, #ffd34d, #f0a800); color: #111; cursor: pointer;
@@ -159,25 +165,22 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 .nextw span { width: 16px; height: 14px; background: #111; clip-path: polygon(0 0, 50% 50%, 50% 0, 100% 50%, 50% 100%, 50% 50%, 0 100%); }
 .nextw:hover { filter: brightness(1.15); }
 .nextw:active { transform: scale(0.94); }
-#bossBar:not([hidden]) ~ .nextw { top: 84px; }
 @keyframes nextIn { from { opacity: 0; transform: translateX(-12px); } }
-/* ready ultimates (manual mode) */
-#ultBar { position: absolute; left: max(10px, env(safe-area-inset-left)); bottom: 10px; z-index: 4; display: flex; gap: 6px; }
-#ultBar.withMode { left: calc(max(10px, env(safe-area-inset-left)) + 82px); }
-/* ultimate auto / manual switch (bottom-left of the field, beside the ULT buttons) */
-#btnUltMode { position: absolute; left: max(10px, env(safe-area-inset-left)); bottom: 10px; z-index: 4; width: 74px; height: 58px; padding: 0;
-  display: grid; place-items: center; background: rgba(8, 10, 14, 0.82); border: 1px solid rgba(127, 240, 255, 0.55); border-left: 3px solid #7ff0ff; color: #dff9ff; }
-#btnUltMode[hidden] { display: none; }
-#btnUltMode .um { display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
-#btnUltMode small { font-size: 11px; color: #9fb4c0; }
-#btnUltMode b { font-size: 17px; font-weight: 700; color: #7ff0ff; }
-#btnUltMode.manual { border-color: rgba(255, 204, 0, 0.7); border-left-color: var(--y); }
-#btnUltMode.manual b { color: var(--y); }
-#btnUltMode:active { transform: scale(0.96); }
-@media (max-width: 720px) { #btnUltMode { width: 64px; height: 48px; } #btnUltMode b { font-size: 15px; } #ultBar.withMode { left: calc(max(10px, env(safe-area-inset-left)) + 70px); } }
-#ultBar button { position: relative; width: 58px; height: 58px; padding: 0; background: none; animation: ultPulse 0.9s ease-in-out infinite alternate; }
-#ultBar .hx { width: 58px; height: 58px; }
-#ultBar b { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); padding: 0 5px; font-family: var(--en); font-weight: 900; font-size: 12px; color: #111; background: #7ff0ff; }
+/* SSS ultimates: cooldown buttons in the footer, one per SSS on the board (never floating over the field).
+   The veil (.cd) shrinks clockwise as --p (gauge 0..1) rises; full = lit, pulsing, ULT tag; a tap fires it */
+#ultBar { display: flex; align-items: center; gap: 8px; padding: 0 2px; }
+#ultBar[hidden] { display: none; }
+#ultBar .sk { position: relative; width: 58px; height: 58px; padding: 0; background: none; flex: none; --p: 0; }
+#ultBar .sk .hx { width: 100%; height: 100%; }
+#ultBar .sk .cd { position: absolute; inset: 0; pointer-events: none; clip-path: polygon(50% 0, 96% 25%, 96% 75%, 50% 100%, 4% 75%, 4% 25%);
+  background: conic-gradient(transparent calc(var(--p) * 360deg), rgba(0, 0, 0, 0.66) 0); }
+#ultBar .sk b { position: absolute; left: 50%; bottom: -5px; transform: translateX(-50%); padding: 0 5px; font-family: var(--en); font-weight: 900; font-size: 11px;
+  color: #9fb4c0; background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); pointer-events: none; }
+#ultBar .sk.ready { animation: ultPulse 0.9s ease-in-out infinite alternate; }
+#ultBar .sk.ready b { color: #111; background: #7ff0ff; border-color: #7ff0ff; }
+#ultBar .sk.nope { animation: skNope 0.3s; }
+#ultBar .sk:active { transform: scale(0.94); }
+@keyframes skNope { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
 @keyframes ultPulse { from { filter: drop-shadow(0 0 2px #7ff0ff); } to { filter: drop-shadow(0 0 12px #7ff0ff) brightness(1.15); } }
 #popup .mana .ult { height: 30px; padding: 0 14px; margin-top: 6px; font-size: 14px; }
 /* boss reward: pick one */
@@ -188,7 +191,7 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 #reward button { display: flex; flex-direction: column; gap: 4px; padding: 10px 8px; text-align: center; color: #fff; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.18); }
 #reward button:hover { border-color: var(--y); background: rgba(255, 204, 0, 0.12); }
 #reward b { font-size: 15px; } #reward small { font-size: 12px; line-height: 1.35; color: #cfd6dc; }
-@media (max-width: 720px) { #reward button { padding: 8px 4px; } #reward b { font-size: 13px; } #reward small { font-size: 11px; } #ultBar button, #ultBar .hx { width: 48px; height: 48px; } }
+@media (max-width: 720px) { #reward button { padding: 8px 4px; } #reward b { font-size: 13px; } #reward small { font-size: 11px; } }
 .summon .aidb { position: absolute; top: 5px; right: 10px; display: flex; gap: 4px; pointer-events: none; }
 .summon .aidb i { padding: 0 5px; font-family: var(--en); font-style: normal; font-weight: 700; font-size: 11px; line-height: 16px; color: #fff; background: rgba(0, 0, 0, 0.45); }
 .summon .aidb i.on { color: #111; background: #7dffb0; }
@@ -234,7 +237,6 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 
 /* toasts: Panel_ToastMsg */
 #toasts { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; z-index: 3; }
-#bossBar:not([hidden]) ~ #toasts { top: 92px; }
 .toast { min-width: 280px; max-width: 86vw; text-align: center; padding: 10px 26px; font-size: 16px; color: var(--txt2); white-space: nowrap;
   /* see-through: the field stays visible under a message (text keeps a shadow so it still reads over busy fights) */
   background: rgba(13, 22, 27, 0.55); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
@@ -617,8 +619,8 @@ body.paused #bottom, body.paused #ultBar { pointer-events: none; filter: brightn
   #bottom #btnAuto { right: max(14px, env(safe-area-inset-right)); }
   #bottom #btnSpeed { right: calc(max(14px, env(safe-area-inset-right)) + var(--actw, 112px) + 10px); }
 }
-@media (max-width: 1240px) { .act { width: 96px; } #bottom { --actw: 96px; } }
-@media (max-width: 1100px) { .act { width: 84px; } #bottom { --actw: 84px; } .summon { width: 220px; } #odds { display: none; } }
+@media (max-width: 1240px) { .act { width: 96px; } #bottom { --actw: 96px; } .round { min-width: 240px; } .enemy { min-width: 190px; } }
+@media (max-width: 1100px) { .act { width: 84px; } #bottom { --actw: 84px; } .summon { width: 220px; } #odds { display: none; } .round { min-width: 210px; } .enemy { min-width: 170px; } .enemy .etop span { display: none; } .enemy .etop { justify-content: flex-end; } }
 @media (max-width: 980px) {
   .round { min-width: 230px; } .enemy { min-width: 180px; }
   .act { width: 84px; } .summon { width: 200px; }
@@ -628,10 +630,15 @@ body.paused #bottom, body.paused #ultBar { pointer-events: none; filter: brightn
   #top { gap: 6px; flex-wrap: wrap; padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) 4px max(6px, env(safe-area-inset-left)); }
   .round { min-width: 0; flex: 1 1 52%; height: 48px; } .round .rlabel b { font-size: 24px; } .round .rtitle { font-size: 12px; }
   .enemy { min-width: 0; flex: 1 1 40%; height: 48px; padding: 0 12px 0 6px; } .enemy .eicon { width: 26px; height: 26px; }
+  /* the boss panel gets the HUD's last row (full width, right above the field) */
+  #bossBar { order: 9; flex: 1 1 100%; max-width: none; height: 38px; clip-path: none; padding: 0 10px 0 2px; } #bossBar .bimg { width: 30px; height: 30px; margin-left: 4px; }
+  #bossBar .row { margin-bottom: 3px; } #bossName { font-size: 13px; } #bossTime { font-size: 13px; } #bossBar .gauge { height: 6px; }
   .spacer { display: none; }
   .res { height: 36px; padding: 0 10px; flex: 1; } .res b { font-size: 16px; min-width: 32px; }
   .rbtn { width: 38px; height: 38px; } .rbtn .g { width: 20px; height: 20px; }
   #bottom { gap: 6px; padding: 8px max(6px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)); }
+  /* the SSS skill row sits above the action buttons */
+  #bottom { flex-wrap: wrap; } #ultBar { flex: 1 1 100%; order: -1; justify-content: center; padding-bottom: 4px; } #ultBar .sk { width: 50px; height: 50px; }
   .acts { gap: 3px; }
   .enemy .etop span { display: none; } .enemy .etop { justify-content: flex-end; } .enemy .etop b { font-size: 15px; }
   .act { width: min(62px, calc((100vw - 136px - env(safe-area-inset-left) - env(safe-area-inset-right)) / 5)); height: 58px; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); } .act b { font-size: 14px; white-space: nowrap; } .act small { display: none; } .act .ai { width: 22px; height: 22px; }
@@ -702,6 +709,7 @@ body.paused #bottom, body.paused #ultBar { pointer-events: none; filter: brightn
   #app { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr); }
   #top { grid-column: 1 / -1; gap: 8px; padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: 4px; flex-wrap: nowrap; }
   .round, .enemy, .res { height: 40px; }
+  #bossBar { order: 0; flex: 1 1 0; min-width: 90px; height: 40px; padding: 0 12px 0 4px; } /* one HUD row: the boss panel takes the spare width */
   .round { min-width: 0; flex: 0 1 230px; } .round .rlabel b { font-size: 22px; } .round .rlabel small { font-size: 9px; } .round .rtitle { font-size: 12px; } .round .rtime { font-size: 12px; }
   .enemy { min-width: 0; flex: 0 1 170px; padding: 0 12px 0 6px; } .enemy .eicon { width: 24px; height: 24px; } .enemy .etop span { display: none; } .enemy .etop { justify-content: flex-end; } .enemy .etop b { font-size: 17px; }
   .res { padding: 0 10px; gap: 6px; } .res b { font-size: 15px; min-width: 30px; } .res .ri { width: 20px; height: 20px; } .res .ri.tuna { width: 24px; }
@@ -713,6 +721,10 @@ body.paused #bottom, body.paused #ultBar { pointer-events: none; filter: brightn
     background: linear-gradient(270deg, rgba(8, 9, 11, 0.97), rgba(8, 9, 11, 0.85) 80%, rgba(8, 9, 11, 0.4)); }
   #bottom::before { left: 0; right: auto; top: 8px; bottom: 8px; width: 1px; height: auto; background: linear-gradient(180deg, rgba(255, 204, 0, 0.4), rgba(255, 255, 255, 0.06)); }
   .acts { display: grid; grid-template-columns: 1fr 1fr; align-content: end; gap: 6px; }
+  /* top of the rail: three to a row; with a second row the rail's buttons give up a little height so it still fits */
+  #ultBar { order: -1; flex: none; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 0 0 6px; } #ultBar .sk { width: 36px; height: 36px; } #ultBar .sk b { font-size: 9px; bottom: -4px; }
+  #bottom:has(#ultBar .sk:nth-child(4)) .act { height: 36px; } #bottom:has(#ultBar .sk:nth-child(4)) .acts > #btnSpeed, #bottom:has(#ultBar .sk:nth-child(4)) .acts > #btnAuto { height: 36px; }
+  #bottom:has(#ultBar .sk:nth-child(4)) .summon { height: 54px; }
   .acts > * { grid-column: span 2; } .acts > #btnSpeed, .acts > #btnAuto { grid-column: span 1; order: -1; height: 38px; justify-content: center; padding-left: 0; gap: 4px; }
   .acts > #btnSpeed .ai, .acts > #btnAuto .ai { display: none; } .acts > #btnAuto b { font-size: 13px; }
   .act { width: 100%; height: 44px; flex-direction: row; justify-content: flex-start; gap: 8px; padding-left: 18px; clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px); }
@@ -747,8 +759,9 @@ body.paused #bottom, body.paused #ultBar { pointer-events: none; filter: brightn
 @media (orientation: landscape) and (max-height: 520px) and (max-width: 900px) {
   .spacer { display: none; }
   #top { gap: 6px; }
-  .round { flex: 1 1 0; } .round .rtime .ico { display: none; }
+  .round { flex: 0 0 168px; } .round .rtime .ico { display: none; } /* the wave title stays readable; the boss panel takes what is left */
   .enemy { flex: 0 0 112px; } .res { flex: 0 1 auto; padding: 0 8px; } .res b { min-width: 0; }
+  #bossBar .bimg { display: none; }
   .rbtn { flex: none; }
   .round .rtitle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }

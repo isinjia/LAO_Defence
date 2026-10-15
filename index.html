@@ -30,6 +30,8 @@
       <span class="eicon"></span>
       <div class="ebody"><div class="etop"><span>적 개체 수</span><b id="enemyNum">0 / 100</b></div><div class="gauge r"><i id="enemyBar"></i></div></div>
     </div>
+    <!-- boss / elite panel: part of the HUD (never over the field); between bosses it names the next one -->
+    <div id="bossBar" class="idle"><div class="bimg" id="bossImg"></div><div class="bmain"><div class="row"><span id="bossName"></span><span id="bossTime"></span></div><div class="gauge r"><i id="bossHp"></i></div></div></div>
     <div class="spacer"></div>
     <div class="res" title="부품: 소환·강화 / 참치: 도박">
       <span class="ri gear"></span><b id="gold" class="gold">0</b><span class="sep"></span><span class="ri tuna"></span><b id="gems" class="gems">0</b>
@@ -41,12 +43,9 @@
 
   <main id="stage">
     <div id="numLayer"></div>
-    <div id="bossBar" hidden><div class="bimg" id="bossImg"></div><div class="bmain"><div class="row"><span id="bossName"></span><span id="bossTime"></span></div><div class="gauge r"><i id="bossHp"></i></div></div></div>
     <button class="nextw" id="btnNext" title="다음 웨이브 호출 (N)" aria-label="다음 웨이브 호출 (N)" hidden><b>NEXT</b><span></span></button>
     <div id="toasts" role="status" aria-live="polite"></div>
     <div id="tip" hidden role="note"></div>
-    <button id="btnUltMode" hidden aria-pressed="true" title="궁극기 자동 / 수동 전환"><span class="um"></span></button>
-    <div id="ultBar"></div>
     <div id="reward" hidden></div>
     <div id="banner" class="banner" role="status" aria-live="polite"></div>
     <div id="announce" aria-live="polite"></div>
@@ -64,6 +63,8 @@
 
   <footer id="bottom">
     <div id="odds"></div>
+    <!-- SSS ultimates: one cooldown button per SSS on the board (charges up, tap when full) -->
+    <div id="ultBar" hidden role="group" aria-label="궁극기"></div>
     <div class="acts">
       <button id="btnGamble" class="act" title="참치를 걸고 상위 랭크 유닛에 도전"><span class="ai random"></span><b>도박</b><small>참치 사용</small></button>
       <button id="btnSummon" class="summon" title="부품으로 무작위 유닛 소환 (Space)"><kbd>SPACE</kbd><span class="st"><b>소환</b><small><i class="ri"></i><span id="summonCost">20</span></small></span><span class="hexb"></span><span class="aidb" id="aidMini"></span></button>
