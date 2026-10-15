@@ -195,6 +195,8 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 #reward { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 5; width: min(620px, calc(100% - 24px)); padding: 10px; background: rgba(8, 10, 14, 0.9); border: 1px solid rgba(255, 204, 0, 0.5); }
 #reward[hidden] { display: none; }
 #reward .rh { margin-bottom: 8px; font-size: 14px; color: var(--y); text-align: center; }
+#reward .rh .rt { display: block; margin-top: 2px; font-size: 12px; color: #9fb0bc; }
+#reward .rh .rt:empty { display: none; }
 #reward .rc { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 #reward button { display: flex; flex-direction: column; gap: 4px; padding: 10px 8px; text-align: center; color: #fff; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.18); }
 #reward button:hover { border-color: var(--y); background: rgba(255, 204, 0, 0.12); }

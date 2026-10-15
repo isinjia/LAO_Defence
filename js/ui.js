@@ -261,8 +261,9 @@
   function toggleAuto() {
     const o = GAME.G.opt;
     o.auto = !o.auto;
+    if (o.auto) GAME.G.autoT = 0; // the first round right away, then every 5 s
     SFX.play('click');
-    toast(o.auto ? T('AUTO 진행: 소환 · 합성을 자동으로 합니다') : T('AUTO 해제'), o.auto ? 'gem' : '');
+    toast(o.auto ? T('AUTO 진행: 5초마다 소환 · 합성을 자동으로 합니다') : T('AUTO 해제'), o.auto ? 'gem' : '');
     saveOpts();
     update(true);
   }
@@ -492,6 +493,11 @@
     set('speed', el.speedTx, 'x' + G.speed);
     set('speedc', el.btnSpeed, G.speed > 1 ? 'act on' : 'act', 'className');
     skills();
+    // boss reward: with AUTO on, how long until it picks for the player
+    if (G.reward && !el.reward.hidden) {
+      const rt = el.reward.querySelector('.rt');
+      if (rt) set('rwt', rt, G.opt.auto ? T('AUTO가 {0}초 후 자동 선택', Math.max(0, Math.ceil(GAME.REWARD_WAIT - (G.rewardWait || 0)))) : '');
+    }
     if (cache.auto !== G.opt.auto) { cache.auto = G.opt.auto; el.btnAuto.className = 'act' + (G.opt.auto ? ' on' : ''); el.btnAuto.setAttribute('aria-pressed', G.opt.auto); }
     set('pause', el.btnPause, G.paused ? 'rbtn on' : 'rbtn', 'className');
     // derived values only when their inputs change (this runs every frame)
@@ -755,7 +761,7 @@
   function reward(list) {
     if (!el.reward) return;
     if (!list) { el.reward.hidden = true; el.reward.innerHTML = ''; return; }
-    el.reward.innerHTML = `<div class="rh">${T('보스 처치 보상 · 하나를 고르세요')}</div><div class="rc">${list.map((r, i) =>
+    el.reward.innerHTML = `<div class="rh">${T('보스 처치 보상 · 하나를 고르세요')}<small class="rt"></small></div><div class="rc">${list.map((r, i) =>
       `<button data-i="${i}"><b>${T(r.name)}</b><small>${T(r.desc)}</small></button>`).join('')}</div>`;
     el.reward.querySelectorAll('button').forEach((b) => { b.onclick = () => GAME.takeReward(+b.dataset.i); });
     el.reward.hidden = false;

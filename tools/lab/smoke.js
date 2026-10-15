@@ -44,6 +44,16 @@
       eq(Object.values(G().upg).every((v) => v === 0), true, 'no upgrade bought');
     });
 
+    test('AUTO picks a boss reward after 18 real seconds, even at x3', () => {
+      fresh(); G().opt.auto = true; G().speed = 3;
+      G().reward = DATA.BAL.rewards.slice(0, 3); G().rewardWait = 0;
+      GAME.simulate(30, false); // 30 game s at x3 = 10 real s
+      eq(!!G().reward, true, 'still open after 10 real seconds');
+      GAME.simulate(30, false); // 20 real s in all
+      eq(G().reward, null, 'picked after 18 real seconds');
+      G().opt.auto = false; G().speed = 1;
+    });
+
     test('merge: 3 of a kind -> one unit of the next rank, selected', () => {
       fresh(); G().gold = 1e6;
       const id = DATA.UNITS.find((u) => u.tier === 0).id;

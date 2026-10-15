@@ -585,6 +585,7 @@
     G.reward = [];
     for (let k = 0; k < 3; k++) G.reward.push(pool.splice(Math.floor(luck('reward') * pool.length), 1)[0]);
     G.rewardAt = G.time;
+    G.rewardWait = 0; // real seconds the pick has been open (AUTO picks after REWARD_WAIT)
     UI.reward(G.reward);
     SFX.play('clear', 0.6);
   }
@@ -1606,11 +1607,15 @@
   // ── update ─────────────────────────────────────────────
   function step(dt) {
     G.time += dt;
+    // the boss reward pick runs on the player's clock (x3 speed does not shorten it)
+    if (G.reward) G.rewardWait = (G.rewardWait || 0) + dt / Math.max(1, G.speed);
     if (G.won) { G.winT -= dt; if (G.winT <= 0) endGame(true); return; }
     // AUTO: the player's own toggle (summon / merge; never upgrades, crafts SSS, sells units or bets tuna)
+    // every AUTO_EVERY real seconds (x3 speed does not hurry it); the first round as soon as it is switched on
     if (G.opt.auto && G.phase === 'play') {
-      G.autoT = (G.autoT || 0) - dt;
-      if (G.autoT <= 0) { G.autoT = 0.4; autoplay(false); }
+      G.autoT = (G.autoT || 0) - dt / Math.max(1, G.speed);
+      if (G.autoT <= 0) { G.autoT = AUTO_EVERY; autoplay(false); }
+      if (G.reward && (G.rewardWait || 0) > REWARD_WAIT) autoReward(true); // the reward clock, not the AUTO round
     }
     // waves
     if (G.boss) {
@@ -2128,7 +2133,7 @@
     const lists = [NORMALS, ELITES, BOSSES];
     const s = {
       v: 1, diff: G.diff, at: Date.now(),
-      ...Object.fromEntries(['wave', 'gold', 'gems', 'waveT', 'waveMax', 'spawnLeft', 'spawnT', 'bossT', 'bossMax', 'summons', 'pity', 'kills', 'time', 'peak', 'labUlt', 'hintUpg', 'rewardAt'].map((k) => [k, G[k]])),
+      ...Object.fromEntries(['wave', 'gold', 'gems', 'waveT', 'waveMax', 'spawnLeft', 'spawnT', 'bossT', 'bossMax', 'summons', 'pity', 'kills', 'time', 'peak', 'labUlt', 'hintUpg', 'rewardAt', 'rewardWait'].map((k) => [k, G[k]])),
       upg: G.upg, buff: G.buff, dmgBy: G.dmgBy,
       reward: G.reward ? G.reward.map((r) => BAL.rewards.indexOf(r)) : null,
       // SSS keep their ult charge and their own AUTO
@@ -2158,7 +2163,7 @@
     newGame();
     G.opt.diff = pick;
     const w = s.wave;
-    ['wave', 'gold', 'gems', 'waveT', 'waveMax', 'spawnLeft', 'spawnT', 'bossT', 'bossMax', 'summons', 'pity', 'kills', 'time', 'peak', 'labUlt', 'hintUpg', 'rewardAt'].forEach((k) => { if (s[k] != null) G[k] = s[k]; });
+    ['wave', 'gold', 'gems', 'waveT', 'waveMax', 'spawnLeft', 'spawnT', 'bossT', 'bossMax', 'summons', 'pity', 'kills', 'time', 'peak', 'labUlt', 'hintUpg', 'rewardAt', 'rewardWait'].forEach((k) => { if (s[k] != null) G[k] = s[k]; });
     Object.assign(G.upg, s.upg); Object.assign(G.buff, s.buff); G.dmgBy = s.dmgBy || {};
     G.waveInfo = NORMALS[(w - 1) % NORMALS.length];
     G.mut = w % 10 ? BAL.mutationFor(w) : null;
@@ -2217,12 +2222,16 @@
     out.push({ wave: G.wave, enemies: G.enemies.length, gold: G.gold, gems: G.gems, units: G.cells.reduce((a, c) => a + c.units.length, 0), phase: G.phase });
     return out;
   }
+  // with AUTO on, an unpicked boss reward is chosen for the player after this many real seconds
+  const REWARD_WAIT = 18;
+  // the player's AUTO summons / merges once every this many real seconds
+  const AUTO_EVERY = 5;
   // sell: the balance bot (crafts SSS, upgrades, sells weak singles for room, bets tuna). The player's AUTO only
   // summons and merges: SSS recipes, upgrades, sales and tuna are the player's calls
   function autoplay(sell = true) {
     if (sell) RECIPES.forEach((r, i) => { if (canCraft(r)) craft(i, true); });
     G.cells.forEach((c, i) => { if (c.units.length === 3 && c.units[0].def.tier < 3) merge(i, true); });
-    if (G.reward && G.time - (G.rewardAt || 0) > 6) autoReward(true);
+    if (G.reward && (G.rewardWait || 0) > REWARD_WAIT) autoReward(true);
     if (sell) {
       const [best, bv] = bestUpgrade();
       const empty = anyEmpty();
@@ -2245,7 +2254,7 @@
     G, lay, boot, newGame, summon, gamble, merge, sell, craft, canCraft, upgrade, summonCost,
     worldToScreen, simulate, autoplay, endGame, findCellOf, enemyLoad, craftRoom, enemyWeight, target, rewardScore, bossMult,
     bestUpgrade, upgradeValue, summonValue, wantedParts, setFocus, takeReward, autoReward, castUlt, readyUlts, ecoMult, critBonus,
-    callNext, canCallNext, reroll, swapCells, isOuter, dmgMult, saveRun, savedRun, resumeRun, clearRun,
+    callNext, canCallNext, reroll, swapCells, isOuter, dmgMult, saveRun, savedRun, resumeRun, clearRun, REWARD_WAIT,
     // tutorial: screen rects of a cell / the whole field, and its practice enemies
     cellRect: (i) => screenRect(lay.cells[i].x - BAL.cell / 2, lay.cells[i].y + BAL.cell / 2, lay.cells[i].x + BAL.cell / 2, lay.cells[i].y - BAL.cell / 2),
     fieldRect: () => screenRect(-lay.hw - 0.6, lay.hh + 0.6, lay.hw + 0.6, -lay.hh - 0.6),
