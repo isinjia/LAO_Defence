@@ -22,8 +22,11 @@
 
   // decode() runs off the main thread (it may stall in a hidden tab: the load event + a short wait wins then)
   async function loadImage(url) {
-    // the deployed build ships the sheets scrambled (js/pack.js restores them in memory)
-    const src = window.PACKED && PACKED.on && HTTP ? await PACKED.url(url).catch(() => null) : url;
+    // the deployed build ships the sheets scrambled: restored straight to pixels in a canvas (no image URL that the
+    // browser's dev tools would list as a picture); a short-lived blob only where createImageBitmap is missing
+    const packed = window.PACKED && PACKED.on && HTTP;
+    if (packed) { const bm = await PACKED.bitmap(url).catch(() => null); if (bm) return PACKED.toCanvas(bm, 1); }
+    const src = packed ? await PACKED.url(url).catch(() => null) : url;
     if (!src) return null;
     const im = new Image();
     const loaded = new Promise((r) => { im.onload = () => r(im); im.onerror = () => r(null); });

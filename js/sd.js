@@ -219,19 +219,27 @@
       }
       s0 = atlasTag() === 'a35' ? 0.35 : s0;
     }
-    const im = new Image();
-    const loaded = new Promise((r) => { im.onload = im.onerror = r; });
-    // the deployed build ships the atlas scrambled (js/pack.js restores it in memory)
-    const src0 = window.PACKED && PACKED.on && HTTP ? await PACKED.url(a.u).catch(() => null) : a.u;
-    if (!src0) { if (a.v) a.u = undefined; return null; }
-    im.src = src0;
-    // decode() decodes off the main thread, but may wait indefinitely in a hidden tab: whichever settles first
-    await Promise.race([im.decode().catch(() => loaded), loaded.then(() => new Promise((r) => setTimeout(r, 250)))]);
-    if (src0 !== a.u) URL.revokeObjectURL(src0); // decoded: the blob is no longer needed
-    if (!im.naturalWidth) { if (a.v) a.u = undefined; return null; } // undecodable: refetch on retry
-    let src = im;
     const k = SD.texScale / s0;
-    if (k < 0.98) {
+    let src;
+    const packed = window.PACKED && PACKED.on && HTTP;
+    // the deployed build ships the atlas scrambled: restored straight to pixels in a canvas (no image URL that the
+    // browser's dev tools would list as a picture)
+    const bm = packed ? await PACKED.bitmap(a.u).catch(() => null) : null;
+    if (bm) src = PACKED.toCanvas(bm, Math.min(1, k));
+    else {
+      const im = new Image();
+      const loaded = new Promise((r) => { im.onload = im.onerror = r; });
+      const src0 = packed ? await PACKED.url(a.u).catch(() => null) : a.u; // no createImageBitmap: a short-lived blob
+      if (!src0) { if (a.v) a.u = undefined; return null; }
+      im.src = src0;
+      // decode() decodes off the main thread, but may wait indefinitely in a hidden tab: whichever settles first
+      await Promise.race([im.decode().catch(() => loaded), loaded.then(() => new Promise((r) => setTimeout(r, 250)))]);
+      if (src0 !== a.u) URL.revokeObjectURL(src0);
+      if (!im.naturalWidth) { if (a.v) a.u = undefined; return null; } // undecodable: refetch on retry
+      src = im;
+    }
+    if (src instanceof HTMLImageElement && k < 0.98) {
+      const im = src;
       await idle();
       src = document.createElement('canvas');
       src.width = Math.max(4, Math.round(im.width * k)); src.height = Math.max(4, Math.round(im.height * k));
