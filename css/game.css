@@ -473,11 +473,12 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 #loading.out { opacity: 0; pointer-events: none; }
 #loading .lbg { position: absolute; inset: 0; background: center 30% / cover no-repeat; opacity: 0.18; filter: grayscale(0.4); }
 #loading .lo { position: relative; width: min(380px, 70vw); aspect-ratio: var(--ar, 4.4); background: var(--logo) center / contain no-repeat; margin-bottom: 5vh; }
-#loading .ltip { position: relative; font-size: 15px; color: #c9d2da; margin-bottom: 14px; min-height: 1.4em; }
+/* the tip wraps inside the screen (a long tip ran off both edges), and the percentage sits under the bar, clear of it */
+#loading .ltip { position: relative; font-size: 15px; color: #c9d2da; margin-bottom: 14px; min-height: 1.4em; max-width: min(1200px, 88vw); line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere; }
 #loading .ltip b { color: var(--y); font-family: var(--en); font-weight: 700; margin-right: 8px; letter-spacing: 1px; }
 #loading .lbar { position: relative; width: min(1200px, 80vw); height: 14px; border-radius: 7px; background: rgba(33, 33, 33, 0.85); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
 #loading .lbar i { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 7px; background: linear-gradient(180deg, #ffe45c, #ffd800 50%, #e8b800); transition: width 0.2s; }
-#loading .lpct { position: absolute; right: 7vw; bottom: calc(7vh + 24px); font-family: var(--en); font-weight: 700; font-size: 34px; text-shadow: 0 0 0 #000, 2px 2px 0 #000; }
+#loading .lpct { position: relative; width: min(1200px, 80vw); margin-top: 8px; text-align: right; font-family: var(--en); font-weight: 700; font-size: 28px; line-height: 1; text-shadow: 0 0 0 #000, 2px 2px 0 #000; }
 
 /* ── settings (Panel_Setting: title bar, yellow section tabs, gauges and toggles) ── */
 .set { display: grid; grid-template-columns: 150px 1fr; gap: 16px; min-height: 260px; }
