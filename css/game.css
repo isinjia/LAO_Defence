@@ -294,6 +294,7 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 .btn.d { border-image-source: var(--s-btn13_d); color: #dfe6ec; }
 .btn:disabled { border-image-source: var(--s-btn13_d); color: #6c737a; }
 #btnContinue { margin-top: 10px; height: 44px; font-size: 18px; min-width: 220px; }
+#btnContinue[hidden] { display: none; } /* .btn sets display: without this a run-less title shows an empty button */
 #btnContinue small { font-family: var(--en); font-size: 13px; font-weight: 700; margin-left: 10px; color: var(--y); }
 .btn.lg { height: 64px; font-size: 26px; border-width: 0 35px 0 41px; border-image-width: 0 35px 0 41px; letter-spacing: 2px; }
 
@@ -615,7 +616,7 @@ body.paused #bottom, body.paused #ultBar { pointer-events: none; filter: brightn
   #titleChars .hx { width: 50px; height: 50px; }
   #titleChars { gap: 4px; }
   .logo .sub { letter-spacing: 5px; font-size: 14px; } .logo .sub::before, .logo .sub::after { width: 30px; }
-  .keys { display: none; } #title > #btnStart { margin-bottom: auto; }
+  .keys { display: none; } #title > .best { margin-bottom: auto; } /* the record sits right under the buttons; the spare height goes below it */
   .ver { position: static; align-self: center; margin-top: 6px; } /* in the flow under the best record, not on top of it */
   /* touch targets stay >= 44 px: the title scrolls rather than squeezing its buttons */
   #title > * { flex-shrink: 0; }
