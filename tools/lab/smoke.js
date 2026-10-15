@@ -58,6 +58,23 @@
       G().opt.autoUlt = true;
     });
 
+    test('one SSS on AUTO (long press) fires by itself; others wait; kept in the save', () => {
+      fresh(); G().opt.autoUlt = false;
+      GAME.debugAdd('constantia'); GAME.debugAdd('titania');
+      const a = G().cells[GAME.findCellOf('constantia')].units[0], b = G().cells[GAME.findCellOf('titania')].units[0];
+      UI.update(true); UI.toggleUltAuto(a); UI.update(true);
+      eq(a.autoUlt, true, 'toggled on'); eq(document.querySelectorAll('#ultBar .sk.auto').length, 1, 'one AUTO badge');
+      a.mana = 99; b.mana = 99;
+      for (let k = 0; k < 6; k++) GAME.tutSpawn(30);
+      GAME.simulate(4, false);
+      eq(a.mana < 99, true, 'the AUTO unit fired on its own'); eq(b.mana >= 99, true, 'the manual unit never fired by itself');
+      GAME.saveRun(); fresh(); GAME.resumeRun();
+      const a2 = G().cells[GAME.findCellOf('constantia')].units[0], b2 = G().cells[GAME.findCellOf('titania')].units[0];
+      eq(a2.autoUlt, true, 'AUTO kept by the save'); eq(!!b2.autoUlt, false, 'manual kept by the save');
+      UI.toggleUltAuto(a2); eq(a2.autoUlt, false, 'toggled off');
+      G().opt.autoUlt = true; GAME.clearRun();
+    });
+
     test('save -> resume restores the run exactly', () => {
       fresh(); for (let k = 0; k < 6; k++) GAME.summon(); GAME.simulate(150);
       GAME.debugAdd('titania'); G().cells[GAME.findCellOf('titania')].units[0].mana = 55;

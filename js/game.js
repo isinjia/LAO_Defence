@@ -54,9 +54,11 @@
     }
   }
 
-  // position along clockwise rectangle starting at top-left
+  // position along the clockwise rectangle; d = 0 is the spawn portal at the bottom-right corner
+  // (the walk is measured from the top-left, so the spawn sits half a lap, W + H, along it)
   function pathPos(d) {
     const { hw, hh } = lay;
+    d += lay.perim / 2;
     d = ((d % lay.perim) + lay.perim) % lay.perim;
     const W = hw * 2, H = hh * 2;
     if (d < W) return [-hw + d, hh];
@@ -262,7 +264,7 @@
     // spawn portal
     const portal = new THREE.Sprite(spriteMat(FX.tex.ring, 0xff3355, true));
     portal.scale.set(1.3, 1.3, 1);
-    portal.position.set(-hw, hh, 0);
+    portal.position.set(hw, -hh, 0); // the spawn point (pathPos(0)): bottom-right
     portal.renderOrder = L.PATH + 0.3;
     grp.add(portal);
     const pglow = new THREE.Sprite(spriteMat(FX.tex.glow, 0xff2244, true));
@@ -1371,11 +1373,13 @@
   function charge(u, e, k) {
     const d = u.def;
     if (!d.ult) return;
-    // players fire ultimates from the SSS cooldown buttons (or Q); only the balance bots / tests auto-cast
-    if (u.mana >= 100) { if (G.opt.autoUlt || G.labUlt) castUlt(u, e); return; }
+    // players fire ultimates from the SSS cooldown buttons (or Q); a unit set to AUTO (long press on its button)
+    // fires its own, and the balance bots / tests auto-cast everything
+    const auto = G.opt.autoUlt || G.labUlt || u.autoUlt;
+    if (u.mana >= 100) { if (auto) castUlt(u, e); return; }
     u.mana = Math.min(100, u.mana + d.mana * k * G.buff.mana);
     if (u.mana >= 100) {
-      if (G.opt.autoUlt || G.labUlt) castUlt(u, e);
+      if (auto) castUlt(u, e);
       else { UI.ultReady(); SFX.play('charge', 0.5); }
     }
   }
@@ -2113,7 +2117,8 @@
       ...Object.fromEntries(['wave', 'gold', 'gems', 'waveT', 'waveMax', 'spawnLeft', 'spawnT', 'bossT', 'bossMax', 'summons', 'pity', 'kills', 'time', 'peak', 'labUlt', 'hintUpg', 'rewardAt'].map((k) => [k, G[k]])),
       upg: G.upg, buff: G.buff, dmgBy: G.dmgBy,
       reward: G.reward ? G.reward.map((r) => BAL.rewards.indexOf(r)) : null,
-      cells: G.cells.map((c) => c.units.map((u) => (u.mana ? [u.def.id, Math.round(u.mana)] : u.def.id))), // SSS keep their ult charge
+      // SSS keep their ult charge and their own AUTO
+      cells: G.cells.map((c) => c.units.map((u) => (u.mana || u.autoUlt ? [u.def.id, Math.round(u.mana), u.autoUlt ? 1 : 0] : u.def.id))),
       enemies: G.enemies.filter((e) => e.alive).map((e) => {
         const o = Object.fromEntries(ENEMY_KEYS.map((k) => [k, e[k]]));
         lists.some((l, li) => { const i = l.indexOf(e.info); if (i >= 0) { o.list = li; o.idx = i; } return i >= 0; });
@@ -2147,9 +2152,9 @@
     s.cells.forEach((ids, i) => {
       if (!G.cells[i]) { dropped += ids.length; return; } // a smaller board in a later build
       ids.forEach((v) => {
-        const [id, mana] = Array.isArray(v) ? v : [v, 0], d = DATA.unit[id];
+        const [id, mana, auto] = Array.isArray(v) ? v : [v, 0, 0], d = DATA.unit[id];
         if (!d) { dropped++; return; } // a unit removed in a later build: refunded below
-        const u = makeUnit(d); u.mana = mana || 0;
+        const u = makeUnit(d); u.mana = mana || 0; u.autoUlt = !!auto;
         G.cells[i].units.push(u);
       });
       if (ids.length) layoutCell(i, true);

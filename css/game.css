@@ -156,16 +156,16 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 #bossBar.idle #bossName small { color: var(--mut); }
 #bossBar.idle #bossTime { color: var(--mut); font-size: 13px; }
 #bossBar.idle .gauge { visibility: hidden; }
-/* call the next wave early: floats over the field (top-left), never part of the HUD layout */
-.nextw { position: absolute; left: max(10px, env(safe-area-inset-left)); top: 10px; z-index: 4; height: 34px; padding: 0 16px 0 12px; gap: 8px;
+/* call the next wave early: at the spawn portal (bottom-right of the field), where the next wave comes from */
+.nextw { position: absolute; right: max(10px, env(safe-area-inset-right)); bottom: 10px; z-index: 4; height: 34px; padding: 0 12px 0 16px; gap: 8px;
   display: flex; align-items: center; background: linear-gradient(180deg, #ffd34d, #f0a800); color: #111; cursor: pointer;
-  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); animation: nextIn 0.25s ease-out; }
+  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%); animation: nextIn 0.25s ease-out; }
 .nextw[hidden] { display: none; }
 .nextw b { font-family: var(--en); font-weight: 900; font-style: italic; font-size: 15px; letter-spacing: 1px; }
 .nextw span { width: 16px; height: 14px; background: #111; clip-path: polygon(0 0, 50% 50%, 50% 0, 100% 50%, 50% 100%, 50% 50%, 0 100%); }
 .nextw:hover { filter: brightness(1.15); }
 .nextw:active { transform: scale(0.94); }
-@keyframes nextIn { from { opacity: 0; transform: translateX(-12px); } }
+@keyframes nextIn { from { opacity: 0; transform: translateX(12px); } }
 /* SSS ultimates: cooldown buttons in the footer, one per SSS on the board (never floating over the field).
    The veil (.cd) shrinks clockwise as --p (gauge 0..1) rises; full = lit, pulsing, ULT tag; a tap fires it */
 #ultBar { display: flex; align-items: center; gap: 8px; padding: 0 2px; }
@@ -179,6 +179,13 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 #ultBar .sk.ready { animation: ultPulse 0.9s ease-in-out infinite alternate; }
 #ultBar .sk.ready b { color: #111; background: #7ff0ff; border-color: #7ff0ff; }
 #ultBar .sk.nope { animation: skNope 0.3s; }
+/* this SSS on AUTO (long press): a gold badge on top and a gold rim; it fires by itself when full */
+#ultBar .sk .sa { display: none; position: absolute; left: 50%; top: -6px; transform: translateX(-50%); padding: 0 4px; font: 900 normal 9px/12px var(--en);
+  letter-spacing: 0.5px; color: #111; background: var(--y); border-radius: 2px; pointer-events: none; z-index: 1; }
+#ultBar .sk.auto .sa { display: block; }
+#ultBar .sk.auto::after { content: ''; position: absolute; inset: -3px; pointer-events: none; clip-path: polygon(50% 0, 96% 25%, 96% 75%, 50% 100%, 4% 75%, 4% 25%);
+  background: var(--y); z-index: -1; }
+#ultBar .sk { isolation: isolate; -webkit-touch-callout: none; touch-action: manipulation; }
 #ultBar .sk:active { transform: scale(0.94); }
 @keyframes skNope { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
 @keyframes ultPulse { from { filter: drop-shadow(0 0 2px #7ff0ff); } to { filter: drop-shadow(0 0 12px #7ff0ff) brightness(1.15); } }
@@ -790,6 +797,6 @@ html:not(:lang(ko)) .act b, html:not(:lang(ko)) .act small { white-space: nowrap
 .res b.gold { width: 5.2ch; } .res b.gems { width: 2.6ch; }
 @media (max-width: 720px), (orientation: landscape) and (max-height: 520px) {
   .round .rlabel { width: 74px; padding-left: 8px; padding-right: 16px; }
-  .nextw { height: 30px; top: 8px; } .nextw b { font-size: 13px; }
+  .nextw { height: 30px; bottom: 8px; } .nextw b { font-size: 13px; }
 }
 @media (max-width: 360px) { .round .rlabel { width: 70px; padding-right: 14px; } .res b.gold { width: 4.6ch; } }

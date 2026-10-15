@@ -706,19 +706,36 @@
     if (force || key !== bar._k) {
       bar._k = key; bar._list = list;
       bar.hidden = !list.length;
-      bar.innerHTML = list.map((u, i) => `<button class="sk" data-i="${i}" title="${T('궁극기 · {0}', u.def.ultName)}">${hex(u.def)}<span class="cd"></span><b>ULT</b></button>`).join('');
+      bar.innerHTML = list.map((u, i) => `<button class="sk" data-i="${i}" title="${T('궁극기 · {0}', u.def.ultName)} · ${T('길게 누르기: 이 유닛만 AUTO')}">${hex(u.def)}<span class="cd"></span><b>ULT</b><i class="sa">AUTO</i></button>`).join('');
+      bar.oncontextmenu = (e) => e.preventDefault(); // a long press must not open the browser's menu
       bar.querySelectorAll('.sk').forEach((b) => {
+        const unit = () => bar._list[+b.dataset.i];
+        // long press (0.5 s) or right click: this SSS alone fires its ultimate by itself; again to stop
+        let hold = 0;
+        const cancel = () => { clearTimeout(hold); hold = 0; };
+        b.onpointerdown = (e) => {
+          if (e.button > 0) return;
+          const u = unit();
+          cancel();
+          hold = setTimeout(() => { hold = 0; bar._noClick = performance.now() + 700; toggleUltAuto(u); }, 500);
+        };
+        b.onpointerup = b.onpointerleave = b.onpointercancel = cancel;
+        b.oncontextmenu = (e) => { e.preventDefault(); cancel(); if (performance.now() > (bar._noClick || 0)) { bar._noClick = performance.now() + 300; toggleUltAuto(unit()); } };
         b.onclick = () => {
-          const u = bar._list[+b.dataset.i];
+          if (performance.now() < (bar._noClick || 0)) return; // the release of a long press is not a tap
+          const u = unit();
           if (!u) return;
           if (u.mana >= 100) GAME.castUlt(u);
           else { SFX.play('fail', 0.5); b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); } // still charging
         };
       });
+      if (list.length) tip('ultauto', T('<b>궁극기 버튼</b>: 게이지가 차면 눌러서 발동합니다. <b>길게 누르면</b> 그 유닛만 AUTO로 자동 발동하고, 다시 길게 누르면 해제됩니다.'));
     }
     bar._list.forEach((u, i) => {
       const b = bar.children[i];
       if (!b) return;
+      // state changes in place (a rebuild under a finger would turn a tap into a long press)
+      if (b._a !== !!u.autoUlt) { b._a = !!u.autoUlt; b.classList.toggle('auto', b._a); }
       const p = Math.min(100, Math.floor(u.mana / 2) * 2); // 2% steps: the style is only written when it moves
       if (b._p === p) return;
       b._p = p;
@@ -727,8 +744,17 @@
       b.setAttribute('aria-label', `${u.def.name} · ${T('궁극기 · {0}', u.def.ultName)} ${p}%`);
     });
   }
-  // a charge completed, a cast, or the board changed: rebuild the buttons
-  function ultReady() { skills(true); }
+  // a charge completed, a cast, or the board changed (a new set of SSS rebuilds; anything else updates in place)
+  function ultReady() { skills(); }
+  // one SSS on AUTO: it fires whenever its gauge fills (kept when moved, and in the run save)
+  function toggleUltAuto(u) {
+    if (!u || u.dead || GAME.G.phase !== 'play') return;
+    u.autoUlt = !u.autoUlt;
+    SFX.play(u.autoUlt ? 'charge' : 'click', 0.6);
+    try { if (navigator.vibrate && GAME.G.opt.haptic) navigator.vibrate(u.autoUlt ? [12, 40, 12] : 10); } catch (e) { /* ignore */ }
+    toast(u.autoUlt ? T('{0} 궁극기 AUTO: 게이지가 차면 자동 발동', u.def.name) : T('{0} 궁극기 AUTO 해제', u.def.name), u.autoUlt ? 'gem' : '');
+    skills();
+  }
   // a boss fell in time: pick one boon (the game keeps running)
   function reward(list) {
     if (!el.reward) return;
@@ -823,5 +849,5 @@
     return (L && !L.hidden) || (el.title && !el.title.hidden);
   }
 
-  window.UI = { tip, ask, closeDrawer, covered, loading, loaded, init, update, toast, banner, announce, dmgNumber, ultCallout, result, ultReady, reward, onSelect, onCellsChanged, closePopup, togglePause };
+  window.UI = { tip, ask, closeDrawer, toggleUltAuto, covered, loading, loaded, init, update, toast, banner, announce, dmgNumber, ultCallout, result, ultReady, reward, onSelect, onCellsChanged, closePopup, togglePause };
 })();
