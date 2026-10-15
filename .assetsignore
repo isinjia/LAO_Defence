@@ -1,0 +1,17 @@
+# Not served by the Cloudflare deploy (wrangler.jsonc): only the game itself goes out
+.git
+.gitignore
+.assetsignore
+.nojekyll
+.claude
+.wrangler
+node_modules
+wrangler.jsonc
+tools
+*.md
+*.bat
+*.log
+sdlab.html
+sdcompare.html
+sdvisual.html
+fxcompare.html
