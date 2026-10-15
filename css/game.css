@@ -244,8 +244,12 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
   80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-50%) translateX(-6%); } }
 
 /* toasts: Panel_ToastMsg */
-#toasts { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; z-index: 3; }
-.toast { min-width: 280px; max-width: 86vw; text-align: center; padding: 10px 26px; font-size: 16px; color: var(--txt2); white-space: nowrap;
+#toasts { position: absolute; top: 14px; left: 12px; right: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; z-index: 3; }
+#toasts .toast { width: fit-content; max-width: min(620px, 100%); }
+@media (max-width: 720px) { .toast { font-size: 14px; padding: 8px 16px; } }
+/* a long message wraps inside its box (one line ran past the frame on phones) */
+.toast { min-width: min(280px, 100%); max-width: 100%; text-align: center; padding: 10px 22px; font-size: 16px; line-height: 1.4; color: var(--txt2);
+  white-space: normal; word-break: keep-all; overflow-wrap: anywhere;
   /* see-through: the field stays visible under a message (text keeps a shadow so it still reads over busy fights) */
   background: rgba(13, 22, 27, 0.55); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
   border: 10px solid transparent; border-image: var(--s-glowframe_y) 22 / 10px; margin: -4px 0; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
