@@ -233,7 +233,7 @@
     update(true);
   }
 
-  let setTab = 'sound';
+  let setTab = 'game';
   // settings persist per browser (optional: storage may be unavailable)
   function saveOpts() {
     try { localStorage.setItem('lao_rd_opts', JSON.stringify({ ...GAME.G.opt, fps30: GAME.G.opt.fps30 && !GAME.autoFps30, bgm: SFX.getVolume('bgm'), sfx: SFX.getVolume('sfx'), mute: SFX.userMuted, q: GAME.quality.auto ? 'auto' : GAME.quality.level })); } catch (e) { /* ignore */ }
@@ -310,17 +310,20 @@
       const pct = (k) => Math.round(SFX.getVolume(k) * 100);
       const seg = (key, val, a, b) => `<div class="seg" data-opt="${key}"><button class="${val ? 'on' : ''}" data-v="1">${a}</button><button class="${val ? '' : 'on'}" data-v="0">${b}</button></div>`;
       const tab = setTab;
-      h += winHead(T('설정'), T('사운드와 전투 표시 옵션')) + `<div class="wb"><div class="set">
-        <div class="tabs"><button class="tab ${tab === 'sound' ? 'on' : ''}" data-tab="sound">${T('사운드')}</button><button class="tab ${tab === 'game' ? 'on' : ''}" data-tab="game">${T('전투 표시')}</button><button class="tab ${tab === 'lang' ? 'on' : ''}" data-tab="lang">${T('언어')}</button></div>
+      // 화면 first (fullscreen, quality: what players look for), then sound and language
+      const fsOk = document.fullscreenEnabled || document.webkitFullscreenEnabled;
+      const fsOn = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      h += winHead(T('설정'), T('화면 · 사운드 · 언어')) + `<div class="wb"><div class="set">
+        <div class="tabs"><button class="tab ${tab === 'game' ? 'on' : ''}" data-tab="game">${T('화면')}</button><button class="tab ${tab === 'sound' ? 'on' : ''}" data-tab="sound">${T('사운드')}</button><button class="tab ${tab === 'lang' ? 'on' : ''}" data-tab="lang">${T('언어')}</button></div>
         <div class="rows">${tab === 'lang' ? `
           <div class="langs">${I18N.langs.map((c, k) => `<button class="${I18N.lang === c ? 'on' : ''}" data-lang="${c}" lang="${c}">${I18N.labels[k]}</button>`).join('')}</div>` : tab === 'sound' ? `
           <div class="row2"><span>${T('배경음')}</span><input type="range" min="0" max="100" value="${pct('bgm')}" data-vol="bgm" aria-label="${T('배경음 볼륨')}"><b class="val">${pct('bgm')}</b></div>
           <div class="row2"><span>${T('효과음')}</span><input type="range" min="0" max="100" value="${pct('sfx')}" data-vol="sfx" aria-label="${T('효과음 볼륨')}"><b class="val">${pct('sfx')}</b></div>
           <div class="row2"><span>${T('음소거')}</span>${seg('mute', SFX.userMuted, T('켜기'), T('끄기'))}</div>` : `
+          <div class="row2"><span>${T('전체 화면')}</span>${fsOk ? seg('fs', fsOn, T('켜기'), T('끄기')) : `<small>${T('이 브라우저는 전체 화면을 지원하지 않습니다. 브라우저 메뉴의 [홈 화면에 추가]로 설치하면 전체 화면으로 실행됩니다.')}</small>`}</div>
           <div class="row2"><span>${T('데미지 숫자')}</span>${seg('dmg', o.dmg, T('표시'), T('숨김'))}<small>${T('원작 데미지 폰트')}</small></div>
           <div class="row2"><span>${T('화면 흔들림')}</span>${seg('shake', o.shake, T('켜기'), T('끄기'))}<small>${T('보스·폭발 연출')}</small></div>
           <div class="row2"><span>${T('그래픽 품질')}</span><div class="seg" data-opt="quality">${['auto', 0, 1, 2].map((v) => `<button class="${(v === 'auto' ? GAME.quality.auto : !GAME.quality.auto && GAME.quality.level === v) ? 'on' : ''}" data-v="${v}">${v === 'auto' ? T('자동') : T(GAME.quality.names[v])}</button>`).join('')}</div><small>${GAME.quality.auto ? T('현재 {0}', T(GAME.quality.names[GAME.quality.level])) : ''}</small></div>
-          ${document.fullscreenEnabled ? `<div class="row2"><span>${T('전체 화면')}</span>${seg('fs', !!document.fullscreenElement, T('켜기'), T('끄기'))}</div>` : ''}
           ${navigator.vibrate ? `<div class="row2"><span>${T('진동')}</span>${seg('haptic', o.haptic, T('켜기'), T('끄기'))}<small>${T('소환 · 합성 · 위치 교환 · 보스')}</small></div>` : ''}
           <div class="row2"><span>${T('프레임 제한')}</span>${seg('fps30', !o.fps30, '60fps', '30fps')}<small>${T('30fps는 배터리 절약')}</small></div>
           <div class="row2"><span>${T('배속')}</span><div class="seg" data-opt="speed">${[1, 2, 3].map((v) => `<button class="${GAME.G.speed === v ? 'on' : ''}" data-v="${v}">x${v}</button>`).join('')}</div></div>`}
@@ -356,7 +359,13 @@
     el.drawer.querySelectorAll('[data-opt] button').forEach((b) => {
       b.onclick = () => {
         const k = b.parentElement.dataset.opt, v = +b.dataset.v;
-        if (k === 'fs') { (v ? document.documentElement.requestFullscreen({ navigationUI: 'hide' }) : document.exitFullscreen()).catch(() => {}).then(() => renderDrawer()); return; }
+        if (k === 'fs') {
+          const d = document, de = d.documentElement; // older WebKit only has the prefixed calls
+          const go = v ? (de.requestFullscreen ? de.requestFullscreen({ navigationUI: 'hide' }) : de.webkitRequestFullscreen && de.webkitRequestFullscreen())
+            : (d.exitFullscreen ? d.exitFullscreen() : d.webkitExitFullscreen && d.webkitExitFullscreen());
+          Promise.resolve(go).catch(() => {}).then(() => setTimeout(renderDrawer, 100));
+          return;
+        }
         if (k === 'quality') GAME.setQuality(b.dataset.v === 'auto' ? GAME.quality.level : v, b.dataset.v === 'auto' ? 'auto' : 'manual');
         else if (k === 'mute') SFX.setMuted(!!v);
         else if (k === 'speed') GAME.G.speed = v;

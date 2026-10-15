@@ -447,16 +447,25 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 #tut .tpanel.top { top: max(12px, env(safe-area-inset-top)); }
 #tut .tpanel.bottom { bottom: max(12px, env(safe-area-inset-bottom)); }
 #tut .tpanel.mid { top: 50%; transform: translate(-50%, -50%); }
-#tut .tstep { font-family: var(--en); font-weight: 700; font-size: 12px; letter-spacing: 2px; color: var(--y); margin-bottom: 6px; }
-#tut .ttx { font-size: 16px; line-height: 1.55; color: #eef2f5; min-height: 2.6em; }
+/* header row: step counter on the left, a small skip link on the right (keeps the panel short) */
+#tut .thead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: -6px 0 2px; }
+#tut .tstep { font-family: var(--en); font-weight: 700; font-size: 12px; letter-spacing: 2px; color: var(--y); }
+#tut .tskip { min-height: 36px; padding: 0 2px 0 12px; font-size: 13px; color: #9fb0bc; text-decoration: underline; text-underline-offset: 3px; }
+#tut .tskip:hover { color: #fff; }
+#tut .ttx { font-size: 16px; line-height: 1.55; color: #eef2f5; }
 #tut .ttx b { color: var(--y); }
 #tut .ttx kbd { font-size: 12px; }
-#tut .tbtns { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; }
-#tut .tbtns .btn { height: 44px; min-width: 0; padding: 0 6px; font-size: 16px; border-width: 0 22px 0 26px; border-image-width: 0 22px 0 26px; }
-#tut .tbtns .tskip { font-size: 14px; }
-#tut .tbtns .tnext { margin-left: auto; min-width: 150px; }
-#tut .tbtns .tnext[hidden] { display: none; }
-@media (max-width: 720px) { #tut .ttx { font-size: 14px; } #tut .tbtns .tnext { min-width: 120px; } }
+#tut .tbtns { display: flex; justify-content: flex-end; margin-top: 10px; }
+#tut .tbtns[hidden] { display: none; }
+#tut .tbtns .btn { height: 44px; min-width: 150px; padding: 0 6px; font-size: 16px; border-width: 0 22px 0 26px; border-image-width: 0 22px 0 26px; }
+/* field steps: docked over the footer (locked during them) so the path along the top and sides stays clear */
+#tut .tpanel.dock { bottom: max(4px, env(safe-area-inset-bottom)); padding: 4px 12px 7px; border-top-width: 2px; background: rgba(8, 10, 14, 0.93); }
+#tut .tpanel.dock .thead { margin: 0; }
+#tut .tpanel.dock .tskip { min-height: 30px; }
+#tut .tpanel.dock .ttx { font-size: 13px; line-height: 1.4; }
+@media (max-width: 720px) { #tut .ttx { font-size: 14px; } #tut .tbtns .btn { min-width: 120px; } }
+/* sideways phones: the footer is a right-hand rail, so the docked panel sits over it instead of over the path */
+@media (orientation: landscape) and (max-height: 520px) { #tut .tpanel.dock { left: auto; right: max(4px, env(safe-area-inset-right)); transform: none; width: 220px; } }
 #askOv { position: fixed; inset: 0; display: grid; place-items: center; z-index: 60; background: rgba(0, 0, 0, 0.6); }
 #askOv[hidden] { display: none; }
 .dlg { width: 100%; min-height: 29%; justify-content: center; padding: 30px 16px 32px; display: flex; flex-direction: column; align-items: center; gap: 10px; background: rgba(5, 6, 8, 0.93);

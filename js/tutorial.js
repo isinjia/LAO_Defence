@@ -41,6 +41,7 @@
           : T('같은 유닛 3기가 한 칸에 모였습니다. 그 칸을 눌러 보세요.') + (mobile ? '' : ' <kbd>M</kbd>')),
       },
       {
+        dock: true,
         target: () => GAME.fieldRect(),
         done: () => G().tut.swapped,
         exit: () => { G().selected = -1; UI.closePopup(); },
@@ -48,6 +49,7 @@
       },
       {
         // practice enemies: a few weak ones walk the path while the squad shoots them down
+        dock: true,
         enter: () => {
           const t = G().tut;
           const extra = DATA.byTier(0).filter((d) => d.type !== 'melee');
@@ -88,8 +90,8 @@
     ov.id = 'tut';
     ov.hidden = true;
     ov.innerHTML = '<div class="tb"></div><div class="tb"></div><div class="tb"></div><div class="tb"></div><div class="tring"></div>' +
-      '<div class="tpanel" role="dialog" aria-live="polite"><div class="tstep"></div><div class="ttx"></div>' +
-      '<div class="tbtns"><button class="btn d tskip"></button><button class="btn tnext"></button></div></div>';
+      '<div class="tpanel" role="dialog" aria-live="polite"><div class="thead"><div class="tstep"></div><button class="tskip"></button></div><div class="ttx"></div>' +
+      '<div class="tbtns"><button class="btn tnext"></button></div></div>';
     document.body.appendChild(ov);
     ov.querySelector('.tskip').onclick = () => { SFX.play('click'); finish(false); };
     ov.querySelector('.tnext').onclick = () => { SFX.play('click'); go(idx + 1); };
@@ -141,10 +143,12 @@
     if (p._h !== html) { p._h = html; p.querySelector('.ttx').innerHTML = html; }
     const nx = p.querySelector('.tnext');
     nx.hidden = !!s.done && !s.cleared;
+    p.querySelector('.tbtns').hidden = nx.hidden; // no empty button row: the panel stays as short as it can
     nx.textContent = s.next ? s.next() : T('다음');
-    // the panel sits on the side away from the lit area
+    // the panel sits on the side away from the lit area; on the field steps it docks over the (locked) footer so the
+    // whole path, where the enemies walk, stays in view
     const below = !hole || (hole[1] + hole[3]) / 2 < innerHeight * 0.5;
-    const pos = !hole ? 'mid' : below ? 'bottom' : 'top';
+    const pos = s.dock ? 'dock' : !hole ? 'mid' : below ? 'bottom' : 'top';
     if (p._pos !== pos) { p._pos = pos; p.className = 'tpanel ' + pos; }
   }
 
