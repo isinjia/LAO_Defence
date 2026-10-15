@@ -1607,7 +1607,7 @@
   function step(dt) {
     G.time += dt;
     if (G.won) { G.winT -= dt; if (G.winT <= 0) endGame(true); return; }
-    // AUTO: the player's own toggle (summon / merge / upgrade; never crafts SSS, sells units or bets tuna)
+    // AUTO: the player's own toggle (summon / merge; never upgrades, crafts SSS, sells units or bets tuna)
     if (G.opt.auto && G.phase === 'play') {
       G.autoT = (G.autoT || 0) - dt;
       if (G.autoT <= 0) { G.autoT = 0.4; autoplay(false); }
@@ -2217,18 +2217,20 @@
     out.push({ wave: G.wave, enemies: G.enemies.length, gold: G.gold, gems: G.gems, units: G.cells.reduce((a, c) => a + c.units.length, 0), phase: G.phase });
     return out;
   }
-  // sell: the balance bot may sell weak singles to make room; the player's AUTO never does
-  // (nor does it craft SSS: which recipe to spend the parts on is the player's call)
+  // sell: the balance bot (crafts SSS, upgrades, sells weak singles for room, bets tuna). The player's AUTO only
+  // summons and merges: SSS recipes, upgrades, sales and tuna are the player's calls
   function autoplay(sell = true) {
     if (sell) RECIPES.forEach((r, i) => { if (canCraft(r)) craft(i, true); });
     G.cells.forEach((c, i) => { if (c.units.length === 3 && c.units[0].def.tier < 3) merge(i, true); });
     if (G.reward && G.time - (G.rewardAt || 0) > 6) autoReward(true);
-    const [best, bv] = bestUpgrade();
-    const empty = anyEmpty();
-    // the better buy per part: an upgrade, or a summon (a full board leaves upgrades only: AUTO never sells for room)
-    if (best && (bv > summonValue() || !empty)) {
-      if (G.gold >= best.cost(G.upg[best.key])) upgrade(best.key);
-      else if (!empty || bv > summonValue() * 2) return; // save up for it
+    if (sell) {
+      const [best, bv] = bestUpgrade();
+      const empty = anyEmpty();
+      // the better buy per part: an upgrade, or a summon (a full board leaves upgrades only)
+      if (best && (bv > summonValue() || !empty)) {
+        if (G.gold >= best.cost(G.upg[best.key])) upgrade(best.key);
+        else if (!empty || bv > summonValue() * 2) return; // save up for it
+      }
     }
     while (G.gold >= summonCost() && anyEmpty()) summon();
     if (!anyEmpty() && G.gold >= summonCost()) {

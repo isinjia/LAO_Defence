@@ -36,6 +36,14 @@
       eq(L[got[0]].y <= Math.min(...L.map((c) => c.y)) + 0.01 && L[got[0]].x >= Math.max(...L.map((c) => c.x)) - 0.01, true, 'first unit in the bottom-right cell');
     });
 
+    test("the player's AUTO summons and merges, never upgrades", () => {
+      fresh(); G().gold = 3000; G().opt.auto = true;
+      GAME.simulate(3, false); // AUTO runs inside the game step
+      G().opt.auto = false;
+      eq(nUnits() > 0, true, 'summoned');
+      eq(Object.values(G().upg).every((v) => v === 0), true, 'no upgrade bought');
+    });
+
     test('merge: 3 of a kind -> one unit of the next rank, selected', () => {
       fresh(); G().gold = 1e6;
       const id = DATA.UNITS.find((u) => u.tier === 0).id;

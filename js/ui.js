@@ -262,7 +262,7 @@
     const o = GAME.G.opt;
     o.auto = !o.auto;
     SFX.play('click');
-    toast(o.auto ? T('AUTO 진행: 소환 · 합성 · 강화를 자동으로 합니다') : T('AUTO 해제'), o.auto ? 'gem' : '');
+    toast(o.auto ? T('AUTO 진행: 소환 · 합성을 자동으로 합니다') : T('AUTO 해제'), o.auto ? 'gem' : '');
     saveOpts();
     update(true);
   }
