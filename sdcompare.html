@@ -1,0 +1,83 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>SD Compare</title>
+<style>body{margin:0;background:#111;color:#ddd;font:12px monospace;padding:12px}table{border-collapse:collapse}td,th{padding:2px 8px;border-bottom:1px solid #333;text-align:right}td:first-child,th:first-child{text-align:left}</style></head>
+<body><h3>SD rig vs Unity ground truth</h3><div id="out">running…</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/sd.js"></script>
+<script>
+// Compares js/sd.js against tools/unity_ref/proj/out/<id>_<clip>.json (Unity SampleAnimation + Puppet2D).
+// Pass = position error < POS_TOL * body height AND rotation error < ROT_TOL degrees,
+// over every rendered node (sprite or skinned part) on every frame.
+const POS_TOL = 0.01, ROT_TOL = 3;
+const ONLY = new URLSearchParams(location.search).get('ids');
+
+async function compare(id, clipKey) {
+  const r = await fetch('tools/unity_ref/proj/out/' + id + '_' + clipKey + '.json');
+  if (!r.ok) return null;
+  const ref = await r.json();
+  const tpl = await SD.prepare(id);
+  if (!tpl || !tpl.data.clips[clipKey]) return null;
+  const c = SD.create(id);
+  // pair nodes by path; duplicated sibling paths are paired by occurrence order
+  const refByPath = {};
+  ref.paths.forEach((p, i) => { (refByPath[p] = refByPath[p] || []).push(i); });
+  const myByPath = {};
+  tpl.data.nodes.forEach((n, i) => { (myByPath[n.path] = myByPath[n.path] || []).push(i); });
+  const pair = {};
+  for (const [p, mine] of Object.entries(myByPath)) {
+    const rs = refByPath[p];
+    if (!rs || rs.length !== mine.length) continue; // ambiguous after pruning
+    mine.forEach((i, k) => { pair[i] = rs[k]; });
+  }
+  const nodes = [...new Set(tpl.rends.map((x) => x.node))].filter((i) => pair[i] != null);
+  const H = tpl.height;
+  c.play(clipKey, null, true);
+  let pass = 0, total = 0, sumPos = 0, sumRot = 0;
+  const worst = {};
+  const n = ref.frames.length;
+  for (let f = 0; f < n; f++) {
+    c.time = Math.min(c.clip.dur, f / 24);
+    c.apply();
+    c.render();
+    const fr = ref.frames[f];
+    for (const i of nodes) {
+      const rv = fr[pair[i]];
+      if (!rv[9] && !c.EA[i]) continue; // hidden in both
+      if (!rv[9] !== !c.EA[i]) { // shown/hidden mismatch
+        total++; const nm = tpl.data.nodes[i].n + '(act)'; worst[nm] = (worst[nm] || 0) + 1; continue;
+      }
+      const p = c.posU(i), q = c.rotU(i);
+      const dp = Math.hypot(p[0] - rv[0], p[1] - rv[1]) / H;
+      const dot = Math.min(1, Math.abs(q[0] * rv[3] + q[1] * rv[4] + q[2] * rv[5] + q[3] * rv[6]));
+      const dr = 2 * Math.acos(dot) * 180 / Math.PI;
+      total++; sumPos += dp; sumRot += dr;
+      const ok = dp < POS_TOL && dr < ROT_TOL;
+      if (ok) pass++;
+      else { const nm = tpl.data.nodes[i].n; worst[nm] = (worst[nm] || 0) + 1; }
+    }
+  }
+  c.dispose();
+  const w = Object.entries(worst).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => k + ':' + v).join(' ');
+  return { id, clipKey, score: total ? 100 * pass / total : 0, total, pos: sumPos / total * 100, rot: sumRot / total, worst: w };
+}
+
+(async () => {
+  const rows = [];
+  const jobs = (await (await fetch('tools/unity_ref/proj/jobs.txt')).text()).trim().split(String.fromCharCode(10)).map((l) => l.trim().split('|'));
+  for (const [id, , k] of jobs) {
+    if (ONLY && !ONLY.split(',').includes(id)) continue;
+    const r = await compare(id, k);
+    if (r) rows.push(r);
+    document.getElementById('out').textContent = 'running… ' + rows.length + '/' + jobs.length;
+  }
+  const tot = rows.reduce((a, r) => a + r.total, 0);
+  const overall = rows.reduce((a, r) => a + r.score * r.total, 0) / tot;
+  const perRig = {};
+  rows.forEach((r) => { (perRig[r.id] = perRig[r.id] || []).push(r); });
+  const rigScores = Object.entries(perRig).map(([id, rs]) => [id, rs.reduce((a, r) => a + r.score * r.total, 0) / rs.reduce((a, r) => a + r.total, 0)]);
+  window.RIGS = rigScores;
+  window.RESULT = { overall, rows };
+  document.getElementById('out').innerHTML = `<p>min rig ${Math.min(...rigScores.map((x) => x[1])).toFixed(2)} · rigs ${rigScores.length} · clips ${rows.length}</p><p>OVERALL ${overall.toFixed(2)} / 100 (tol: pos ${POS_TOL * 100}% height, rot ${ROT_TOL}°)</p><table><tr><th>rig</th><th>clip</th><th>score</th><th>samples</th><th>mean pos err %H</th><th>mean rot err °</th><th>worst nodes</th></tr>` +
+    rows.map((r) => `<tr><td>${r.id}</td><td>${r.clipKey}</td><td>${r.score.toFixed(1)}</td><td>${r.total}</td><td>${r.pos.toFixed(2)}</td><td>${r.rot.toFixed(2)}</td><td>${r.worst}</td></tr>`).join('') + '</table>';
+})();
+</script></body></html>

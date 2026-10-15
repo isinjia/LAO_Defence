@@ -1,0 +1,32 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>SD Lab</title>
+<style>body{margin:0;background:#2a3346;color:#fff;font:12px monospace}canvas{display:block}#ui{position:fixed;left:8px;top:8px}</style></head>
+<body><div id="ui"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/sd.js"></script>
+<script>
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const aspect = innerWidth / innerHeight;
+const camera = new THREE.OrthographicCamera(-4 * aspect, 4 * aspect, 4, -4, -100, 100);
+const chars = [];
+window.LAB = { scene, camera, chars };
+async function add(id, x) {
+  const t = await SD.prepare(id);
+  const c = SD.create(id);
+  const k = 3 / t.height;
+  c.root.scale.set(k, k, 1);
+  c.root.position.set(x - (t.box.min.x + t.box.max.x) / 2 * k, -2 - t.box.min.y * k, 0);
+  c.setOrder(1);
+  scene.add(c.root);
+  chars.push(c);
+  return c;
+}
+window.addChar = add;
+let last = 0;
+(function loop(t) { requestAnimationFrame(loop); const dt = Math.min(0.05, (t - last) / 1000 || 0); last = t; chars.forEach(c => c.update(dt)); renderer.render(scene, camera); })();
+const ids = (new URLSearchParams(location.search).get('ids') || 'brownie').split(',');
+ids.forEach((id, i) => add(id, (i - (ids.length - 1) / 2) * 3.2));
+</script></body></html>

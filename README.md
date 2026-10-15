@@ -1,0 +1,78 @@
+# 오르카 랜덤 디펜스
+
+라스트오리진 에셋으로 만든 HTML 랜덤 디펜스 (운빨존망겜 / 나루토 랜덤 디펜스 스타일).
+렌더링·이펙트는 three.js(r128, CDN)로 처리합니다.
+
+## 실행
+
+`index.html`을 브라우저로 바로 열거나, 개발 서버로 실행:
+
+```
+python tools/serve.py 8765
+```
+
+→ http://localhost:8765
+
+## 규칙
+
+- **소환**: 골드로 무작위 유닛 소환 (일반 / 희귀 / 영웅 / 전설). 소환할수록 비용 +1.
+- **합성**: 같은 유닛 3기가 한 칸에 모이면 상위 등급 무작위 유닛으로 합성.
+- **신화 조합**: 지정 재료 3종 → 궁극기를 쓰는 신화 유닛.
+- **도박**: 보석으로 희귀(60%) / 영웅(20%) / 전설(10%)에 도전.
+- **강화**: 등급군별 공격력 강화, 소환 확률 강화.
+- 필드의 적이 100마리(폭주한 보스·엘리트는 여러 마리로 계산)가 되면 패배.
+- 10웨이브마다 보스. 제한 시간 안에 못 잡으면 폭주해 필드에 남습니다. 80웨이브 최종 보스는 30초 추가 시간 안에 반드시 처치해야 승리.
+- 새 작전(작전 개시·재출격·일일 작전)은 항상 **튜토리얼**로 시작합니다. 실제 전장에서 소환 → 합성 → 이동 → 연습용 적 방어 → 강화를
+  직접 해 보고, 조합·도박·배속/AUTO·보스 안내를 본 뒤 본 작전이 깨끗한 상태로 시작됩니다. 언제든 **튜토리얼 건너뛰기** 가능(이어하기는 제외).
+- 진행 상황은 웨이브마다·탭을 닫을 때 자동 저장되어 타이틀의 **이어하기**로 재개합니다(일일 작전 제외).
+- 조작: `Space` 소환, `M` 합성(선택한 칸 또는 첫 3기 칸), `1/2/3` 배속, `N` 다음 웨이브 호출, `A` AUTO, `Q` 궁극기,
+  `G` 도박, `U` 강화, `C` SSS 조합, `P`/`Esc` 일시정지, 유닛 드래그로 칸 교환, 적 탭으로 집중 공격.
+
+## 테스트
+
+개발 서버 실행 후 `http://localhost:8765/?smoke=1` — 부팅·소환·합성·일시정지·저장/이어하기·튜토리얼·최종 보스·80웨이브 클리어를
+자동으로 확인하고 결과를 화면에 표시합니다(`tools/lab/smoke.js`, 플레이어 기록은 건드리지 않음).
+
+## 에셋 빌드
+
+원본: `E:/LAO/Google_QA/Assets` (Unity 프로젝트)
+
+| 단계 | 명령 | 결과 |
+|---|---|---|
+| 아이콘·배경·사운드 | `python tools/build_assets.py` | `js/assets.js`, `assets/` |
+| SD 리그 1차 | `python tools/build_sd.py` / `python tools/build_sd.py enemies` | `js/sd/*.js`, `tools/lab/fbx_manifest.json` |
+| FBX 스킨 메쉬 추출 | 서버 실행 후 `http://localhost:8765/tools/lab/fbxdump.html` 열기 | `tools/lab/out/*.json` |
+| SD 리그 최종 | `build_sd.py` 다시 실행 | 머리카락·옷자락 포함된 `js/sd/*.js` |
+
+SD 캐릭터(아군 26명, 적 23종)는 프리팹(Transform 트리 + SpriteRenderer + SkinnedMeshRenderer)과
+`.anim` 클립(Euler/Position/Scale/활성/스프라이트 교체 커브)을 변환해 `js/sd.js`에서 재구성·재생합니다.
+캐릭터 하나는 텍스처 아틀라스 1장 + 동적 버텍스 버퍼 1개(드로우콜 1~2회)로 그려집니다.
+
+`sdlab.html?ids=brownie,e_Centurion_N` — SD 리그 단독 확인용 페이지 (콘솔에서 `LAB.chars[0].play('atk')`).
+
+### 원작 일치 검증
+
+SD 리그는 Puppet2D(2D 컷아웃 플러그인)로 만들어져 있어, 팔다리는 런타임 IK로 움직입니다.
+`js/sd.js`는 원본 `Puppet2D_GlobalControl/IKHandle/ParentControl` 로직을 Unity 좌표계·쿼터니언 규칙 그대로 옮겼습니다
+(음수 스케일 하의 `Transform.rotation`, 애니메이션되는 `Flip`/`OnOff`, 가중치 탄젠트 커브 포함).
+
+1. `python tools/unity_ref/setup.py all` — 원본 프리팹·클립·Puppet2D 스크립트(GUID 유지)로 검증용 Unity 프로젝트 생성
+2. Unity 6000.0.58f2 배치 실행 → `tools/unity_ref/proj/out/*.json` (프레임별 모든 본의 월드 위치/회전/활성)
+   ```
+   Unity.exe -batchmode -nographics -projectPath tools/unity_ref/proj -executeMethod RefDump.Run
+   ```
+3. `sdcompare.html` — 렌더링되는 모든 파츠 노드를 프레임마다 비교 (위치 오차 < 키의 1%, 회전 오차 < 3°, 표시 여부 일치)
+
+결과: 49개 리그 × 291클립(97만 샘플) **99.98점**, 최저 리그 99.81점.
+
+### 외형 일치 검증 (`sdvisual.html`)
+
+`RefRender.Run`이 찍은 Unity 렌더(441포즈)와 웹 렌더를 실루엣 IoU·색 차이로 비교합니다.
+외형 재현을 위해 `RefMesh.Run`(`tools/unity_ref/Mesh.cs`)이 Unity가 실제로 쓰는 데이터를 내보냅니다.
+
+- 스킨/정적 메시(바인드포즈·머티리얼 포함). `_MainTex`가 없는 Shader Forge 셰이더(`_Diffuse` 등)도 텍스처를 찾음
+- 스프라이트 시트의 **타이트 스프라이트 메시**(`spriteMesh`) — 사각 쿼드로 그리면 촘촘히 배치된 이웃 스프라이트가 비침
+- 애니메이션: `m_FlipY`, `m_SortingOrder`(그리기 순서가 바뀌면 인덱스 버퍼를 재정렬) 지원
+- 머티리얼: `_Cull`(3D 이펙트 메시의 뒷면 컬링), LO 셰이더의 `_Src/_Dst = One/One` 가산 블렌드,
+  `_MainTex_ST` 타일링·스크롤(아틀라스 안에서 텍스처 영역 기준 `fract` 반복, 셰이더 주입)
+- 비교 시 레거시 가산 파티클 셰이더의 `ColorMask RGB`를 흉내 냄(투명 PNG에 알파를 쓰지 않음; 게임 화면은 불투명이라 정상 표시)

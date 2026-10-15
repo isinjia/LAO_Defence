@@ -1,0 +1,52 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>FBX dump</title></head>
+<body><pre id="log">working…</pre>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/fflate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/curves/NURBSUtils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/curves/NURBSCurve.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+<script>
+// Extracts skinned-mesh data from every FBX listed in fbx_manifest.json and saves
+// one JSON per FBX into tools/lab/out/ (via the dev server's PUT handler).
+// some rigs attach skin deformers to non-mesh nodes; let FBXLoader skip those
+if (!THREE.Object3D.prototype.bind) THREE.Object3D.prototype.bind = function () {};
+const log = (s) => { document.getElementById('log').textContent += '\n' + s; };
+const r = (a, k) => Array.from(a, (v) => Math.round(v * k) / k);
+async function dump(key) {
+  const obj = await new Promise((res, rej) => new THREE.FBXLoader().load('fbx/' + key + '.fbx', res, undefined, rej));
+  const meshes = [], bonePos = {};
+  obj.traverse((o) => {
+    if (o.isBone && !(o.name in bonePos)) bonePos[o.name] = r(o.position.toArray(), 1e4);
+    if (!o.isSkinnedMesh) return;
+    const g = o.geometry;
+    const idx = g.index ? Array.from(g.index.array) : [...Array(g.attributes.position.count).keys()];
+    meshes.push({
+      name: o.name,
+      bones: o.skeleton.bones.map((b) => b.name),
+      inv: o.skeleton.boneInverses.map((m) => r(m.elements, 1e5)),
+      bind: r(o.bindMatrix.elements, 1e5),
+      pos: r(g.attributes.position.array, 1e3),
+      uv: g.attributes.uv ? r(g.attributes.uv.array, 1e4) : [],
+      si: Array.from(g.attributes.skinIndex.array),
+      sw: r(g.attributes.skinWeight.array, 1e3),
+      idx,
+    });
+  });
+  await fetch('out/' + key + '.json', { method: 'PUT', body: JSON.stringify({ meshes, bonePos }) });
+  return meshes.length;
+}
+(async () => {
+  const man = await (await fetch('fbx_manifest.json')).json();
+  const keys = Object.keys(man);
+  const only = new URLSearchParams(location.search).get('only');
+  let done = 0;
+  for (const k of keys) {
+    if (only && !only.split(',').includes(k)) continue;
+    try { log(k + ': ' + await dump(k) + ' meshes'); } catch (e) { log(k + ': FAIL ' + e); }
+    done++;
+  }
+  log('DONE ' + done);
+  window.DONE = true;
+})();
+</script></body></html>

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0c0e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="오르카 디펜스">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<title>오르카 랜덤 디펜스</title>
+<link rel="stylesheet" href="css/game.css">
+<script defer src="js/ui_assets.js"></script>
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div class="round" id="roundBox">
+      <div class="rlabel"><small>WAVE</small><b id="waveNum">1<i>/80</i></b></div>
+      <div class="rbody">
+        <div class="rtop"><span class="rtitle" id="waveName">작전 대기</span><span class="rtime"><i class="ico"></i><span id="waveTime"></span></span></div>
+        <div class="gauge"><i id="waveBar"></i></div>
+      </div>
+    </div>
+    <div class="enemy" id="enemyBox" title="필드의 적이 100기가 되면 작전 실패">
+      <span class="eicon"></span>
+      <div class="ebody"><div class="etop"><span>적 개체 수</span><b id="enemyNum">0 / 100</b></div><div class="gauge r"><i id="enemyBar"></i></div></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="res" title="부품: 소환·강화 / 참치: 도박">
+      <span class="ri gear"></span><b id="gold" class="gold">0</b><span class="sep"></span><span class="ri tuna"></span><b id="gems" class="gems">0</b>
+    </div>
+    <button class="rbtn" id="btnSound" title="사운드" aria-label="사운드"><span class="g music"></span></button>
+    <button class="rbtn" id="btnSettings" title="설정" aria-label="설정"><span class="g gear"></span></button>
+    <button class="rbtn" id="btnPause" title="일시 정지 (P)" aria-label="일시 정지"><span class="g pause"></span></button>
+  </header>
+
+  <main id="stage">
+    <div id="numLayer"></div>
+    <div id="bossBar" hidden><div class="bimg" id="bossImg"></div><div class="bmain"><div class="row"><span id="bossName"></span><span id="bossTime"></span></div><div class="gauge r"><i id="bossHp"></i></div></div></div>
+    <button class="nextw" id="btnNext" title="다음 웨이브 호출 (N)" aria-label="다음 웨이브 호출 (N)" hidden><b>NEXT</b><span></span></button>
+    <div id="toasts" role="status" aria-live="polite"></div>
+    <div id="tip" hidden role="note"></div>
+    <div id="ultBar"></div>
+    <div id="reward" hidden></div>
+    <div id="banner" class="banner" role="status" aria-live="polite"></div>
+    <div id="announce" aria-live="polite"></div>
+    <div id="popup" hidden></div>
+    <div id="modal" hidden><div class="pwin" id="drawer"></div></div>
+    <div id="pauseOv" hidden>
+      <div class="dlg">
+        <h4>작전 일시 정지</h4>
+        <p>전투가 멈춰 있습니다. 작전을 계속하거나 처음부터 다시 시작할 수 있습니다.</p>
+        <div class="row"><button class="btn" id="btnResume">작전 계속</button><button class="btn d" id="btnPauseSet">설정</button><button class="btn o" id="btnRestart">재출격</button><button class="btn d" id="btnPauseHome">타이틀</button></div>
+        <div class="keys"><kbd>P</kbd> 계속 · <kbd>Esc</kbd> 닫기</div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="bottom">
+    <div id="odds"></div>
+    <div class="acts">
+      <button id="btnGamble" class="act" title="참치를 걸고 상위 랭크 유닛에 도전"><span class="ai random"></span><b>도박</b><small>참치 사용</small></button>
+      <button id="btnSummon" class="summon" title="부품으로 무작위 유닛 소환 (Space)"><kbd>SPACE</kbd><span class="st"><b>소환</b><small><i class="ri"></i><span id="summonCost">20</span></small></span><span class="hexb"></span><span class="aidb" id="aidMini"></span></button>
+      <button id="btnUpgrade" class="act" title="공격력 · 보스 피해 · 보급 · 행운 강화 (U)"><span class="ai research"></span><b>강화</b><small>공격력</small></button>
+      <button id="btnMythic" class="act" title="재료 3종으로 SSS 유닛 조합"><span class="ai mechanic"></span><b>조합</b><small>SSS</small></button>
+      <button id="btnSpeed" class="act" title="게임 속도 (1 · 2 · 3)"><span class="ai speed"></span><b id="speedTx">x1</b><small>배속</small></button>
+      <button id="btnAuto" class="act" title="자동 진행: 소환 · 합성 · SSS 조합 · 강화 (A)" aria-pressed="false"><span class="ai auto"></span><b>AUTO</b><small>자동 진행</small></button>
+    </div>
+  </footer>
+</div>
+
+<div id="loading" class="overlay">
+  <div class="lbg"></div>
+  <div class="lo" id="loadLogo"></div>
+  <div class="ltip" id="loadTip"></div>
+  <div class="lbar"><i id="loadBar"></i></div>
+  <div class="lpct num" id="loadPct">0%</div>
+</div>
+
+<div id="title" class="overlay">
+  <div id="titleBg"></div>
+  <div class="logo"><div class="lo" id="logoImg"></div><div class="sub">RANDOM DEFENSE</div><h1>오르카 방어 작전</h1></div>
+  <div id="titleChars"></div>
+  <div class="brief">
+    <div class="bh"><b>작전 브리핑</b><small>OPERATION BRIEFING</small></div>
+    <div class="howto">
+      <div><b><i>01</i>소환</b>부품으로 무작위 바이오로이드를 소환합니다. 소환할수록 비용이 오릅니다.</div>
+      <div><b><i>02</i>합성</b>같은 유닛 3기를 모으면 한 단계 높은 랭크의 무작위 유닛이 됩니다.</div>
+      <div><b><i>03</i>SSS 조합</b>지정된 재료 3종을 모으면 궁극기를 쓰는 SSS 유닛이 탄생합니다.</div>
+      <div><b><i>04</i>방어</b>적이 100기 쌓이면 실패. 보스를 제한 시간 안에 못 잡으면 폭주합니다. 80웨이브 최종 보스를 쓰러뜨리면 승리!</div>
+    </div>
+  </div>
+  <div class="diffs" id="diffSel"></div>
+  <button class="btn lg" id="btnStart">작전 개시</button>
+  <button class="btn d cont" id="btnContinue" hidden></button>
+  <div class="best" id="bestRec"></div>
+  <div class="keys"><kbd>Space</kbd> 소환 · <kbd>M</kbd> 합성 · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 속도 · <kbd>N</kbd> 다음 웨이브 · <kbd>P</kbd> 일시 정지 · 유닛을 드래그해 위치 교환</div>
+  <div class="ver">LAST ORIGIN FAN DEFENSE · build 1.0</div>
+</div>
+
+<div id="askOv" hidden role="alertdialog" aria-modal="true" aria-labelledby="askTitle">
+  <div class="dlg">
+    <h4 id="askTitle"></h4>
+    <p id="askText"></p>
+    <div class="row"><button class="btn o" id="askOk"></button><button class="btn d" id="askNo">취소</button></div>
+  </div>
+</div>
+
+<div id="result" class="overlay" hidden>
+  <div class="rwrap">
+    <div class="mc">
+      <h2>임무 완료</h2>
+      <div class="lab"></div>
+      <div class="reason"></div>
+      <div class="stars"><i></i><i></i><i></i></div>
+      <div class="ml"></div>
+      <div class="rbtns"><button class="btn lg" id="btnRetry">재출격</button><button class="btn d lg" id="btnHome">타이틀</button></div>
+    </div>
+    <div class="report"><div class="rh"><b>전투 보고</b><small>BATTLE REPORT</small></div><div class="rteam"></div></div>
+  </div>
+</div>
+
+<script defer src="js/vendor/three.min.js"></script>
+<script defer src="js/vendor/CopyShader.js"></script>
+<script defer src="js/vendor/LuminosityHighPassShader.js"></script>
+<script defer src="js/vendor/EffectComposer.js"></script>
+<script defer src="js/vendor/RenderPass.js"></script>
+<script defer src="js/vendor/ShaderPass.js"></script>
+<script defer src="js/vendor/UnrealBloomPass.js"></script>
+<script defer src="js/assets.js"></script>
+<script defer src="js/data.js"></script>
+<script defer src="js/i18n_data.js"></script>
+<script defer src="js/i18n.js"></script>
+<script defer src="js/anim_events.js"></script>
+<script defer src="js/audio.js"></script>
+<script defer src="js/fx.js"></script>
+<script defer src="js/sd.js"></script>
+<script defer src="js/fxbake.js"></script>
+<script defer src="js/fx/_meta.js"></script>
+<script defer src="js/ui.js"></script>
+<script defer src="js/game.js"></script>
+<script defer src="js/tutorial.js"></script>
+<script>
+// scripts are deferred so the loading screen paints first; they run in order before DOMContentLoaded
+// a failed boot (no network for the three.js CDN, no WebGL) must say so instead of leaving the loading bar stuck
+function bootFailed(err) {
+  console.error(err);
+  const tip = document.getElementById('loadTip'), tr = (s) => (window.T ? T(s) : s);
+  const gl = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
+  tip.innerHTML = '<b style="color:#ff6060">' + tr(!window.THREE ? '그래픽 엔진을 불러오지 못했습니다. 네트워크 연결을 확인해 주세요.' : !gl ? '이 브라우저/기기에서 WebGL을 사용할 수 없습니다.' : '게임을 시작하지 못했습니다.') + '</b> ' +
+    '<button class="btn" style="margin-left:8px;height:32px;padding:0 14px;font-size:14px" onclick="location.reload()">' + tr('다시 시도') + '</button>';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    I18N.init();
+    if (!window.THREE || !window.GAME) throw new Error('engine scripts missing');
+    Promise.resolve(GAME.boot()).catch(bootFailed);
+  } catch (e) { bootFailed(e); }
+});
+// dev only: index.html?smoke=1 runs the smoke tests (tools/lab/smoke.js) once the game has loaded
+if (/[?&]smoke=1/.test(location.search)) {
+  document.addEventListener('DOMContentLoaded', () => { const s = document.createElement('script'); s.src = 'tools/lab/smoke.js?' + Date.now(); document.head.appendChild(s); });
+}
+// dev only: index.html?mute=1&lab=<plan> runs a balance batch (tools/lab/balance.js) in a headless browser
+if (/[?&]lab=/.test(location.search)) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const plan = JSON.parse(decodeURIComponent(location.search.match(/[?&]lab=([^&]*)/)[1]));
+    const t0 = Date.now();
+    const go = () => {
+      if (!window.GAME || !window.UI || !document.getElementById('loading').hidden) {
+        if (Date.now() - t0 > 90000) { location.reload(); return; } // a stalled load (busy dev server): start over
+        return setTimeout(go, 300);
+      }
+      document.getElementById('btnStart').click();
+      const s = document.createElement('script');
+      s.src = 'tools/lab/balance.js?' + Date.now();
+      s.onload = async () => {
+        for (const p of plan.runs) await BALANCE.evaluate(p);
+        fetch('tools/lab/out/lab_done_' + plan.id + '.json', { method: 'PUT', body: '{}' });
+      };
+      document.head.appendChild(s);
+    };
+    go();
+  });
+}
+// offline cache for installs / repeat visits (skipped on local / LAN dev hosts unless ?sw=1)
+const devHost = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1)/.test(location.hostname);
+if ('serviceWorker' in navigator && location.protocol !== 'file:' && (!devHost || /[?&]sw=1/.test(location.search))) {
+  // a new build waits (old worker + old cache keep serving this session) until the player is on the title screen:
+  // only then it is activated and the page reloads, so neither a battle nor its result screen is interrupted
+  const hadController = !!navigator.serviceWorker.controller;
+  const atTitle = () => !window.GAME || GAME.G.phase === 'title';
+  navigator.serviceWorker.register('sw.js').then((reg) => {
+    setInterval(() => { if (reg.waiting && hadController && atTitle()) reg.waiting.postMessage('skipWaiting'); }, 2000);
+  }).catch(() => {});
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && atTitle()) location.reload(); });
+}
+// a lazily loaded data file from a newer deploy was refused (BUILD_MISMATCH): pick up the new build at the title
+if (location.protocol !== 'file:') {
+  // once per session at most: if the mismatch survives the reload (stale HTTP / edge cache), stop and tell the player
+  const tries = () => { try { return +sessionStorage.getItem('lao_mismatch_reload') || 0; } catch (e) { return 9; } };
+  let told = false;
+  setInterval(() => {
+    if (!window.GAME) return;
+    // a battle running on consistent data: this build is fine, so a later deploy may reload once again
+    if (!window.BUILD_MISMATCH && GAME.G.phase === 'play' && tries()) { try { sessionStorage.removeItem('lao_mismatch_reload'); } catch (e) { /* ignore */ } }
+    if (!window.BUILD_MISMATCH || GAME.G.phase !== 'title') return;
+    if (tries() < 1) { try { sessionStorage.setItem('lao_mismatch_reload', '1'); } catch (e) { /* no storage: no reload */ } if (tries() === 1) location.reload(); }
+    else if (!told) { told = true; if (window.UI && UI.toast) UI.toast(T('새 버전이 배포되었습니다. 앱을 다시 열면 적용됩니다'), ''); }
+  }, 2000);
+}
+</script>
+</body>
+</html>

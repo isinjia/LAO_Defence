@@ -1,0 +1,107 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>SD Visual Compare</title>
+<style>body{margin:0;background:#222;color:#ddd;font:12px monospace;padding:10px}.row{display:flex;gap:6px;align-items:center;margin:4px 0}.row img,.row canvas{width:160px;height:160px;background:repeating-conic-gradient(#333 0 25%,#2a2a2a 0 50%) 0 0/16px 16px}.bad{color:#f66}</style></head>
+<body><div id="sum">running…</div><div id="list"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/sd.js"></script>
+<script>
+// Renders each rig in the pose RefRender used and compares against the Unity PNG.
+// score = 100 * (0.6 * silhouette IoU + 0.4 * (1 - mean colour difference inside the union))
+const SIZE = 512;
+const renderer = new THREE.WebGLRenderer({ alpha: true, preserveDrawingBuffer: true, antialias: true });
+renderer.setSize(SIZE, SIZE);
+renderer.setPixelRatio(1);
+renderer.setClearColor(0x000000, 0);
+const scene = new THREE.Scene();
+const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, -100, 100);
+const ONLY = new URLSearchParams(location.search).get('ids');
+// ?gpu=1: render with the game's GPU skinning path (positions are not read back then)
+if (new URLSearchParams(location.search).get('gpu')) SD.gpuSkin = renderer.capabilities.floatVertexTextures;
+
+function loadImg(src) { return new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; }); }
+function pixels(src) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = SIZE;
+  const g = cv.getContext('2d'); g.drawImage(src, 0, 0, SIZE, SIZE);
+  return g.getImageData(0, 0, SIZE, SIZE).data;
+}
+
+async function one(id, clip, time) {
+  const base = 'tools/unity_ref/proj/render/' + id + '_' + clip + '_' + (+time.toFixed(2));
+  const img = await loadImg(base + '.png');
+  if (!img) return null;
+  const meta = JSON.parse((await (await fetch(base + '.json')).text()).replace(/NaN|-?Infinity/g, '0'));
+  const tpl = await SD.prepare(id);
+  if (!tpl || !tpl.data.clips[clip]) return null;
+  const c = SD.create(id);
+  c.play(clip, null, true);
+  const n = Math.round(time * 24);
+  for (let f = 0; f <= n; f++) { c.time = Math.min(c.clip.dur, f / 24); c.apply(); c.render(); }
+  // RefRender moved the prefab root to the origin
+  c.root.position.set(-c.W[9], -c.W[10], 0);
+  scene.add(c.root);
+  cam.left = meta.cx - meta.half; cam.right = meta.cx + meta.half;
+  cam.top = meta.cy + meta.half; cam.bottom = meta.cy - meta.half;
+  cam.position.set(0, 0, 50); cam.updateProjectionMatrix();
+  // Unity's legacy additive particle shaders use ColorMask RGB: on the transparent reference PNG they
+  // leave alpha untouched, so emulate that here (in game the canvas is opaque and they show normally)
+  c.root.traverse((o) => {
+    for (const m of [].concat(o.material || [])) {
+      if (m.blending !== THREE.AdditiveBlending) continue;
+      m.blending = THREE.CustomBlending;
+      m.blendSrc = THREE.SrcAlphaFactor; m.blendDst = THREE.OneFactor;
+      m.blendSrcAlpha = THREE.ZeroFactor; m.blendDstAlpha = THREE.OneFactor;
+    }
+  });
+  renderer.render(scene, cam);
+  const a = pixels(img), b = pixels(renderer.domElement);
+  let inter = 0, uni = 0, diff = 0;
+  for (let i = 0; i < a.length; i += 4) {
+    const ia = a[i + 3] > 25, ib = b[i + 3] > 25;
+    if (ia || ib) {
+      uni++;
+      if (ia && ib) inter++;
+      diff += (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2])) / 765 * (ia && ib ? 1 : 0) + (ia !== ib ? 1 : 0);
+    }
+  }
+  const iou = uni ? inter / uni : 1, col = uni ? diff / uni : 0;
+  const score = 100 * (0.6 * iou + 0.4 * (1 - col));
+  // skinned parts: centroid error vs Unity baked vertices
+  const skinErr = [];
+  for (const s of (c.gpu ? [] : meta.skins)) {
+    if (!s.on || !s.v.length) continue;
+    const r = tpl.rends.find((x) => x.kind === 1 && tpl.data.nodes[x.node].path === s.path);
+    let ux = 0, uy = 0; for (let i = 0; i < s.v.length; i += 2) { ux += s.v[i]; uy += s.v[i + 1]; }
+    ux /= s.v.length / 2; uy /= s.v.length / 2;
+    if (!r) { skinErr.push(s.path.split('/').pop() + ':missing'); continue; }
+    const vis = !r.broken && c.EA[r.node];
+    let mx = 0, my = 0; for (let j = 0; j < r.nv; j++) { mx += c.pos[(r.v + j) * 3]; my += c.pos[(r.v + j) * 3 + 1]; }
+    mx = mx / r.nv - c.W[9]; my = my / r.nv - c.W[10];
+    const e = Math.hypot(mx - ux, my - uy) / tpl.height;
+    if (!vis || e > 0.02) skinErr.push(s.path.split('/').pop() + ':' + (vis ? (e * 100).toFixed(1) + '%' : 'HIDDEN'));
+  }
+  const row = document.createElement('div'); row.className = 'row';
+  const mine = document.createElement('img'); mine.src = renderer.domElement.toDataURL();
+  img.title = 'unity'; row.append(img, mine);
+  const t = document.createElement('span');
+  t.textContent = `${id} ${clip} score ${score.toFixed(1)} iou ${(iou * 100).toFixed(1)} col ${(col * 100).toFixed(1)} ${skinErr.join(' ')}`;
+  if (score < 90 || skinErr.length) t.className = 'bad';
+  row.append(t);
+  document.getElementById('list').append(row);
+  scene.remove(c.root); c.dispose();
+  return { id, clip: clip + '@' + time, score, iou, col, skinErr };
+}
+
+(async () => {
+  const jobs = (await (await fetch('tools/unity_ref/proj/render_jobs.txt')).text()).trim().split(String.fromCharCode(10)).map((l) => l.trim().split('|'));
+  const res = [];
+  for (const [id, , clip, , time] of jobs) {
+    if (ONLY && !ONLY.split(',').includes(id)) continue;
+    const r = await one(id, clip, parseFloat(time));
+    if (r) res.push(r);
+    document.getElementById('sum').textContent = 'running… ' + res.length;
+  }
+  const avg = res.reduce((a, r) => a + r.score, 0) / res.length;
+  window.VIS = res;
+  document.getElementById('sum').textContent = `avg ${avg.toFixed(2)} min ${Math.min(...res.map((r) => r.score)).toFixed(2)} n ${res.length} skinIssues ${res.filter((r) => r.skinErr.length).length}`;
+})();
+</script></body></html>

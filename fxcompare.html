@@ -1,0 +1,84 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>FX Compare</title>
+<style>body{margin:0;background:#222;color:#ddd;font:12px monospace;padding:10px}.row{display:flex;gap:6px;align-items:center;margin:3px 0}.row img{width:240px;height:240px;background:#000;image-rendering:pixelated}.bad{color:#f66}</style></head>
+<body><div id="sum">running…</div><div id="list"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/fxbake.js"></script>
+<script>
+// Scores the web playback of every baked effect against Unity's own render of the same frames.
+// Frame score = 100 * (0.5 * IoU of lit pixels + 0.5 * (1 - mean colour difference over the union));
+// an effect's score is the energy-weighted mean of its frame scores.
+const SIZE = 384;
+const renderer = new THREE.WebGLRenderer({ alpha: true, preserveDrawingBuffer: true, antialias: false });
+renderer.setSize(SIZE, SIZE); renderer.setPixelRatio(1); renderer.setClearColor(0x000000, 1);
+const scene = new THREE.Scene();
+const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, -100, 100);
+const ONLY = new URLSearchParams(location.search).get('ids');
+const ALL = new URLSearchParams(location.search).get('all');
+const loadImg = (s) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = s; });
+function px(src) { const cv = document.createElement('canvas'); cv.width = cv.height = SIZE; const g = cv.getContext('2d'); g.drawImage(src, 0, 0, SIZE, SIZE); return g.getImageData(0, 0, SIZE, SIZE).data; }
+// premultiplied brightness: an effect pixel matters as much as it lights the screen
+const lum = (d, i) => (d[i] + d[i + 1] + d[i + 2]) / 765; // both rendered over opaque black
+
+async function one(name) {
+  const c = await FXB.prepare(name);
+  if (!c) return null;
+  const d = c.d, inst = FXB.create(name);
+
+  scene.add(inst.root);
+  cam.left = d.cx - d.half; cam.right = d.cx + d.half; cam.top = d.cy + d.half; cam.bottom = d.cy - d.half;
+  cam.position.set(0, 0, 50); cam.updateProjectionMatrix();
+  const scores = [], weights = [];
+  let shown = null;
+  const st = d.step || 1; // decimated effects keep every other Unity frame
+  for (let f = 0; f < d.nf; f += 2 / st) {
+    const img = await loadImg('tools/unity_ref/proj/fx/' + name + '_' + (f * st) + '.png');
+    if (!img) continue;
+    // projectile frames are baked relative to the moving projectile: put it back on its path
+    if (d.mode === 'proj') {
+      inst.root.position.set(d.org[f] || 0, 0, 0);
+    }
+    inst.setFrame(f);
+    renderer.render(scene, cam);
+    const a = px(img), b = px(renderer.domElement);
+    let inter = 0, uni = 0, diff = 0, energy = 0;
+    for (let i = 0; i < a.length; i += 4) {
+      const la = lum(a, i), lb = lum(b, i);
+      energy += la + lb;
+      const ia = la > 0.04, ib = lb > 0.04;
+      if (ia || ib) { uni++; if (ia && ib) inter++; diff += Math.min(1, Math.abs(la - lb) * 2); }
+    }
+    if (!uni) continue; // empty frame in both
+    const s = 100 * (0.5 * inter / uni + 0.5 * (1 - diff / uni));
+    scores.push(s);
+    weights.push(energy);
+    if (ALL) { const r2 = document.createElement('div'); r2.className = 'row'; const i1 = new Image(); i1.src = img.src; const i2 = new Image(); i2.src = renderer.domElement.toDataURL(); r2.append(i1, i2, Object.assign(document.createElement('span'), { textContent: name + ' f' + f + ' ' + s.toFixed(1) })); document.getElementById('list').append(r2); }
+    if (!shown || Math.abs(f - d.nf / 2) < Math.abs(shown.f - d.nf / 2)) shown = { f, a: img.src, b: renderer.domElement.toDataURL(), s };
+  }
+  inst.dispose();
+  // frames weighted by how much light they put on screen (near-empty frames barely count)
+  const wsum = weights.reduce((x, y) => x + y, 0);
+  const avg = scores.length ? scores.reduce((x, y, k) => x + y * weights[k], 0) / (wsum || 1) : 100;
+  const row = document.createElement('div'); row.className = 'row';
+  if (shown) { const i1 = new Image(); i1.src = shown.a; const i2 = new Image(); i2.src = shown.b; row.append(i1, i2); }
+  const t = document.createElement('span');
+  t.textContent = `${name} ${d.mode} score ${avg.toFixed(1)} frames ${scores.length}`;
+  if (avg < 90) t.className = 'bad';
+  row.append(t); document.getElementById('list').append(row);
+  return { name, mode: d.mode, score: avg, n: scores.length };
+}
+
+(async () => {
+  const jobs = (await (await fetch('tools/unity_ref/proj/fx_jobs.txt')).text()).trim().split(String.fromCharCode(10)).map((l) => l.trim().split('|')[0]);
+  const res = [];
+  for (const n of jobs) {
+    if (ONLY && !ONLY.split(',').includes(n)) continue;
+    const r = await one(n);
+    if (r) res.push(r);
+    document.getElementById('sum').textContent = 'running… ' + res.length + '/' + jobs.length;
+  }
+  const avg = res.reduce((a, r) => a + r.score, 0) / res.length;
+  window.FXR = res;
+  document.getElementById('sum').textContent = `avg ${avg.toFixed(2)} min ${Math.min(...res.map((r) => r.score)).toFixed(2)} n ${res.length}`;
+})();
+</script></body></html>
