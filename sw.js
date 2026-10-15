@@ -2,13 +2,13 @@
 // new deploy gets a new cache. Everything is immutable within a build (cache-first, no background refresh), so a
 // cache never mixes files of two builds. A new worker waits until the page activates it from the title screen;
 // the old worker and its cache keep serving the running session, and the old cache is dropped on activation.
-const BUILD = 'c2d4d430b4';
+const BUILD = '9055d44f02';
 const CACHE = 'orca-rd-' + BUILD;
 // the code and UI of this build (stamped with the file list): fetched past the HTTP cache at install
 // third-party libraries the page loads from a CDN (pinned versions), so the first visit is enough to boot offline
 // (three.js r128 now ships in js/vendor and is part of CORE; this list is empty unless a CDN script is added back)
 const CDN = [];
-const CORE = ["index.html", "manifest.webmanifest", "css/game.css", "js/anim_events.js", "js/assets.js", "js/audio.js", "js/data.js", "js/fx.js", "js/fxbake.js", "js/game.js", "js/i18n.js", "js/i18n_data.js", "js/sd.js", "js/tutorial.js", "js/ui.js", "js/ui_assets.js", "js/fx/_meta.js", "js/vendor/CopyShader.js", "js/vendor/EffectComposer.js", "js/vendor/LuminosityHighPassShader.js", "js/vendor/RenderPass.js", "js/vendor/ShaderPass.js", "js/vendor/UnrealBloomPass.js", "js/vendor/three.min.js", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"];
+const CORE = ["index.html", "manifest.webmanifest", "css/game.css", "js/anim_events.js", "js/assets.js", "js/audio.js", "js/data.js", "js/fx.js", "js/fxbake.js", "js/game.js", "js/i18n.js", "js/i18n_data.js", "js/pack.js", "js/sd.js", "js/tutorial.js", "js/ui.js", "js/ui_assets.js", "js/fx/_meta.js", "js/vendor/CopyShader.js", "js/vendor/EffectComposer.js", "js/vendor/LuminosityHighPassShader.js", "js/vendor/RenderPass.js", "js/vendor/ShaderPass.js", "js/vendor/UnrealBloomPass.js", "js/vendor/three.min.js", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => Promise.all([

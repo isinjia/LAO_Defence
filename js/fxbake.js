@@ -21,12 +21,16 @@
   }
 
   // decode() runs off the main thread (it may stall in a hidden tab: the load event + a short wait wins then)
-  function loadImage(url) {
+  async function loadImage(url) {
+    // the deployed build ships the sheets scrambled (js/pack.js restores them in memory)
+    const src = window.PACKED && PACKED.on && HTTP ? await PACKED.url(url).catch(() => null) : url;
+    if (!src) return null;
     const im = new Image();
     const loaded = new Promise((r) => { im.onload = () => r(im); im.onerror = () => r(null); });
-    im.src = url;
-    return Promise.race([im.decode().then(() => im, () => loaded), loaded.then((x) => new Promise((r) => setTimeout(() => r(x), 250)))])
-      .then((x) => (x && x.naturalWidth ? x : null));
+    im.src = src;
+    const x = await Promise.race([im.decode().then(() => im, () => loaded), loaded.then((y) => new Promise((r) => setTimeout(() => r(y), 250)))]);
+    if (src !== url) URL.revokeObjectURL(src);
+    return x && x.naturalWidth ? x : null;
   }
   function idle() {
     return new Promise((r) => { let done = false; const fin = () => { if (!done) { done = true; r(); } };

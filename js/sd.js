@@ -221,9 +221,13 @@
     }
     const im = new Image();
     const loaded = new Promise((r) => { im.onload = im.onerror = r; });
-    im.src = a.u;
+    // the deployed build ships the atlas scrambled (js/pack.js restores it in memory)
+    const src0 = window.PACKED && PACKED.on && HTTP ? await PACKED.url(a.u).catch(() => null) : a.u;
+    if (!src0) { if (a.v) a.u = undefined; return null; }
+    im.src = src0;
     // decode() decodes off the main thread, but may wait indefinitely in a hidden tab: whichever settles first
     await Promise.race([im.decode().catch(() => loaded), loaded.then(() => new Promise((r) => setTimeout(r, 250)))]);
+    if (src0 !== a.u) URL.revokeObjectURL(src0); // decoded: the blob is no longer needed
     if (!im.naturalWidth) { if (a.v) a.u = undefined; return null; } // undecodable: refetch on retry
     let src = im;
     const k = SD.texScale / s0;
