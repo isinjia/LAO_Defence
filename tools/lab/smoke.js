@@ -104,6 +104,59 @@
       eq(Object.keys(ORIGINAL).length, DATA.UNITS.filter((d) => d.tier >= 4 && d.tier <= DATA.UNIQUE).length, 'every one listed');
     });
 
+    // measured: cast each ultimate on a controlled field and read back the effect values the in-game skill text gives
+    // (tools/lab/skill_source.md). The pass rate is the measured fidelity; window.SKILL_MEASURE keeps the detail.
+    test('ultimate effects measured against the in-game skill numbers', () => {
+      const checks = [];
+      const ck = (name, ok) => checks.push([name, !!ok]);
+      const near = (a, b) => Math.abs(a - b) < 1e-6;
+      const rnd0 = Math.random;
+      const setup = (id, n = 3, k = 3000, extra) => {
+        fresh(); (extra || []).forEach((x) => GAME.debugAdd(x)); GAME.debugAdd(id);
+        const es = []; for (let i = 0; i < n; i++) { const e = GAME.tutSpawn(k); e.d = 6 + i * 0.15; es.push(e); }
+        GAME.simulate(0.05, false);
+        return { u: G().cells[GAME.findCellOf(id)].units[0], es };
+      };
+      const cast = (u, e, t = 1.5) => { u.mana = 100; GAME.castUlt(u, e); GAME.simulate(t, false); };
+      try {
+        Math.random = () => 0.99; // no crit rolls
+        let s;
+        s = setup('harpy'); cast(s.u, s.es[0]); ck('Harpeia: evasion -34% (mark 1.34)', s.es.some((e) => near(e.markK, 1.34)));
+        s = setup('lemonadealpha'); s.es[0].shieldT = 9; const d0 = s.es[0].d; cast(s.u, s.es[0], 0.2);
+        ck('Lemonade Alpha: evasion -61% (mark 1.61)', near(s.es[0].markK, 1.61)); ck('Lemonade Alpha: all protection removed', s.es[0].shieldT === 0);
+        ck('Lemonade Alpha: pushed back 1 tile', s.es[0].d < d0);
+        s = setup('sleipnir'); cast(s.u, s.es[0], 0.5); ck('Sleipnir: mark', s.es[0].markT > 0); ck('Sleipnir: immobile 2 rounds', s.es[0].stunT > 4);
+        s = setup('blacklilith'); cast(s.u, s.es[0], 0.4); ck('Black Lilith: taunted', s.es[0].tauntT > 0);
+        s = setup('brunhild'); cast(s.u, s.es[0], 1); ck('Brunhild: fire resistance -28.5% (mark 1.285)', s.es.some((e) => near(e.markK, 1.285))); ck('Brunhild: effect resistance down', s.es.some((e) => e.resistT > 0));
+        s = setup('khan', 3, 1e6); cast(s.u, s.es[0], 1); ck('Khan: mark +19% damage taken', s.es.some((e) => near(e.markK, 1.19)));
+        s = setup('constantia'); cast(s.u, s.es[0], 0.5);
+        const ct = s.es.find((e) => e.markT > 0) || s.es[0];
+        ck('Constantia: mark', near(ct.markK, 1.145)); ck('Constantia: immobile 2 rounds', ct.stunT > 4); ck('Constantia: AP -34%', near(ct.slowAmt, 0.34));
+        s = setup('titania'); cast(s.u, s.es[0], 0.3); ck('Titania: AP -3.8% (천년서리)', s.es.some((e) => near(e.slowAmt, 0.038))); ck('Titania: her own AP -50% afterwards', s.u.lateT > 0);
+        s = setup('mercury', 3, 3000, ['brownie']); cast(s.u, s.es[0], 0.2);
+        ck('Mercury: every ally AP up (haste)', G().cells.every((c) => c.units.every((x) => x.hasteT > 0))); ck('Mercury: defense penetration +19%', near(G().rallyK, 1.19));
+        s = setup('mercury', 3, 3000, ['tiamat']); cast(s.u, s.es[0], 0.2); ck('Mercury: x1.5 with a Strikers member', near(G().rallyK, 1 + 0.19 * 1.5));
+        s = setup('empress', 1, 1e6); s.es[0].slowT = 9; s.es[0].slowAmt = 0.2; cast(s.u, s.es[0], 2.5);
+        ck('Empress: waterlogged target can not act', s.es[0].stunT > 0); ck('Empress: frozen +38.5% damage taken', near(s.es[0].markK, 1.385));
+        s = setup('empress', 1, 1e6); cast(s.u, s.es[0], 2.5); ck('Empress: a dry target is not frozen', !(s.es[0].stunT > 0));
+        s = setup('fafnir', 4); s.es.forEach((e) => { e.shieldT = 9; }); cast(s.u, s.es[0], 0.3); ck('Fafnir: 2+ adjacent strips enhancements', s.es.every((e) => e.shieldT === 0));
+        s = setup('ramiel'); cast(s.u, s.es[0], 0.3); ck('Ramiel: no skill for 2 rounds', s.u.sealT > 0); ck('Ramiel: fixed fire damage', s.es.some((e) => e.burnFixed && e.burnT > 0));
+        s = setup('ramiel'); s.u.age = 31; cast(s.u, s.es[0], 0.3); ck('Ramiel: 원죄의 굴레 burns 3 rounds', s.es.some((e) => e.burnFixed && e.burnT > 5));
+        // ignores shields / damage reduction (Tiamat): the same hit on a shielded and an unshielded target
+        s = setup('tiamat', 1, 1e6); const a0 = s.es[0].hp; cast(s.u, s.es[0], 1); const plain = a0 - s.es[0].hp;
+        s = setup('tiamat', 1, 1e6); s.es[0].shieldT = 99; const b0 = s.es[0].hp; cast(s.u, s.es[0], 1); const shielded = b0 - s.es[0].hp;
+        ck('Tiamat: shields and damage reduction ignored', plain > 0 && Math.abs(shielded - plain) / plain < 0.01);
+        // Labiata: +19% per plasma stack
+        s = setup('labiata', 1, 1e6); s.u.plasma = 0; s.u.powT = 0; const l0 = s.es[0].hp; cast(s.u, s.es[0], 0.5); const p0 = l0 - s.es[0].hp;
+        s = setup('labiata', 1, 1e6); s.u.plasma = 3; s.u.powT = 0; const l3 = s.es[0].hp; cast(s.u, s.es[0], 0.5); const p3 = l3 - s.es[0].hp;
+        ck('Labiata: +19% per plasma stack', p0 > 0 && Math.abs(p3 / p0 - 1.57) < 0.02);
+      } finally { Math.random = rnd0; }
+      const pass = checks.filter((c) => c[1]).length;
+      window.SKILL_MEASURE = { pass, total: checks.length, rate: pass / checks.length, failed: checks.filter((c) => !c[1]).map((c) => c[0]) };
+      eq(pass / checks.length >= 0.9, true, `measured ${pass}/${checks.length}: ${window.SKILL_MEASURE.failed.join(', ')}`);
+      return `${pass}/${checks.length} effect checks`;
+    });
+
     test('GOD: a flat 0.0001% summon (luck upgrades do not change it), one per cell, never merges', () => {
       eq(DATA.BAL.godChance, 0.000001, '0.0001%');
       fresh(); G().gold = 1e6; G().upg.luck = 5;
