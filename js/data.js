@@ -55,7 +55,7 @@
     U('tiamat', '티아멧', 5, 'ST_Tiamat_N', { type: 'laser', dmg: 0, rate: 1.25, range: 5.4, width: 0.7, fx: 'laser', color: 0x6ef0ff, sfx: 'laserBig', mana: 10, ult: 'execute', ultName: '풀 웨폰 어썰트', desc: '대구경 관통 레이저 / 궁극기: 가장 강한 적 하나에 방어막·피해 감소 무시 초고화력, 치명타 시 +29%' }),
     U('khan', '칸', 5, 'BR_Khan_N', { type: 'single', dmg: 0, rate: 0.5, range: 5.0, crit: 0.3, fx: 'snipe', color: 0xffcf7a, sfx: 'rifle', mana: 10, ult: 'sandstorm', ultName: '데저트 스톰', desc: '고속 사격 / 궁극기: 단일 대상 보호 무시 고속 연계 공격, 표식 + 받는 피해 +19%, 치명타 시 +58%' }),
     U('labiata', '라비아타', 5, '3P_Labiata_N', { type: 'melee', dmg: 0, rate: 0.38, range: 3.0, splash: 1.1, crit: 0.3, fx: 'slash', color: 0xffd36e, sfx: 'swing', mana: 10, ult: 'sweep', ultName: '백화요란', desc: '연속 타격 / 궁극기: 지정 범위(가로줄) 보호 무시 강타, 플라즈마 중첩마다 +19%, 3중첩 치명타 시 강화 해제, 처치 시 중첩 +1' }),
-    // ── UR (조합, 필드에 1기만) ──
+    // ── UR (조합, 같은 UR은 필드에 1기만) ──
     U('constantia', '콘스탄챠 S2', 6, '3P_ConstantiaS2_N', { type: 'laser', dmg: 0, rate: 1.0, range: 5.6, width: 0.7, fx: 'laser', color: 0xff6af0, sfx: 'laserBig', mana: 12, ult: 'snipe', ultName: '발목 잡기', desc: '관통 레이저 / 궁극기: 가장 강한 적 하나에 표식 + 이동 불가 + 행동력 -34%' }),
     U('titania', '티타니아', 6, '3P_Titania_N', { type: 'chain', dmg: 0, rate: 0.9, range: 5.2, chain: 6, slow: 0.3, slowDur: 1.2, fx: 'iceChain', color: 0xaef4ff, sfx: 'ice', mana: 10, ult: 'freeze', ultName: '서리 폭풍', desc: '빙결 연쇄 / 궁극기: 지정 범위 보호 무시 냉기 피해, 행동력 감소(천년서리), 치명타 시 +38%, 사용 후 자신 행동력 -50%' }),
     U('mercury', '머큐리', 6, 'ST_Mercury_N', { type: 'melee', dmg: 0, rate: 0.3, range: 3.2, splash: 1.1, crit: 0.4, fx: 'slash', color: 0x7dffb0, sfx: 'slash', mana: 6, ult: 'blades', ultName: '최상의 시간', desc: '초고속 참격 / 궁극기: 아군 전원 AP 증가(가속) + 해로운 효과 해제 + 방어 관통 +19%, 스트라이커즈(티아멧·우르)가 있으면 1.5배' }),

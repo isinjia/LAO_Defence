@@ -445,7 +445,7 @@
     G.cells.forEach((c) => c.units.forEach((u) => G.owned.add(u.def.id)));
     if (G.phase === 'play' && UI.tip && !G.headless && !G.tut) { // the tutorial teaches these itself
       if (G.cells.some((c) => c.units.length === 3 && canMerge(c.units[0].def))) UI.tip('merge', MOBILE ? T('같은 유닛 3기가 모였습니다! 그 칸을 탭해 <b>합성</b>하면 한 랭크 위 유닛이 됩니다.') : T('같은 유닛 3기가 모였습니다! 그 칸을 눌러 <b>합성</b>하거나 <b>M</b> 키를 누르면 한 랭크 위 유닛이 됩니다.'));
-      if (RECIPES.some((r) => r.parts.some((p) => G.owned.has(p)))) UI.tip('sss', T('<b>UR 조합</b> 재료를 얻었습니다. 연관 대원을 모두 모으면 [조합]에서 UR 유닛을 만듭니다(필드에 1기만).'));
+      if (RECIPES.some((r) => r.parts.some((p) => G.owned.has(p)))) UI.tip('sss', T('<b>UR 조합</b> 재료를 얻었습니다. 연관 대원을 모두 모으면 [조합]에서 UR 유닛을 만듭니다(같은 UR은 필드에 1기만).'));
     }
     UI.onCellsChanged();
   }
@@ -473,7 +473,8 @@
   }
   function stackMax(def) { return def.tier >= UNIQUE ? 1 : 3; }
   function canMerge(def) { return def.tier < LR; }
-  function hasUnique() { return G.cells.some((c) => c.units.some((u) => u.def.tier === UNIQUE)); }
+  // a UR can be on the field once per kind (different URs may stand together)
+  function hasUnique(id) { return G.cells.some((c) => c.units.some((u) => u.def.id === id)); }
   // cell indices bottom row first, right to left within a row (world y up, x right; follows the current orientation)
   function fillOrder() {
     return lay.cells.map((c, k) => k).sort((a, b) => (lay.cells[a].y - lay.cells[b].y) || (lay.cells[b].x - lay.cells[a].x));
@@ -768,13 +769,13 @@
     UI.update(true);
   }
 
-  function canCraft(r) { return r.parts.every((id) => freeCellOf(id) >= 0) && !hasUnique(); }
+  function canCraft(r) { return r.parts.every((id) => freeCellOf(id) >= 0) && !hasUnique(r.result); }
 
   function craftRoom(r) { return anyEmpty() || r.parts.some((id) => { const i = freeCellOf(id); return i >= 0 && G.cells[i].units.length === 1; }); }
   function craft(ri, quiet) {
     const r = RECIPES[ri];
     if (G.paused) return;
-    if (hasUnique()) { if (!quiet) { UI.toast(T('UR 유닛은 필드에 1기만 둘 수 있습니다 (판매하면 다시 조합 가능)'), 'warn'); SFX.play('fail'); } return; }
+    if (hasUnique(r.result)) { if (!quiet) { UI.toast(T('같은 UR 유닛은 필드에 1기만 둘 수 있습니다 (판매하면 다시 조합 가능)'), 'warn'); SFX.play('fail'); } return; }
     if (!canCraft(r)) return;
     if (!craftRoom(r)) { if (!quiet) { UI.toast(T('배치할 칸이 없습니다'), 'warn'); SFX.play('fail'); } return; }
     let at = -1;

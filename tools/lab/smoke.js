@@ -79,17 +79,21 @@
       GAME.merge(j); eq(G().cells[j].units.length, 3, 'no merge above LR');
     });
 
-    test('UR: crafted from its parts, only one on the board at a time', () => {
+    test('UR: crafted from its parts, one of each kind on the board', () => {
       fresh();
       eq(DATA.RECIPES.every((x) => x.parts.every((id) => DATA.unit[id].tier < DATA.LR)), true, 'no recipe costs an LR (the top rank) or above');
+      const urs = () => G().cells.filter((c) => c.units.some((u) => u.def.tier === DATA.UNIQUE)).length;
       const r = DATA.RECIPES[0];
       r.parts.forEach((id) => GAME.debugAdd(id));
       eq(GAME.canCraft(r), true, 'craftable'); GAME.craft(0);
-      eq(G().cells.filter((c) => c.units.some((u) => u.def.tier === DATA.UNIQUE)).length, 1, 'one UR');
+      eq(urs(), 1, 'one UR');
+      r.parts.forEach((id) => GAME.debugAdd(id));
+      eq(GAME.canCraft(r), false, 'the same UR twice is refused'); GAME.craft(0);
+      eq(urs(), 1, 'still one');
       DATA.RECIPES[1].parts.forEach((id) => GAME.debugAdd(id));
-      eq(GAME.canCraft(DATA.RECIPES[1]), false, 'a second UR is refused'); GAME.craft(1);
-      eq(G().cells.filter((c) => c.units.some((u) => u.def.tier === DATA.UNIQUE)).length, 1, 'still one');
-      GAME.sell(GAME.findCellOf(r.result)); eq(GAME.canCraft(DATA.RECIPES[1]), true, 'sold: craftable again');
+      eq(GAME.canCraft(DATA.RECIPES[1]), true, 'a different UR is allowed'); GAME.craft(1);
+      eq(urs(), 2, 'two different URs');
+      GAME.sell(GAME.findCellOf(r.result)); eq(GAME.canCraft(r), true, 'sold: craftable again');
     });
 
     // the original skill names, checked word for word in the in-game data on lo.swaytwig.com (2026-10)
