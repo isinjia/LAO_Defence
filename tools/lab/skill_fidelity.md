@@ -47,3 +47,13 @@ The two caveats the audit noted are fixed as well: Ramiel's burns are fixed dama
 (`damage(..., 'fixed')`: no armour, shield, mark, vulnerability or boss multiplier).
 
 Balance after these changes (expert bot, tools/lab/winrate.js, normal): 11 / 12 wins; smoke 21 / 21.
+
+## Measured in the game (tools/lab/smoke.js)
+
+Two smoke tests cast every ultimate on a controlled field and read the results back (no ordinary attacks during the
+cast, crit rolls forced on / off): effect values (marks, holds, slows, pushes, strips, seals, buffs: 27 checks) and
+damage rules as ratios between casts (area and falloff, protection / armour ignored, crit multipliers, conditional
+bonuses, fixed damage, the 30x burn branch: 44 checks). **71 / 71 pass**, covering all 65 expressible items.
+The measurement found one real bug, now fixed: Harpeia's missiles were spread over three crowds instead of the
+chosen area, and her own evasion-down counted as a prior 표식 for her +47.5% bonus.
+

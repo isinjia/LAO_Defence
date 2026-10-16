@@ -157,6 +157,102 @@
       return `${pass}/${checks.length} effect checks`;
     });
 
+    // the rest of the items (damage shape, crits, protection, conditional bonuses): measured as damage ratios between
+    // controlled casts (no unit attacks during the cast, crit rolls forced on or off). With the test above this covers
+    // all 65 items of tools/lab/skill_fidelity.md that the board can express.
+    test('ultimate damage rules measured: area, protection, crits and conditional bonuses', () => {
+      const checks = [];
+      const ck = (name, ok) => checks.push([name, !!ok]);
+      const rat = (a, b, want, tol = 0.02) => b > 0 && Math.abs(a / b - want) <= tol * want;
+      const rnd0 = Math.random;
+      const maxE = DATA.BAL.maxEnemies;
+      // one cast on a controlled field: es = [{ d, set }], returns each enemy's HP lost
+      const R = (id, cfg = {}) => {
+        fresh(); (cfg.extra || []).forEach((x) => GAME.debugAdd(x)); GAME.debugAdd(id);
+        const u = G().cells[GAME.findCellOf(id)].units[0];
+        const spec = cfg.es || [{}];
+        const es = spec.map((o, i) => { const e = GAME.tutSpawn(1e7); e.d = o.d != null ? o.d : 6 + i * 0.15; return e; });
+        GAME.simulate(0.02, false);
+        es.forEach((e, i) => Object.assign(e, spec[i].set || {}));
+        Object.assign(u, cfg.u || {});
+        G().cells.forEach((c) => c.units.forEach((x) => { x.cd = 1e9; })); // no ordinary attacks during the measurement
+        if (cfg.maxE) DATA.BAL.maxEnemies = cfg.maxE;
+        const hp0 = es.map((e) => e.hp);
+        Math.random = () => (cfg.crit ? 0 : 0.99);
+        try { u.mana = 100; GAME.castUlt(u, es[cfg.at || 0]); GAME.simulate(cfg.t || 2.5, false); } finally { Math.random = rnd0; DATA.BAL.maxEnemies = maxE; }
+        return { u, es, loss: es.map((e, i) => hp0[i] - e.hp) };
+      };
+      const PROT = { shieldT: 99, armor: 0.5 }; // a shielded, armoured target
+      const pierces = (id, cfg = {}) => { const a = R(id, cfg).loss[0], b = R(id, { ...cfg, es: (cfg.es || [{}]).map((o, i) => (i ? o : { ...o, set: { ...(o.set || {}), ...PROT } })) }).loss[0]; return rat(b, a, 1); };
+      const critK = (id, want, cfg = {}) => rat(R(id, { ...cfg, crit: true }).loss[0], R(id, cfg).loss[0], want);
+      const FAR = { d: 30 };
+      let r;
+      // Ullr · 전방위 사격
+      ck('Ullr: ignores protection', pierces('ullr'));
+      r = R('ullr', { es: [{}, { d: 6.4 }, FAR] }); const ul = r.loss.slice(0, 2).sort((a, b) => b - a);
+      ck('Ullr: around the target point 75%', rat(ul[1], ul[0], 0.75)); ck('Ullr: only the chosen area', r.loss[2] === 0);
+      ck('Ullr: crit +38%', critK('ullr', 1.38));
+      // Harpeia · NARAAK 미사일
+      r = R('harpy', { es: [{}, { d: 6.3 }, FAR] }); ck('Harpeia: area damage', r.loss[0] > 0 && r.loss[1] > 0 && r.loss[2] === 0);
+      ck('Harpeia: +47.5% on marked / immobile', rat(R('harpy', { es: [{ set: { markT: 99, markK: 1 } }] }).loss[0], R('harpy').loss[0], 1.475));
+      // Eternity · 편히 잠드소서
+      ck('Eternity: ignores protection', pierces('eternity'));
+      r = R('eternity', { es: [{}, FAR] }); ck('Eternity: only the chosen area', r.loss[0] > 0 && r.loss[1] === 0);
+      ck('Eternity: Rage +80%', rat(R('eternity', { maxE: 1.3 }).loss[0], R('eternity').loss[0], 1.8)); // 1 enemy = 77% of a 1.3 limit
+      // Lemonade Alpha · 출력전개: physical ignores protection, the 135% is fixed (no mark multiplier)
+      ck('Lemonade Alpha: ignores protection', pierces('lemonadealpha'));
+      ck('Lemonade Alpha: 135% fixed damage', rat(R('lemonadealpha', { es: [{ set: { markT: 99, markK: 2 } }] }).loss[0], R('lemonadealpha').loss[0], (1.4 * 2 + 1.35) / (1.4 + 1.35)));
+      // Sleipnir · 한계돌파: shields ignored, 75% of armour ignored
+      ck('Sleipnir: ignores protection (shield)', rat(R('sleipnir', { es: [{ set: { shieldT: 99 } }] }).loss[0], R('sleipnir').loss[0], 1));
+      ck('Sleipnir: defense penetration 75%', rat(R('sleipnir', { es: [{ set: { armor: 0.5 } }] }).loss[0], R('sleipnir').loss[0], 0.875));
+      // Black Lilith · 듀얼 버스트
+      r = R('blacklilith', { es: [{}, { d: 6.15 }] }); ck('Black Lilith: one target', r.loss[0] > 0 && r.loss[1] === 0);
+      ck('Black Lilith: +48% on a taunted target', rat(R('blacklilith', { es: [{ set: { tauntT: 99 } }] }).loss[0], R('blacklilith').loss[0], 1.48));
+      { const d = DATA.unit.blacklilith; const want = d.dmg * GAME.dmgMult() * GAME.ULT_K * 9 * 1.475 * DATA.BAL.vuln; ck('Black Lilith: 정조준 +47.5% (one target)', rat(R('blacklilith').loss[0], want, 1)); }
+      // Brunhild · 핏빛 효후
+      ck('Brunhild: ignores protection', pierces('brunhild', { es: [{ d: 6 }] }));
+      ck('Brunhild: crit +47.5%', critK('brunhild', 1.475, { es: [{ d: 6 }] }));
+      r = R('brunhild', { crit: true, es: [{ set: { burnT: 99, burnDps: 1, burnN: 1, burnAcc: 0 } }] }); ck('Brunhild: crit removes burning', !(r.es[0].burnT > 90));
+      // Tiamat · 풀 웨폰 어썰트
+      r = R('tiamat', { es: [{}, { d: 6.15, set: { hp: 5e5, maxHp: 5e5 } }] }); ck('Tiamat: one target', r.loss[0] > 0 && r.loss[1] === 0);
+      ck('Tiamat: vs heavy +0%', rat(R('tiamat', { es: [{ set: { kind: 'elite' } }] }).loss[0], R('tiamat').loss[0], 1));
+      ck('Tiamat: crit +29%', critK('tiamat', 1.29));
+      // Khan · 데저트 스톰
+      r = R('khan', { es: [{}, { d: 6.15 }] }); ck('Khan: one target', (r.loss[0] > 0) !== (r.loss[1] > 0));
+      ck('Khan: ignores protection', pierces('khan')); ck('Khan: crit +58%', critK('khan', 1.58));
+      // Labiata · 백화요란
+      ck('Labiata: ignores protection', pierces('labiata', { u: { plasma: 0, powT: 0 } }));
+      r = R('labiata', { crit: true, u: { plasma: 3, powT: 0 }, es: [{ set: { shieldT: 99 } }] }); ck('Labiata: crit at 3 stacks strips enhancements', r.es[0].shieldT === 0);
+      r = R('labiata', { u: { plasma: 3, powT: 0 }, es: [{ set: { shieldT: 99 } }] }); ck('Labiata: no crit, no strip', r.es[0].shieldT > 0);
+      r = R('labiata', { u: { plasma: 3, powT: 0 }, es: [{ set: { hp: 1 } }] }); ck('Labiata: a kill adds a stack past the limit', r.u.plasma === 4);
+      ck('Labiata: plasma attack buff counts', rat(R('labiata', { u: { plasma: 0, powT: 99, powK: 1.285 } }).loss[0], R('labiata', { u: { plasma: 0, powT: 0 } }).loss[0], 1.285));
+      // Constantia · 발목 잡기
+      r = R('constantia', { es: [{}, { d: 6.15, set: { hp: 5e5 } }] }); ck('Constantia: one target', r.loss[0] > 0 && r.loss[1] === 0);
+      // Titania · 서리 폭풍
+      ck('Titania: ignores protection', pierces('titania')); r = R('titania', { es: [{}, FAR] }); ck('Titania: only the chosen area', r.loss[1] === 0);
+      ck('Titania: crit +38%', critK('titania', 1.38));
+      // Mercury · 최상의 시간: debuffs removed (a sealed cell freed)
+      { fresh(); GAME.debugAdd('brownie'); GAME.debugAdd('mercury'); const c = G().cells[GAME.findCellOf('brownie')]; c.silT = 9; const u = G().cells[GAME.findCellOf('mercury')].units[0]; GAME.tutSpawn(1e7); GAME.simulate(0.05, false); u.mana = 100; GAME.castUlt(u); GAME.simulate(0.1, false); ck('Mercury: debuffs removed', !(c.silT > 0)); }
+      // Empress · 펭귄 서프라이즈!
+      r = R('empress', { es: [{}, { d: 6.15, set: { hp: 5e5 } }] }); ck('Empress: one target', r.loss[0] > 0 && r.loss[1] === 0);
+      ck('Empress: crit +43.5%', critK('empress', 1.435));
+      // Fafnir · 뇌정벽력
+      r = R('fafnir', { es: [{}, { d: 6.15 }] }); const fa = r.loss.slice().sort((a, b) => b - a);
+      ck('Fafnir: area', r.loss.every((x) => x > 0)); ck('Fafnir: around the target point -75%', rat(fa[1], fa[0], 0.25));
+      ck('Fafnir: +14.5% per adjacent enemy', rat(fa[0], R('fafnir').loss[0], 1.145));
+      ck('Fafnir: overheated counts as 3 adjacent', rat(R('fafnir', { es: [{ set: { slowT: 99, slowAmt: 0.01 } }] }).loss[0], R('fafnir').loss[0], (1 + 0.145 * 3) * DATA.BAL.vuln));
+      // Ramiel · 억겁의 성화
+      ck('Ramiel: ignores protection', pierces('ramiel', { t: 0.3 }));
+      r = R('ramiel', { u: { age: 31 }, t: 0.3, es: [{ set: { shieldT: 99 } }] }); ck('Ramiel: 원죄의 굴레 ignores shields', r.es[0].shieldT === 0);
+      { const burnTotal = (x) => x.es[0].burnDps * x.es[0].burnN * x.es[0].burnT; // the fixed fire still to come
+        ck('Ramiel: 원죄의 굴레 burns 30x', rat(burnTotal(R('ramiel', { u: { age: 31 }, t: 0.01 })), burnTotal(R('ramiel', { t: 0.01 })), 30)); }
+      const pass = checks.filter((c) => c[1]).length;
+      const m = window.SKILL_MEASURE || { pass: 0, total: 0 };
+      window.SKILL_MEASURE2 = { pass, total: checks.length, failed: checks.filter((c) => !c[1]).map((c) => c[0]), all: `${m.pass + pass}/${m.total + checks.length}` };
+      eq(pass, checks.length, `measured ${pass}/${checks.length}: ${window.SKILL_MEASURE2.failed.join(', ')}`);
+      return `${pass}/${checks.length} damage-rule checks (all items: ${window.SKILL_MEASURE2.all})`;
+    });
+
     test('GOD: a flat 0.0001% summon (luck upgrades do not change it), one per cell, never merges', () => {
       eq(DATA.BAL.godChance, 0.000001, '0.0001%');
       fresh(); G().gold = 1e6; G().upg.luck = 5;

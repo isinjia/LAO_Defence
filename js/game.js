@@ -1630,15 +1630,18 @@
       }
       case 'salvo': { // Harpeia P-22 · NARAAK 미사일: missiles on the chosen area; +47.5% on marked or immobile targets;
         // evasion -34% for 2 rounds whether it hits or not
-        const spots = densest(1.4, 3);
+        // one chosen area (the densest spot); the bonus counts marks / holds the targets had before this skill (its
+        // own evasion-down is not a 표식)
+        const c = densest(1.4, 1)[0] || e;
+        const cx = c.x, cy = c.y;
+        const pre = new Set(G.enemies.filter((z) => z.alive && (z.markT > 0 || z.stunT > 0)));
         for (let k = 0; k < 9; k++) {
           FX.later(k * 0.08, () => {
-            const o = spots[k % spots.length];
-            const x = o.x + rnd(-0.5, 0.5), y = o.y + rnd(-0.5, 0.5);
+            const x = cx + rnd(-0.5, 0.5), y = cy + rnd(-0.5, 0.5);
             FX.beam(u.x, u.y, x, y, 0.08, d.color, 0.12);
             FX.explosion(x, y, 1.0, d.color, k % 3 === 0);
             SFX.play('expM', 0.5);
-            for (const z of enemiesNear(x, y, 1.3)) { damage(z, base * 2.5 * (z.markT > 0 || z.stunT > 0 ? 1.475 : 1), d.color, true, d); mark(z, 1.34, 5); }
+            for (const z of enemiesNear(cx, cy, 1.6)) { damage(z, base * 2.5 * (pre.has(z) || z.stunT > 0 ? 1.475 : 1), d.color, true, d); mark(z, 1.34, 5); }
           });
         }
         break;
@@ -2587,7 +2590,7 @@
   window.GAME = {
     G, lay, boot, newGame, summon, gamble, merge, sell, craft, canCraft, upgrade, summonCost,
     worldToScreen, simulate, autoplay, endGame, findCellOf, enemyLoad, craftRoom, enemyWeight, target, rewardScore, bossMult,
-    canSummon, bestUpgrade, upgradeValue, summonValue, wantedParts, setFocus, takeReward, autoReward, castUlt, readyUlts, ecoMult, critBonus,
+    ULT_K, canSummon, bestUpgrade, upgradeValue, summonValue, wantedParts, setFocus, takeReward, autoReward, castUlt, readyUlts, ecoMult, critBonus,
     callNext, canCallNext, reroll, swapCells, isOuter, dmgMult, saveRun, savedRun, resumeRun, clearRun, REWARD_WAIT,
     // tutorial: screen rects of a cell / the whole field, and its practice enemies
     cellRect: (i) => screenRect(lay.cells[i].x - BAL.cell / 2, lay.cells[i].y + BAL.cell / 2, lay.cells[i].x + BAL.cell / 2, lay.cells[i].y - BAL.cell / 2),

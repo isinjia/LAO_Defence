@@ -511,7 +511,6 @@
       cache.luck = G.upg.luck; cache.pityLeft = pityLeft; cache.wantN = wantN;
       const o = BAL.odds(G.upg.luck);
       set('odds', el.odds, '<span class="t">SUMMON RATE</span>' + o.map((v, i) => v > 0 ? `<span style="color:${TIERS[i].color}"><i style="background-image:${rank(i)}"></i>${+v.toFixed(1)}%</span>` : '').join('') +
-        `<span class="god" title="${T('소환할 때마다 확률 강화와 무관하게 0.0001%')}">GOD 0.0001%</span>` +
         `<span class="aid" title="${T('S급 미만이 {0}번 연속이면 다음 소환은 S급 보장', BAL.pity)}">${T('S급 보장까지 {0}회', pityLeft)}</span>` +
         (wantN ? `<span class="aid on" title="${T('재료 2종을 모은 UR 조합은 마지막 재료가 더 잘 나옵니다.')}">${T('재료 보정 {0}%', Math.round(BAL.partBias * 100))}</span>` : ''), 'innerHTML');
       // the same aids on the summon button (the rate panel is hidden on narrow screens)
