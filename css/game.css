@@ -264,7 +264,7 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 .hx::before { inset: 0; background: linear-gradient(160deg, color-mix(in srgb, var(--c, #fff) 100%, #fff 35%), var(--c, #fff) 45%, color-mix(in srgb, var(--c, #fff) 60%, #000)); }
 /* portrait zoomed out 15% (128% -> 109%) and raised so the face sits in the middle of the hexagon */
 .hx::after { inset: 7%; background: var(--img) center 120% / 109% no-repeat, #1a1d22; }
-.hx .hrk { position: absolute; z-index: 1; left: 50%; bottom: -2px; transform: translateX(-50%); padding: 0 4px; min-width: 16px; text-align: center;
+.hx .hrk { position: absolute; z-index: 1; left: 50%; bottom: -2px; transform: translateX(-50%); padding: 0 4px; min-width: 16px; text-align: center; white-space: nowrap;
   font: 700 normal 10px/13px var(--en); letter-spacing: 0.5px; color: #111; background: var(--c, #fff); border: 1px solid rgba(0, 0, 0, 0.6); border-radius: 3px; pointer-events: none; }
 
 /* unit detail popup (BattleCharacterDetail-like) */

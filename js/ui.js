@@ -17,7 +17,7 @@
     return n.toLocaleString('en-US');
   };
   const img = (def) => window.IMG['c_' + def.img];
-  const rank = (t) => S('rank' + t);
+  const rank = (t) => S('rank' + Math.min(t, 4));
   // hexagon portrait in the tier colour (frame_Cha_formation_icon)
   // the rank letter rides on the frame too: the tier is never told by colour alone (colour-blind players, screen readers)
   const hex = (def, cls = '') => `<span class="hx ${cls}" style="--img:url(${img(def)});--c:${TIERS[def.tier].color}" role="img" aria-label="${def.name} (${TIERS[def.tier].name})"><i class="hrk">${TIERS[def.tier].name}</i></span>`;
@@ -106,7 +106,7 @@
       else if (e.code === 'KeyC') toggleDrawer('mythic');
       else if (e.code === 'KeyM') {
         // the selected cell, else the first full stack on the board (M is advertised as plain "merge")
-        const cells = GAME.G.cells, ok = (i) => i >= 0 && cells[i].units.length === 3 && cells[i].units[0].def.tier < 3;
+        const cells = GAME.G.cells, ok = (i) => i >= 0 && cells[i].units.length === 3 && cells[i].units[0].def.tier < DATA.UR;
         const i = ok(GAME.G.selected) ? GAME.G.selected : cells.findIndex((c, k) => ok(k));
         if (i >= 0) GAME.merge(i); else { toast(T('합성할 수 있는 유닛이 없습니다 (같은 유닛 3기)'), 'warn'); SFX.play('fail'); }
       }
@@ -335,17 +335,18 @@
           <div class="row2"><span>${T('배속')}</span><div class="seg" data-opt="speed">${[1, 2, 3].map((v) => `<button class="${GAME.G.speed === v ? 'on' : ''}" data-v="${v}">x${v}</button>`).join('')}</div></div>`}
         </div></div></div>`;
     } else if (drawer === 'mythic') {
-      h += winHead(T('SSS 조합'), T('재료 3종을 모아 궁극기를 쓰는 SSS 유닛을 만듭니다')) + '<div class="wb"><div class="recipes">';
+      h += winHead(T('유일 조합'), T('재료 3종(SSS 2 + SS 1)을 모아 유일 유닛을 만듭니다. 유일 유닛은 필드에 1기만 둘 수 있습니다')) + '<div class="wb"><div class="recipes">';
       RECIPES.forEach((r, i) => {
         const d = DATA.unit[r.result];
         const ok = GAME.canCraft(r);
+        const has = r.parts.every((id) => G.owned.has(id));
         h += `<div class="recipe ${ok ? 'ready' : ''}">
           <div class="res2">${hex(d)}<div><b>${d.name}</b><small>${d.ultName}</small></div></div>
           <div class="parts">${r.parts.map((id) => {
             const p = DATA.unit[id]; const have = G.owned.has(id);
             return `<span class="part ${have ? 'have' : ''}" title="${T('{0} ({1}급)', p.name, TIERS[p.tier].name)}">${hex(p)}<i>${p.name}</i></span>`;
           }).join('<em>+</em>')}</div>
-          <button class="btn" data-r="${i}" ${ok ? '' : 'disabled'}>${T('조합')}<small>${r.parts.filter((id) => G.owned.has(id)).length}/3</small></button></div>`;
+          <button class="btn" data-r="${i}" ${ok ? '' : 'disabled'} ${has && !ok ? `title="${T('유일 유닛은 필드에 1기만 둘 수 있습니다 (판매하면 다시 조합 가능)')}"` : ''}>${has && !ok ? T('1기 제한') : T('조합')}<small>${r.parts.filter((id) => G.owned.has(id)).length}/3</small></button></div>`;
       });
       h += `</div></div>`;
     }
@@ -389,9 +390,9 @@
     const mult = GAME.dmgMult();
     const c = GAME.lay.cells[i], gap = Math.min(GAME.lay.hw - Math.abs(c.x), GAME.lay.hh - Math.abs(c.y));
     const reroll = BAL.reroll[d.tier];
-    const canMerge = cell.units.length === 3 && d.tier < 3;
+    const canMerge = cell.units.length === 3 && d.tier < DATA.UR;
     const uses = RECIPES.filter((r) => r.parts.includes(d.id)).map((r) => DATA.unit[r.result]);
-    const max = d.tier === 4 ? 1 : 3;
+    const max = d.tier >= DATA.UR ? 1 : 3;
     const stat = (icon, label, v) => `<span><i class="si" style="background-image:${S(icon)}"></i>${label}<b>${v}</b></span>`;
     el.popup.style.setProperty('--c', t.color);
     el.popup.innerHTML = `
@@ -405,10 +406,10 @@
         ${stat('i_acc', T('사거리'), +(d.range + G.buff.range).toFixed(1))}${stat('i_crit', T('보유'), cell.units.length + '/' + max)}
       </div>
       ${d.ult ? `<div class="mana"><span>${T('궁극기 · {0}', d.ultName)}</span><div class="gauge c"><i style="transform:scaleX(${u.mana / 100})"></i></div></div>` : ''}
-      ${uses.length ? `<div class="uses">${T('SSS 재료')} ${uses.map((m) => hex(m)).join('')}</div>` : ''}
+      ${uses.length ? `<div class="uses">${T('유일 재료')} ${uses.map((m) => hex(m)).join('')}</div>` : ''}
       ${d.range + G.buff.range < gap + 0.2 ? `<div class="warn">${T('이 칸에서는 적에게 닿지 않습니다. 바깥쪽 칸으로 옮기세요')}</div>` : ''}
       <div class="btns">
-        ${d.tier < 3 ? `<button class="btn merge" ${canMerge ? '' : 'disabled'}>${T('합성')}<small>${cell.units.length}/3</small></button>` : ''}
+        ${d.tier < DATA.UR ? `<button class="btn merge" ${canMerge ? '' : 'disabled'}>${T('합성')}<small>${cell.units.length}/3</small></button>` : ''}
         ${reroll ? `<button class="btn d reroll" title="${T('같은 랭크의 다른 유닛으로 교체')}" ${G.gems < reroll ? 'disabled' : ''}>${T('교체')}<small>${tunaI}${reroll}</small></button>` : ''}
         <button class="btn o sell">${T('판매')}<small>+${t.sell}</small></button>
       </div>`;
@@ -501,7 +502,7 @@
       const o = BAL.odds(G.upg.luck);
       set('odds', el.odds, '<span class="t">SUMMON RATE</span>' + o.map((v, i) => v > 0 ? `<span style="color:${TIERS[i].color}"><i style="background-image:${rank(i)}"></i>${+v.toFixed(1)}%</span>` : '').join('') +
         `<span class="aid" title="${T('S급 미만이 {0}번 연속이면 다음 소환은 S급 보장', BAL.pity)}">${T('S급 보장까지 {0}회', pityLeft)}</span>` +
-        (wantN ? `<span class="aid on" title="${T('재료 2종을 모은 SSS 조합은 마지막 재료가 더 잘 나옵니다.')}">${T('재료 보정 {0}%', Math.round(BAL.partBias * 100))}</span>` : ''), 'innerHTML');
+        (wantN ? `<span class="aid on" title="${T('재료 2종을 모은 유일 조합은 마지막 재료가 더 잘 나옵니다.')}">${T('재료 보정 {0}%', Math.round(BAL.partBias * 100))}</span>` : ''), 'innerHTML');
       // the same aids on the summon button (the rate panel is hidden on narrow screens)
       el.aidMini.innerHTML = `<i title="${T('S급 보장까지 {0}회', pityLeft)}">S ${pityLeft}</i>` + (wantN ? `<i class="on" title="${T('재료 보정 {0}%', Math.round(BAL.partBias * 100))}">+${Math.round(BAL.partBias * 100)}%</i>` : '');
     }
@@ -615,7 +616,7 @@
     const wait = bannerUntil + 250 - performance.now();
     if (wait > 0) { setTimeout(() => announce(def, text), wait); return; }
     const t = TIERS[def.tier];
-    el.announce.innerHTML = `<div class="ann ${def.tier === 4 ? 'r4' : ''}" style="--c:${t.color}">${hex(def)}
+    el.announce.innerHTML = `<div class="ann ${def.tier >= 4 ? 'r4' : ''}" style="--c:${t.color}">${hex(def)}
       <div><small>${text}</small><b>${def.name}</b></div><span class="rk" style="background-image:${rank(def.tier)}"></span></div>`;
     const a = el.announce.firstChild;
     setTimeout(() => a.classList.add('out'), 1700);
@@ -744,16 +745,16 @@
 
   const TIPS = [
     '같은 유닛 3기를 모으면 한 단계 높은 랭크로 합성됩니다.',
-    'SSS 유닛의 재료는 유닛 상세 정보에서 확인할 수 있습니다.',
+    '유일 유닛의 재료는 유닛 상세 정보에서 확인할 수 있습니다.',
     '10웨이브마다 보스가 등장합니다. 제한 시간 안에 처치하세요.',
     '보스마다 고유 기믹이 있습니다. 8웨이브에 다음 보스가 예고됩니다.',
     '근접 유닛은 바깥쪽 칸에 두어야 적에게 닿습니다.',
     '적이 다 나오고 필드가 한산하면 다음 웨이브를 호출해 부품을 더 받으세요.',
     '둔화·기절한 적은 피해를 15% 더 받습니다.',
-    '궁극기를 수동으로 바꾸면 보스 방어막이 걷힌 뒤처럼 원하는 순간에 쓸 수 있습니다(Q).',
+    'SSS도 3기를 모아 합성하면 UR 유닛이 됩니다. SSS·UR·유일 유닛의 궁극기는 자동으로 발동합니다.',
     '보스를 제한 시간 안에 잡으면 보상 3개 중 하나를 고를 수 있습니다.',
     '보급 강화는 일찍 살수록 많이 돌려받습니다.',
-    '재료 2종을 모은 SSS 조합은 마지막 재료가 더 잘 나옵니다.',
+    '재료 2종을 모은 유일 조합은 마지막 재료가 더 잘 나옵니다.',
     '적을 탭하면 집중 공격 대상으로 지정합니다. 다시 탭하면 해제됩니다.',
     '참치는 엘리트·보스 처치와 5웨이브마다 얻을 수 있습니다.',
     '유닛을 드래그하면 다른 칸의 유닛과 위치를 바꿀 수 있습니다.',

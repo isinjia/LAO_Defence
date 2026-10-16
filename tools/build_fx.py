@@ -16,7 +16,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "unity_ref", "proj", "fx")
-ASSETS = r"E:/LAO/Google_QA/Assets"
+ASSETS = r"E:/LAO_Google_QA/Assets"
 OUT = os.path.join(HERE, "..", "js", "fx")
 MAX_TEX = 1024
 BIG = 1_500_000      # packed bytes above which an effect is baked at half its frame rate

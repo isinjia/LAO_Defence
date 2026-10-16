@@ -1,6 +1,6 @@
 // Core game: scene setup, entities, waves, combat and input.
 (function () {
-  const { TIERS, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL } = DATA;
+  const { TIERS, UR, UNIQUE, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL } = DATA;
   const L = FX.L;
   const rnd = FX.rnd;
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -9,13 +9,19 @@
   const pickL = (a, k) => a[Math.floor(luck(k) * a.length)];
   const STREAMS = ['summon', 'merge', 'gamble', 'reward', 'reroll', 'auto'];
   const makeStreams = (seed) => Object.fromEntries(STREAMS.map((k, i) => [k, mulberry32(seed * 31 + i * 7919)]));
-  // a unit of a rank: 35% of the time it is the last missing part of an SSS recipe the player is two thirds into
+  // a unit of a rank: 35% of the time it is the last missing part of a 유일 recipe the player is two thirds into
   function wantedParts(t) { return RECIPES.map((r) => r.parts.filter((p) => !G.owned.has(p))).filter((m) => m.length === 1).map((m) => DATA.unit[m[0]]).filter((d) => t == null || d.tier === t); }
   function pickRank(t, k) {
     // the tutorial's summons are all one B unit, so the first three stack up for the merge lesson
     if (G.tut && G.tut.unit && k === 'summon') return DATA.unit[G.tut.unit];
     const want = wantedParts(t);
     if (want.length && luck(k) < BAL.partBias) return pickL(want, k);
+    // an S..SSS from a merge / summon / gamble often is one already stacking on the board: three of one SS (for an
+    // SSS) and of one SSS (for a UR) stay reachable with five or six kinds per rank
+    if (t >= 2 && t <= 4 && k !== 'reroll' && k !== 'reward') {
+      const stacking = UNITS.filter((d) => d.tier === t && G.cells.some((c) => c.units.length && c.units.length < 3 && c.units[0].def.id === d.id));
+      if (stacking.length && luck(k) < BAL.stackBias) return pickL(stacking, k);
+    }
     return pickL(DATA.byTier(t), k);
   }
   function mulberry32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -123,7 +129,7 @@
   function getUnitTex(def) {
     if (!unitTex[def.id]) {
       const tier = TIERS[def.tier];
-      unitTex[def.id] = circleTex(images['c_' + def.img], tier.color, def.tier >= 3 ? 12 : 9, def.tier >= 3, def.tier === 4 ? '#ffd56b' : null);
+      unitTex[def.id] = circleTex(images['c_' + def.img], tier.color, def.tier >= 3 ? 12 : 9, def.tier >= 3, def.tier >= 4 ? (def.tier === UNIQUE ? '#9ffcff' : '#ffd56b') : null);
     }
     return unitTex[def.id];
   }
@@ -335,7 +341,7 @@
 
   function makeUnit(def) {
     const u = { def, x: 0, y: 0, tx: 0, ty: 0, cd: Math.random() * def.rate, mana: 0, pulse: 0, cell: -1, face: 1, lastAtk: -9, casting: false };
-    u.size = def.tier === 4 ? 1.5 : 0.92;
+    u.size = def.tier >= 4 ? 1.5 : 0.92;
     u.h = SD_BODY;
     // ground: soft shadow + tier ring
     u.shadow = FX.sprite({ x: 0, y: 0, size: 1, aspect: 0.22 / 0.75, color: 0x000000, alpha: 0.7, tex: FX.tex.dot, normal: true, order: L.CELL + 1 });
@@ -425,7 +431,7 @@
       if (cell.units.length) {
         const t = TIERS[cell.units[0].def.tier];
         m.material.color.setHex(t.hex);
-        m.material.opacity = cell.units.length === 3 && cell.units[0].def.tier < 3 ? 0.95 : 0.7;
+        m.material.opacity = cell.units.length === 3 && canMerge(cell.units[0].def) ? 0.95 : 0.7;
         if (cell.silT > 0) { m.material.color.setHex(0xff2040); m.material.opacity = 1; }
       } else {
         m.material.color.setHex(0xb8c0c8);
@@ -435,15 +441,18 @@
     G.owned = new Set();
     G.cells.forEach((c) => c.units.forEach((u) => G.owned.add(u.def.id)));
     if (G.phase === 'play' && UI.tip && !G.headless && !G.tut) { // the tutorial teaches these itself
-      if (G.cells.some((c) => c.units.length === 3 && c.units[0].def.tier < 3)) UI.tip('merge', MOBILE ? T('같은 유닛 3기가 모였습니다! 그 칸을 탭해 <b>합성</b>하면 한 랭크 위 유닛이 됩니다.') : T('같은 유닛 3기가 모였습니다! 그 칸을 눌러 <b>합성</b>하거나 <b>M</b> 키를 누르면 한 랭크 위 유닛이 됩니다.'));
-      if (RECIPES.some((r) => r.parts.some((p) => G.owned.has(p)))) UI.tip('sss', T('<b>SSS 조합</b> 재료를 얻었습니다. 재료 3종을 모으면 [조합]에서 궁극기를 쓰는 SSS 유닛을 만듭니다.'));
+      if (G.cells.some((c) => c.units.length === 3 && canMerge(c.units[0].def))) UI.tip('merge', MOBILE ? T('같은 유닛 3기가 모였습니다! 그 칸을 탭해 <b>합성</b>하면 한 랭크 위 유닛이 됩니다.') : T('같은 유닛 3기가 모였습니다! 그 칸을 눌러 <b>합성</b>하거나 <b>M</b> 키를 누르면 한 랭크 위 유닛이 됩니다.'));
+      if (RECIPES.some((r) => r.parts.some((p) => G.owned.has(p)))) UI.tip('sss', T('<b>유일 조합</b> 재료(SSS)를 얻었습니다. 재료 3종을 모으면 [조합]에서 유일 유닛을 만듭니다(필드에 1기만).'));
     }
     UI.onCellsChanged();
   }
 
   // a cell next to the path (the middle row's inner cells are ~3.7 away from it)
   function isOuter(i) { const r = Math.floor(i / BAL.cols), c = i % BAL.cols; return r !== 1 || c === 0 || c === BAL.cols - 1; }
-  function stackMax(def) { return def.tier === 4 ? 1 : 3; }
+  // B..SSS stack to three and merge one rank up (three SSS make a UR); UR and 유일 stand alone
+  function stackMax(def) { return def.tier >= UR ? 1 : 3; }
+  function canMerge(def) { return def.tier < UR; }
+  function hasUnique() { return G.cells.some((c) => c.units.some((u) => u.def.tier === UNIQUE)); }
   // cell indices bottom row first, right to left within a row (world y up, x right; follows the current orientation)
   function fillOrder() {
     return lay.cells.map((c, k) => k).sort((a, b) => (lay.cells[a].y - lay.cells[b].y) || (lay.cells[b].x - lay.cells[a].x));
@@ -540,7 +549,7 @@
   }
   function merge(i, quiet) {
     const cell = G.cells[i];
-    if (cell.units.length !== 3 || cell.units[0].def.tier >= 3) return;
+    if (cell.units.length !== 3 || !canMerge(cell.units[0].def)) return;
     const tier = cell.units[0].def.tier + 1;
     const c = lay.cells[i];
     cell.units.forEach(removeUnit);
@@ -555,6 +564,7 @@
     if (!quiet) buzz(tier >= 3 ? [14, 50, 14, 50, 30] : [12, 40, 12]);
     if (G.tut) G.tut.merged = true;
     if (tier >= 2) UI.announce(def, T('{0}급 합성!', TIERS[tier].name));
+    if (tier >= UR) FX.flash(TIERS[tier].hex, 0.5), FX.shake(0.3);
     // the selection window closes after a merge (the new unit is shown by its reveal, not by a popup)
     if (quiet) keepSelection();
     else { G.selected = -1; UI.closePopup(); }
@@ -615,7 +625,7 @@
   // the boon worth most in this situation (a reading of the board, not a fixed order)
   function rewardScore(r) {
     const w = G.wave, nb = DATA.bossFor(Math.min(BAL.lastWave, (Math.floor(w / 10) + 1) * 10));
-    const sss = G.cells.some((c) => c.units.length && c.units[0].def.tier === 4);
+    const sss = G.cells.some((c) => c.units.length && c.units[0].def.ult);
     const melee = G.cells.filter((c) => c.units.length && c.units[0].def.type === 'melee').length;
     switch (r.key) {
       case 'ss': return anyEmpty() ? (w < 50 ? 9 : 6) : 3;
@@ -650,7 +660,7 @@
     startWave();
     return true;
   }
-  // swap one unit (A..SS) for a different random unit of the same rank, for tuna: chase a missing SSS part
+  // swap one unit (A..SSS) for a different random unit of the same rank, for tuna: chase a missing recipe part
   function reroll(i) {
     const cell = G.cells[i];
     if (!cell || !cell.units.length) return;
@@ -672,12 +682,14 @@
     UI.update(true);
   }
 
-  function canCraft(r) { return r.parts.every((id) => G.owned.has(id)); }
+  function canCraft(r) { return r.parts.every((id) => G.owned.has(id)) && !hasUnique(); }
 
   function craftRoom(r) { return anyEmpty() || r.parts.some((id) => { const i = findCellOf(id); return i >= 0 && G.cells[i].units.length === 1; }); }
   function craft(ri, quiet) {
     const r = RECIPES[ri];
-    if (G.paused || !canCraft(r)) return;
+    if (G.paused) return;
+    if (hasUnique()) { if (!quiet) { UI.toast(T('유일 유닛은 필드에 1기만 둘 수 있습니다 (판매하면 다시 조합 가능)'), 'warn'); SFX.play('fail'); } return; }
+    if (!canCraft(r)) return;
     if (!craftRoom(r)) { if (!quiet) { UI.toast(T('배치할 칸이 없습니다'), 'warn'); SFX.play('fail'); } return; }
     let at = -1;
     let sx = 0, sy = 0;
@@ -693,7 +705,7 @@
     const def = DATA.unit[r.result];
     const i = addUnit(def, at, sx, sy);
     SFX.play('pickSS');
-    UI.announce(def, T('SSS 조합!'));
+    UI.announce(def, T('유일 조합!'));
     if (quiet) keepSelection();
     else { G.selected = i; UI.onSelect(); }
     UI.update(true);
@@ -727,7 +739,7 @@
   }
 
   // attack multiplier (upgrade line x boss rewards); every rank alike
-  function dmgMult() { return BAL.upgradeMult(G.upg.atk, 'atk') * G.buff.atk; }
+  function dmgMult() { return BAL.upgradeMult(G.upg.atk, 'atk') * G.buff.atk * (G.rallyT > 0 ? G.rallyK : 1); }
   function critBonus() { return G.buff.crit; }
   function bossMult() { return BAL.upgradeMult(G.upg.boss, 'boss'); }
   function ecoMult() { return (1 + G.upg.eco * BAL.upgrades[2].bonus) * G.buff.eco; }
@@ -849,11 +861,15 @@
     e.grp.children.forEach((o) => { if (o.isSprite) o.material.dispose(); });
   }
 
-  function damage(e, amount, color, crit, src) {
+  // pierce: ignores shields and armour (Khan's sandstorm)
+  function damage(e, amount, color, crit, src, pierce) {
     if (!e.alive) return;
     if (e.slowT > 0 || e.stunT > 0) amount *= BAL.vuln;
-    if (e.shieldT > 0) amount *= 0.2;
-    amount *= e.armor;
+    if (e.markT > 0) amount *= e.markK;
+    if (!pierce) {
+      if (e.shieldT > 0) amount *= 0.2;
+      amount *= e.armor;
+    }
     if (e.resist && src) amount *= src.type === 'melee' ? 1.3 : 0.75;
     if (e.kind !== 'normal') amount *= bossMult();
     e.quietT = 0;
@@ -1387,7 +1403,7 @@
   function charge(u, e, k) {
     const d = u.def;
     if (!d.ult) return;
-    // an SSS fires its ultimate by itself as soon as the gauge is full (no buttons); a full gauge that found no
+    // an SSS / UR / 유일 fires its ultimate by itself as soon as the gauge is full (no buttons); a full gauge that found no
     // target retries on the next attack
     if (u.mana < 100) u.mana = Math.min(100, u.mana + d.mana * k * G.buff.mana);
     if (u.mana >= 100) castUlt(u, e);
@@ -1505,7 +1521,7 @@
   function ultimate(u, e) {
     const d = u.def;
     const base = d.dmg * dmgMult();
-    UI.ultCallout(u.x, u.y, d.ultName, TIERS[4].color);
+    UI.ultCallout(u.x, u.y, d.ultName, TIERS[d.tier].color);
     // the original skill clip, except where it is a full-screen cut-in (Fafnir's grows ~5x the board cell)
     const clip = HUGE_SKILL.has(d.id) ? 'atk' : 'skill';
     if (u.sd && u.sd.has(clip)) {
@@ -1517,29 +1533,158 @@
     FX.ring(u.x, u.y, 0.3, 3, d.color, 0.5);
     SFX.play('charge');
     switch (d.ult) {
-      case 'orbital': {
+      // ── SSS ──
+      case 'rail': { // Ullr: a railgun across the whole field; every enemy it passes takes less (100% → 40%)
         const ang = Math.atan2(e.y - u.y, e.x - u.x);
-        const x1 = u.x + Math.cos(ang) * 20, y1 = u.y + Math.sin(ang) * 20;
+        const x1 = u.x + Math.cos(ang) * 24, y1 = u.y + Math.sin(ang) * 24;
         FX.later(0.15, () => {
           FX.orbital(u.x, u.y, x1, y1, d.color);
-          SFX.play('laserBig'); SFX.play('expB');
-          for (const o of G.enemies) if (o.alive && distToSeg(o.x, o.y, u.x, u.y, x1, y1) < 1.3) damage(o, base * 10, d.color, true, d);
+          SFX.play('laserBig');
+          inLine(u.x, u.y, x1, y1, 1.0).sort((a, b) => Math.hypot(a.x - u.x, a.y - u.y) - Math.hypot(b.x - u.x, b.y - u.y))
+            .forEach((o, k) => damage(o, base * 9 * Math.max(0.4, 1 - 0.12 * k), d.color, true, d));
         });
         break;
       }
-      case 'freeze': {
+      case 'salvo': { // Harpeia: a missile salvo over the crowd; the hit lose their footing (take +20% for 5 s)
+        const spots = densest(1.4, 4);
+        for (let k = 0; k < 10; k++) {
+          FX.later(k * 0.08, () => {
+            const o = spots[k % spots.length];
+            const x = o.x + rnd(-0.5, 0.5), y = o.y + rnd(-0.5, 0.5);
+            FX.beam(u.x, u.y, x, y, 0.08, d.color, 0.12);
+            FX.explosion(x, y, 1.0, d.color, k % 3 === 0);
+            SFX.play('expM', 0.5);
+            for (const z of enemiesNear(x, y, 1.3)) { damage(z, base * 2.5, d.color, true, d); mark(z, 1.2, 5); }
+          });
+        }
+        break;
+      }
+      case 'guardian': { // Eternity: a protector's barrage over the target's area, the squad shielded (+15% for 6 s)
+        for (let k = 0; k < 12; k++) {
+          FX.later(k * 0.1, () => {
+            const near = enemiesNear(e.x, e.y, 2.2);
+            near.slice(0, 4).forEach((o) => { FX.beam(u.x, u.y, o.x, o.y, 0.05, d.color, 0.08); FX.hit(o.x, o.y, d.color, 0.9); });
+            if (k % 3 === 0) SFX.play('mg', 0.5);
+            for (const o of near) damage(o, base * 0.9, d.color, false, d);
+          });
+        }
+        rally(1.15, 6);
+        break;
+      }
+      case 'domain': { // Lemonade Alpha: the whole field weakened (+30% taken for 7 s), knocked back, boss shields broken
+        FX.flash(0xffe14d, 0.25);
+        FX.ring(u.x, u.y, 0.5, 16, d.color, 0.6, 1.2);
+        SFX.play('energy');
+        for (const o of G.enemies) {
+          if (!o.alive) continue;
+          mark(o, 1.3, 7);
+          if (o.kind === 'normal') o.d = Math.max(0, o.d - 1.2);
+          else o.shieldT = 0;
+          FX.ring(o.x, o.y, 0.1, 0.8, d.color, 0.3);
+          damage(o, base * 2.5, d.color, true, d);
+        }
+        break;
+      }
+      case 'rowlaser': { // Sleipnir: a laser along the target's row that pins everything in it for 2 s
+        const y = e.y;
+        FX.later(0.12, () => {
+          FX.orbital(-lay.hw - 2, y, lay.hw + 2, y, d.color);
+          SFX.play('laserBig');
+          for (const o of G.enemies) if (o.alive && Math.abs(o.y - y) < 1.0) { damage(o, base * 6, d.color, true, d); stun(o, 2); }
+        });
+        break;
+      }
+      case 'taunt': { // Black Lilith: draws the enemies around the target onto her blades: held 1.6 s, +25% taken for 6 s
+        FX.ring(e.x, e.y, 0.3, 2.6, d.color, 0.7);
+        SFX.play('slash');
+        for (const o of enemiesNear(e.x, e.y, 2.6)) { stun(o, 1.6); mark(o, 1.25, 6); FX.slash(o.x, o.y, d.color, 1.6); damage(o, base * 5, d.color, true, d); }
+        break;
+      }
+      // ── UR ──
+      case 'wolfpack': { // Brunhild: three waves of the fire wolves over the crowds; the burns stack (up to 3)
+        for (let w = 0; w < 3; w++) {
+          FX.later(w * 0.45, () => {
+            SFX.play('expB');
+            densest(1.8, 3).forEach((o) => {
+              const x = o.x, y = o.y;
+              FX.explosion(x, y, 1.3, d.color, w === 2);
+              FX.ring(x, y, 0.2, 1.9, d.color, 0.45, 0.7);
+              for (const z of enemiesNear(x, y, 1.9)) { damage(z, base * 4, d.color, true, d); burn(z, base * 0.6, 4, d); }
+            });
+          });
+        }
+        break;
+      }
+      case 'execute': { // Tiamat: breaks the armour around the strongest enemy (+40% taken for 8 s), then one huge shot
+        const t = strongest() || e;
+        for (const o of enemiesNear(t.x, t.y, 1.6)) mark(o, 1.4, 8);
+        FX.ring(t.x, t.y, 0.3, 1.8, d.color, 0.6);
+        FX.later(0.5, () => {
+          if (!t.alive) return;
+          FX.orbital(u.x, u.y, t.x, t.y, d.color);
+          SFX.play('laserBig'); SFX.play('expB');
+          damage(t, base * 40, d.color, true, d);
+          if (t.alive && t.kind === 'normal' && t.hp < t.maxHp * 0.3) damage(t, t.maxHp * 10, d.color, true, d); // executed
+        });
+        break;
+      }
+      case 'sandstorm': { // Khan: an armour-ignoring sandstorm over the whole field; every kill speeds her up (6 s)
+        FX.flash(0xd9b070, 0.25);
+        for (let k = 0; k < 10; k++) {
+          FX.later(k * 0.25, () => {
+            const before = G.kills;
+            G.enemies.forEach((o, n) => {
+              if (!o.alive) return;
+              if (n % 3 === k % 3) FX.sparks(o.x, o.y, d.color, 3, 2, 0.1, 0.4);
+              mark(o, 1.15, 3);
+              damage(o, base * 1.2, d.color, false, d, true);
+            });
+            if (k % 3 === 0) SFX.play('spray', 0.4);
+            if (G.kills > before) u.hasteT = 6;
+          });
+        }
+        break;
+      }
+      case 'sweep': { // Labiata: a row, a column and a row again through the target; the squad fights harder (+25%, 8 s)
+        const lines = [[-lay.hw - 2, e.y, lay.hw + 2, e.y], [e.x, -lay.hh - 2, e.x, lay.hh + 2], [-lay.hw - 2, e.y, lay.hw + 2, e.y]];
+        lines.forEach(([x0, y0, x1, y1], k) => FX.later(k * 0.2, () => {
+          FX.beam(x0, y0, x1, y1, 0.4, d.color, 0.25);
+          SFX.play('swing');
+          for (const o of inLine(x0, y0, x1, y1, 1.1)) { FX.slash(o.x, o.y, d.color, 1.8); damage(o, base * 6, d.color, true, d); }
+        }));
+        rally(1.25, 8);
+        break;
+      }
+      // ── 유일 ──
+      case 'snipe': { // Constantia S2: the strongest enemy shot, rooted 3 s and marked (+35% for 8 s); the shot pierces on
+        const t = strongest() || e;
+        const ang = Math.atan2(t.y - u.y, t.x - u.x);
+        const x1 = u.x + Math.cos(ang) * 24, y1 = u.y + Math.sin(ang) * 24;
+        FX.later(0.15, () => {
+          FX.orbital(u.x, u.y, x1, y1, d.color);
+          SFX.play('laserBig'); SFX.play('expB');
+          for (const o of inLine(u.x, u.y, x1, y1, 1.0)) if (o !== t) damage(o, base * 6, d.color, true, d);
+          if (t.alive) { mark(t, 1.35, 8); stun(t, 3); damage(t, base * 25, d.color, true, d); }
+        });
+        break;
+      }
+      case 'freeze': { // Titania: the frost storm freezes the field, then everything stays 55% slower
         FX.freezeAll(0, 0, d.color);
         SFX.play('ice');
         for (const o of G.enemies) {
           if (!o.alive) continue;
           stun(o, 2.5);
           o.frozenT = o.stunT; // iced over for as long as it is held (bosses shrug it off sooner)
+          slow(o, 0.55, 6.5);
           FX.frost(o.x, o.y, 0.7, d.color);
           damage(o, base * 4, d.color, true, d);
         }
         break;
       }
-      case 'blades': {
+      case 'blades': { // Mercury: the whole squad hastened (6 s), the strongest enemy slowed, then the blade dance
+        G.cells.forEach((c) => c.units.forEach((x) => { x.hasteT = 6; FX.ring(x.x, x.y, 0.2, 0.9, d.color, 0.4); }));
+        const t = strongest();
+        if (t) slow(t, 0.6, 5);
         let px = u.x, py = u.y;
         for (let k = 0; k < 12; k++) {
           FX.later(k * 0.09, () => {
@@ -1550,36 +1695,46 @@
             FX.slash(o.x, o.y, d.color, 2.2);
             px = o.x; py = o.y;
             SFX.play('slash');
-            for (const z of enemiesNear(o.x, o.y, 1.0)) damage(z, base * 4, d.color, true, d);
+            for (const z of enemiesNear(o.x, o.y, 1.0)) damage(z, base * 3, d.color, true, d);
           });
         }
         break;
       }
-      case 'meteor': {
-        densest(1.8, 5).forEach((o, k) => {
+      case 'iceage': { // Empress: an ice age over the field (frozen 2 s), then the penguin bombs on the crowds
+        FX.freezeAll(0, 0, d.color);
+        SFX.play('ice');
+        for (const o of G.enemies) {
+          if (!o.alive) continue;
+          stun(o, 2);
+          o.frozenT = o.stunT;
+          damage(o, base * 3, d.color, true, d);
+        }
+        densest(1.8, 3).forEach((o, k) => {
           const x = o.x, y = o.y;
-          FX.later(k * 0.18, () => FX.meteor(x, y, () => {
+          FX.later(0.3 + k * 0.2, () => FX.meteor(x, y, () => {
             SFX.play('expB');
-            for (const z of enemiesNear(x, y, 2.0)) { damage(z, base * 7, d.color, true, d); stun(z, 0.5); }
+            for (const z of enemiesNear(x, y, 2.0)) damage(z, base * 6, d.color, true, d);
           }, d.color));
         });
         break;
       }
-      case 'thunder': {
+      case 'thunder': { // Fafnir: a lightning storm that hits harder where the enemies crowd
         FX.flash(0x6fa8ff, 0.3);
         for (let k = 0; k < 12; k++) {
           FX.later(k * 0.11, () => {
             const alive = G.enemies.filter((o) => o.alive);
             if (!alive.length) return;
             const o = pick(alive);
+            const near = enemiesNear(o.x, o.y, 1.1);
             FX.thunderBolt(o.x, o.y, d.color);
             SFX.play('elec');
-            for (const z of enemiesNear(o.x, o.y, 1.1)) { damage(z, base * 5, d.color, true, d); stun(z, 0.3); }
+            const k2 = 1 + 0.15 * Math.min(6, near.length - 1);
+            for (const z of near) { damage(z, base * 4 * k2, d.color, true, d); stun(z, 0.3); }
           });
         }
         break;
       }
-      case 'pillar': {
+      case 'pillar': { // Ramiel: pillars of holy fire on the crowds, the ground left burning
         FX.flash(0xfff1b8, 0.3);
         SFX.play('energy');
         densest(1.6, 3).forEach((o) => {
@@ -1587,7 +1742,7 @@
           FX.pillar(x, y, 3, d.color);
           for (let k = 0; k < 12; k++) {
             FX.later(k * 0.25, () => {
-              for (const z of enemiesNear(x, y, 1.6)) { damage(z, base * 1.4, d.color, false, d); slow(z, 0.5, 0.4); }
+              for (const z of enemiesNear(x, y, 1.6)) { damage(z, base * 1.4, d.color, false, d); slow(z, 0.5, 0.4); if (k % 4 === 0) burn(z, base * 0.4, 3, d); }
             });
           }
         });
@@ -1596,13 +1751,29 @@
     }
   }
 
+  // ── ultimate helpers ──
+  function inLine(x0, y0, x1, y1, w) { return G.enemies.filter((o) => o.alive && distToSeg(o.x, o.y, x0, y0, x1, y1) < w); }
+  // the boss, or else the enemy with the most HP left
+  function strongest() { return G.boss && G.boss.alive ? G.boss : G.enemies.reduce((b, o) => (o.alive && (!b || o.hp > b.hp) ? o : b), null); }
+  // a mark: the enemy takes k times the damage for t seconds (the strongest mark holds)
+  function mark(e, k, t) { if (!(e.markT > 0) || k >= e.markK) e.markK = k; e.markT = Math.max(e.markT || 0, t); }
+  // a burn: dps per stack (up to 3 stacks) for t seconds, refreshed by each new burn
+  function burn(e, dps, t, src) { e.burnN = Math.min(3, (e.burnT > 0 ? e.burnN : 0) + 1); e.burnDps = Math.max(e.burnT > 0 ? e.burnDps : 0, dps); e.burnT = t; e.burnSrc = src; e.burnAcc = e.burnAcc || 0; }
+  // the squad's attack x k for t seconds (the stronger rally holds)
+  function rally(k, t) {
+    if (!(G.rallyT > 0) || k >= G.rallyK) G.rallyK = k;
+    G.rallyT = Math.max(G.rallyT || 0, t);
+    G.cells.forEach((c) => c.units.forEach((x) => FX.ring(x.x, x.y, 0.2, 0.9, 0xffd36e, 0.4)));
+  }
+
   // ── update ─────────────────────────────────────────────
   function step(dt) {
     G.time += dt;
+    if (G.rallyT > 0) G.rallyT -= dt;
     // the boss reward pick runs on the player's clock (x3 speed does not shorten it)
     if (G.reward) G.rewardWait = (G.rewardWait || 0) + dt / Math.max(1, G.speed);
     if (G.won) { G.winT -= dt; if (G.winT <= 0) endGame(true); return; }
-    // AUTO: the player's own toggle (summon / merge; never upgrades, crafts SSS, sells units or bets tuna)
+    // AUTO: the player's own toggle (summon / merge; never upgrades, crafts 유일, sells units or bets tuna)
     // every AUTO_EVERY real seconds (x3 speed does not hurry it); the first round as soon as it is switched on
     if (G.opt.auto && G.phase === 'play') {
       G.autoT = (G.autoT || 0) - dt / Math.max(1, G.speed);
@@ -1644,6 +1815,13 @@
       if (e.stunT > 0) { e.stunT -= dt; sp = 0; }
       if (e.frozenT > 0) e.frozenT -= dt;
       if (e.slowT > 0) { e.slowT -= dt; sp *= 1 - e.slowAmt; } else e.slowAmt = 0;
+      if (e.markT > 0) e.markT -= dt;
+      if (e.burnT > 0) {
+        e.burnT -= dt;
+        e.burnAcc += e.burnDps * e.burnN * dt;
+        if (e.burnAcc >= e.burnDps * 0.5 || e.burnT <= 0) { const a = e.burnAcc; e.burnAcc = 0; damage(e, a, 0xff6a2a, false, e.burnSrc); }
+        if (!e.alive) continue;
+      }
       if (e.kind === 'elite' && !e.enraged && (e.lifeT -= dt) <= 0) enrageElite(e);
       if (e.gim && !e.enraged) bossTricks(e, dt);
       else if (e.regen) { e.quietT += dt; if (e.quietT > 1.5 && e.hp < e.maxHp) e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.03 * dt); }
@@ -1660,6 +1838,7 @@
       for (const u of cell.units) {
         if (u.act) stepAttack(u, dt);
         u.cd -= dt;
+        if (u.hasteT > 0) { u.hasteT -= dt; u.cd -= dt * 0.5; }
         if (u.cd <= 0) {
           const e = target(u);
           u.cd = e ? attack(u, e) : 0.1;
@@ -1828,9 +2007,9 @@
           u.ring.alpha = 0.55 + Math.sin(time * 3 + u.x) * 0.15;
         }
         if (u.aura) {
-          const k = u.def.tier === 4 ? 1.3 + (u.mana / 100) * 0.4 : 1.2;
+          const k = u.def.ult ? 1.3 + (u.mana / 100) * 0.4 : 1.2;
           u.aura.x = ux; u.aura.y = uy + u.h * 0.45; u.aura.sz = u.h * k;
-          u.aura.alpha = 0.25 + Math.sin(time * 3) * 0.08 + (u.def.tier === 4 ? u.mana / 300 : 0);
+          u.aura.alpha = 0.25 + Math.sin(time * 3) * 0.08 + (u.def.ult ? u.mana / 300 : 0);
         }
         if (u.sd) {
           if (u.sd.clipName === 'atk' && !u.act && G.time - u.lastAtk > 1.0) { u.sd.speed = 1; u.sd.play('idle'); }
@@ -2101,7 +2280,7 @@
     Object.assign(G, {
       phase: 'play', paused: false, speed: 1, gold: BAL.startGold, gems: BAL.startGems, wave: 0, waveT: 0,
       spawnLeft: 0, spawnT: 0, bossT: 0, boss: null, enemies: [], corpses: [], projs: [], bfx: [], sfx: [], summons: 0, pity: 0, won: false,
-      upg: { atk: 0, boss: 0, eco: 0, luck: 0 }, buff: { atk: 1, crit: 0, eco: 1, time: 0, mana: 1, range: 0, mutx: 1, nullify: false }, reward: null, mut: null, bossMax: BAL.bossTime, waveMax: 3, labUlt: false, kills: 0, time: 0, selected: -1, dmgBy: {}, peak: 0,
+      upg: { atk: 0, boss: 0, eco: 0, luck: 0 }, buff: { atk: 1, crit: 0, eco: 1, time: 0, mana: 1, range: 0, mutx: 1, nullify: false }, rallyT: 0, rallyK: 1, reward: null, mut: null, bossMax: BAL.bossTime, waveMax: 3, labUlt: false, kills: 0, time: 0, selected: -1, dmgBy: {}, peak: 0,
       diff: G.daily ? 1 : G.opt.diff == null ? 1 : G.opt.diff,
       rng: G.daily ? makeStreams(G.daily) : null, focus: null, hintUpg: false, tut: null,
     });
@@ -2218,11 +2397,11 @@
   const REWARD_WAIT = 18;
   // the player's AUTO summons / merges once every this many real seconds
   const AUTO_EVERY = 5;
-  // sell: the balance bot (crafts SSS, upgrades, sells weak singles for room, bets tuna). The player's AUTO only
-  // summons and merges: SSS recipes, upgrades, sales and tuna are the player's calls
+  // sell: the balance bot (crafts 유일, upgrades, sells weak singles for room, bets tuna). The player's AUTO only
+  // summons and merges: 유일 recipes, upgrades, sales and tuna are the player's calls
   function autoplay(sell = true) {
     if (sell) RECIPES.forEach((r, i) => { if (canCraft(r)) craft(i, true); });
-    G.cells.forEach((c, i) => { if (c.units.length === 3 && c.units[0].def.tier < 3) merge(i, true); });
+    G.cells.forEach((c, i) => { if (c.units.length === 3 && canMerge(c.units[0].def)) merge(i, true); });
     if (G.reward && (G.rewardWait || 0) > REWARD_WAIT) autoReward(true);
     if (sell) {
       const [best, bv] = bestUpgrade();
@@ -2233,7 +2412,7 @@
         else if (!empty || bv > summonValue() * 2) return; // save up for it
       }
     }
-    while (G.gold >= summonCost() && anyEmpty()) summon();
+    while (G.gold >= summonCost() && anyEmpty() && !G.paused && G.phase === 'play') summon(); // (a paused run refuses summons)
     if (!anyEmpty() && G.gold >= summonCost()) {
       // sell the weakest single to make room
       const i = G.cells.findIndex((c) => c.units.length && c.units[0].def.tier === 0 && c.units.length < 3);

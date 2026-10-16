@@ -76,9 +76,9 @@
         exit: () => UI.closeDrawer(),
         text: () => (!$('#modal').hidden ? T('원하는 강화를 하나 구매하세요.') : T('부품으로 <b>강화</b>하면 모든 유닛이 강해집니다. [강화]를 열어 보세요.')),
       },
-      { target: () => rectOf('#btnMythic'), text: () => T('지정된 재료 3종을 모으면 [조합]에서 궁극기를 쓰는 <b>SSS 유닛</b>을 만듭니다.') },
+      { target: () => rectOf('#btnMythic'), text: () => T('SSS 3기를 모아 합성하면 <b>UR</b>이 되고, 지정된 재료 3종을 모으면 [조합]에서 <b>유일 유닛</b>(필드에 1기만)을 만듭니다.') },
       { target: () => rectOf('#btnGamble'), text: () => T('[도박]은 <b>참치</b>를 걸고 상위 랭크 유닛에 도전합니다.') },
-      { target: () => union(rectOf('#btnSpeed'), rectOf('#btnAuto')), text: () => T('<b>배속</b>과 <b>AUTO</b>(소환·합성 자동 진행)로 편하게 플레이할 수 있습니다. 강화와 SSS 조합은 직접 합니다. SSS 유닛은 게이지가 다 차면 <b>궁극기를 자동으로</b> 발동합니다.') },
+      { target: () => union(rectOf('#btnSpeed'), rectOf('#btnAuto')), text: () => T('<b>배속</b>과 <b>AUTO</b>(소환·합성 자동 진행)로 편하게 플레이할 수 있습니다. 강화와 유일 조합은 직접 합니다. SSS 이상 유닛은 게이지가 다 차면 <b>궁극기를 자동으로</b> 발동합니다.') },
       { target: () => rectOf('#roundBox'), text: () => T('10웨이브마다 <b>보스</b>가 나옵니다. 제한 시간 안에 처치하면 보상을 고르고, 놓치면 폭주합니다. 80웨이브 최종 보스를 쓰러뜨리면 승리!') },
       { text: () => T('준비 완료! 이제 <b>본 작전</b>을 시작합니다.'), next: () => T('작전 개시') },
     ];

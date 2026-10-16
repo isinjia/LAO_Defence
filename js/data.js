@@ -1,49 +1,66 @@
 // Game data: tiers, units, mythic recipes, enemies and balance constants.
 (function () {
   const TIERS = [
-    // the original game's ranks (B / A / S / SS) plus SSS for the crafted units
+    // the original game's ranks (B / A / S / SS), SSS and UR from merges, and the crafted 유일 (one on the board at a time)
     { key: 'C', name: 'B', color: '#63d34a', hex: 0x63d34a, sell: 10 },
     { key: 'R', name: 'A', color: '#38b6ff', hex: 0x38b6ff, sell: 20 },
     { key: 'E', name: 'S', color: '#ffc81e', hex: 0xffc81e, sell: 50 },
     { key: 'L', name: 'SS', color: '#ff9420', hex: 0xff9420, sell: 120 },
     { key: 'M', name: 'SSS', color: '#ff3d5a', hex: 0xff3d5a, sell: 300 },
+    { key: 'U', name: 'UR', color: '#d06bff', hex: 0xd06bff, sell: 900 },
+    { key: 'X', name: '유일', color: '#38f2e8', hex: 0x38f2e8, sell: 700 },
   ];
+  const UR = 5, UNIQUE = 6;
 
   // type: single | splash | chain | laser | melee | slow | stun
   // fx: projectile/visual style key used by the effect system
+  // ranks follow the original rarity first, then 무력 (attack x crit x evasion, as in the 3Kingdom roster)
+  // ult (SSS / UR / 유일): the original's signature skill, fired by itself when the gauge is full (see game.js ultimate)
   const U = (id, name, tier, img, o) => Object.assign({ id, name, tier, img }, o);
   const UNITS = [
     // ── B ──
+    U('daphne', '다프네', 0, '3P_Daphne_N', { type: 'slow', dmg: 6, rate: 1.0, range: 3.2, slow: 0.25, slowDur: 1.5, fx: 'wave', color: 0x9dffc8, sfx: 'laser', desc: '견제 사격 둔화 25%' }),
+    U('impet', '임펫', 0, 'BR_Impet_N', { type: 'melee', dmg: 5, rate: 0.45, range: 2.4, splash: 0.9, fx: 'flame', color: 0xff6a2a, sfx: 'spray', desc: '화염방사 근거리 범위' }),
+    U('leprechaun', '레프리콘', 0, 'BR_Leprechaun_N', { type: 'single', dmg: 6, rate: 0.42, range: 3.0, fx: 'bullet', color: 0x9dff7a, sfx: 'mg', desc: '기관총 연사' }),
     U('brownie', '브라우니', 0, 'BR_Brownie_N', { type: 'single', dmg: 11, rate: 0.8, range: 3.2, fx: 'bullet', color: 0xffe08a, sfx: 'rifle', desc: '돌격소총 단일 공격' }),
     U('gnome', '놈', 0, 'BR_Gnome_N', { type: 'splash', dmg: 9, rate: 1.2, range: 3.0, splash: 0.9, fx: 'grenade', color: 0xffa040, sfx: 'cannon', desc: '유탄 범위 공격' }),
-    U('leprechaun', '레프리콘', 0, 'BR_Leprechaun_N', { type: 'single', dmg: 6, rate: 0.42, range: 3.0, fx: 'bullet', color: 0x9dff7a, sfx: 'mg', desc: '기관총 연사' }),
-    U('impet', '임펫', 0, 'BR_Impet_N', { type: 'melee', dmg: 5, rate: 0.45, range: 2.4, splash: 0.9, fx: 'flame', color: 0xff6a2a, sfx: 'spray', desc: '화염방사 근거리 범위' }),
-    U('banshee', '밴시', 0, 'BR_Banshee_N', { type: 'slow', dmg: 6, rate: 1.0, range: 3.2, slow: 0.3, slowDur: 1.5, fx: 'wave', color: 0x7affd4, sfx: 'laser', desc: '음파 둔화 30%' }),
     // ── A ──
-    U('nymph', '님프', 1, 'BR_Nymph_N', { type: 'slow', dmg: 16, rate: 0.9, range: 3.4, slow: 0.4, slowDur: 1.8, splash: 0.8, fx: 'wave', color: 0x6fe3ff, sfx: 'laser', desc: '범위 둔화 40%' }),
-    U('raven', '레이븐', 1, 'BR_Raven_N', { type: 'single', dmg: 55, rate: 1.5, range: 4.6, crit: 0.25, fx: 'snipe', color: 0xfff2b0, sfx: 'handgun', desc: '저격, 치명타 25%' }),
-    U('harpy', '하르페', 1, 'BR_Harpy_N', { type: 'splash', dmg: 26, rate: 1.1, range: 3.6, splash: 1.2, fx: 'missile', color: 0xff8a3d, sfx: 'missile', desc: '미사일 범위 공격' }),
+    U('banshee', '밴시', 1, 'BR_Banshee_N', { type: 'slow', dmg: 6, rate: 1.0, range: 3.4, slow: 0.4, slowDur: 1.8, splash: 0.8, fx: 'wave', color: 0x7affd4, sfx: 'laser', desc: '음파 범위 둔화 40%' }),
     U('sylphid', '실피드', 1, 'BR_Sylphid_N', { type: 'stun', dmg: 20, rate: 0.9, range: 3.4, stun: 0.15, stunDur: 0.7, fx: 'bullet', color: 0xd78bff, sfx: 'gun', desc: '15% 확률 기절' }),
-    U('valkyrie', '발키리', 1, 'BR_Valkyrie_N', { type: 'single', dmg: 15, rate: 0.45, range: 3.4, fx: 'bullet', color: 0x9fd0ff, sfx: 'rifle', desc: '고속 연사' }),
+    U('raven', '레이븐', 1, 'BR_Raven_N', { type: 'single', dmg: 55, rate: 1.5, range: 4.6, crit: 0.25, fx: 'snipe', color: 0xfff2b0, sfx: 'handgun', desc: '저격, 치명타 25%' }),
+    U('nymph', '님프', 1, 'BR_Nymph_N', { type: 'slow', dmg: 16, rate: 0.9, range: 3.4, slow: 0.4, slowDur: 1.8, splash: 0.8, fx: 'wave', color: 0x6fe3ff, sfx: 'laser', desc: '범위 둔화 40%' }),
+    U('andvari', '안드바리', 1, 'BR_Andvari_N', { type: 'splash', dmg: 26, rate: 1.1, range: 3.4, splash: 1.1, fx: 'grenade', color: 0xffc070, sfx: 'cannon', desc: '포격 범위 공격' }),
     // ── S ──
     U('phoenix', '피닉스', 2, 'BR_Phoenix_N', { type: 'splash', dmg: 70, rate: 1.15, range: 3.8, splash: 1.5, fx: 'fireball', color: 0xff5a1f, sfx: 'expS', desc: '화염탄 광역 폭발' }),
-    U('zero', '쿠노이치 제로', 2, 'DS_KunoichiZero_N', { type: 'melee', dmg: 42, rate: 0.35, range: 2.6, splash: 0.9, crit: 0.2, fx: 'slash', color: 0xff3b6b, sfx: 'slash', desc: '고속 참격, 치명타 20%' }),
     U('thetis', '테티스', 2, 'BR_Thetis_N', { type: 'chain', dmg: 48, rate: 1.0, range: 3.8, chain: 3, fx: 'lightning', color: 0x66ccff, sfx: 'elec', desc: '연쇄 번개 3타겟' }),
-    U('leona', '레오나', 2, 'BR_Leona_N', { type: 'laser', dmg: 60, rate: 1.3, range: 4.2, width: 0.45, fx: 'laser', color: 0xff9ad5, sfx: 'laserBig', desc: '관통 레이저' }),
+    U('hraesvelgr', '흐레스벨그', 2, 'BR_Hraesvelgr_N', { type: 'laser', dmg: 60, rate: 1.3, range: 4.2, width: 0.45, fx: 'laser', color: 0x9ab8ff, sfx: 'laserBig', desc: '대구경 관통 사격' }),
     U('undine', '운디네', 2, 'BR_Undine_N', { type: 'slow', dmg: 36, rate: 0.95, range: 3.8, slow: 0.5, slowDur: 2.0, splash: 1.3, fx: 'frost', color: 0x9feaff, sfx: 'ice', desc: '빙결 범위 둔화 50%' }),
+    U('valkyrie', '발키리', 2, 'BR_Valkyrie_N', { type: 'single', dmg: 15, rate: 0.45, range: 3.6, fx: 'bullet', color: 0x9fd0ff, sfx: 'rifle', desc: '고속 연사' }),
     // ── SS ──
-    U('azazel', '아자젤', 3, 'DS_Azazel_N', { type: 'splash', dmg: 240, rate: 1.2, range: 4.2, splash: 1.7, fx: 'holy', color: 0xffe9a0, sfx: 'energy', desc: '성광 대폭발' }),
+    U('zero', '쿠노이치 제로', 3, 'DS_KunoichiZero_N', { type: 'melee', dmg: 42, rate: 0.35, range: 2.6, splash: 0.9, crit: 0.2, fx: 'slash', color: 0xff3b6b, sfx: 'slash', desc: '고속 참격, 치명타 20%' }),
     U('hela', '헬라', 3, 'BR_Hela_N', { type: 'chain', dmg: 175, rate: 0.9, range: 4.2, chain: 5, fx: 'lightning', color: 0xc77dff, sfx: 'elec', desc: '연쇄 번개 5타겟' }),
-    U('tiamat', '티아멧', 3, 'ST_Tiamat_N', { type: 'laser', dmg: 280, rate: 1.25, range: 4.8, width: 0.6, fx: 'laser', color: 0x6ef0ff, sfx: 'laserBig', desc: '대구경 관통 레이저' }),
-    U('labiata', '라비아타', 3, '3P_Labiata_N', { type: 'melee', dmg: 130, rate: 0.38, range: 2.8, splash: 1.0, crit: 0.3, fx: 'slash', color: 0xffd36e, sfx: 'swing', desc: '연속 타격, 치명타 30%' }),
-    U('sleipnir', '슬레이프니르', 3, 'BR_Sleipnir_N', { type: 'stun', dmg: 170, rate: 1.0, range: 4.2, splash: 1.3, stun: 0.25, stunDur: 0.8, fx: 'missile', color: 0xffb070, sfx: 'missile', desc: '범위 공격 + 25% 기절' }),
-    // ── SSS ──
-    U('constantia', '콘스탄챠 S2', 4, '3P_ConstantiaS2_N', { type: 'laser', dmg: 950, rate: 1.0, range: 5.2, width: 0.7, fx: 'laser', color: 0xff6af0, sfx: 'laserBig', mana: 14, ult: 'orbital', ultName: '궤도 레이저', desc: '관통 레이저 / 궁극기: 궤도 레이저 섬멸' }),
-    U('titania', '티타니아', 4, '3P_Titania_N', { type: 'chain', dmg: 620, rate: 0.9, range: 5.0, chain: 6, slow: 0.3, slowDur: 1.2, fx: 'iceChain', color: 0xaef4ff, sfx: 'ice', mana: 10, ult: 'freeze', ultName: '절대 빙결', desc: '빙결 연쇄 / 궁극기: 전장 전체 빙결' }),
-    U('mercury', '머큐리', 4, 'ST_Mercury_N', { type: 'melee', dmg: 480, rate: 0.3, range: 3.2, splash: 1.1, crit: 0.4, fx: 'slash', color: 0x7dffb0, sfx: 'slash', mana: 5, ult: 'blades', ultName: '광속 난무', desc: '초고속 참격 / 궁극기: 광속 난무' }),
-    U('empress', '엠프레스', 4, 'PECS_Empress_N', { type: 'splash', dmg: 1050, rate: 1.0, range: 5.0, splash: 1.9, fx: 'missile', color: 0xff7b3a, sfx: 'expM', mana: 14, ult: 'meteor', ultName: '메테오 스트라이크', desc: '대형 포격 / 궁극기: 메테오' }),
-    U('fafnir', '파프니르', 4, 'BR_Fafnir_N', { type: 'chain', dmg: 720, rate: 0.8, range: 5.0, chain: 6, fx: 'lightning', color: 0x5aa8ff, sfx: 'elec', mana: 12, ult: 'thunder', ultName: '뇌룡의 분노', desc: '연쇄 번개 / 궁극기: 낙뢰 폭풍' }),
-    U('ramiel', '라미엘', 4, 'DS_Ramiel_N', { type: 'stun', dmg: 820, rate: 0.9, range: 4.8, splash: 1.5, stun: 0.12, stunDur: 0.6, fx: 'holy', color: 0xfff1b8, sfx: 'energy', mana: 12, ult: 'pillar', ultName: '심판의 성광', desc: '성광 폭발 / 궁극기: 심판의 기둥' }),
+    U('azazel', '아자젤', 3, 'DS_Azazel_N', { type: 'splash', dmg: 240, rate: 1.2, range: 4.2, splash: 1.7, fx: 'holy', color: 0xffe9a0, sfx: 'energy', desc: '성광 대폭발' }),
+    U('saraqael', '사라쿠엘', 3, 'DS_Saraqael_N', { type: 'stun', dmg: 170, rate: 1.0, range: 4.2, splash: 1.3, stun: 0.25, stunDur: 0.8, fx: 'wave', color: 0xb28cff, sfx: 'energy', desc: '파동 범위 공격 + 25% 기절' }),
+    U('leona', '레오나', 3, 'BR_Leona_N', { type: 'laser', dmg: 60, rate: 1.3, range: 4.4, width: 0.5, fx: 'laser', color: 0xff9ad5, sfx: 'laserBig', desc: '관통 레이저' }),
+    // ── SSS (SS 3기 합성) ──
+    U('ullr', '울르', 4, 'ST_Ullr_N', { type: 'laser', dmg: 0, rate: 1.4, range: 5.4, width: 0.55, fx: 'laser', color: 0x7fe8ff, sfx: 'laserBig', mana: 12, ult: 'rail', ultName: '초장거리 저격', desc: '관통 저격 / 궁극기: 전장을 가로지르는 관통 레일건(맞힐수록 위력 감소)' }),
+    U('harpy', '하르페이아', 4, 'BR_Harpy_N', { type: 'splash', dmg: 0, rate: 1.1, range: 4.6, splash: 1.5, fx: 'missile', color: 0xff8a3d, sfx: 'missile', mana: 12, ult: 'salvo', ultName: '미사일 일제 사격', desc: '미사일 범위 공격 / 궁극기: 미사일 일제 사격 + 회피 감소(받는 피해 +20%)' }),
+    U('eternity', '이터니티', 4, '3P_Eternity_N', { type: 'single', dmg: 0, rate: 0.4, range: 4.4, fx: 'bullet', color: 0xffd98a, sfx: 'mg', mana: 12, ult: 'guardian', ultName: '수호자의 탄막', desc: '기관총 연사 / 궁극기: 범위 탄막 + 아군 보호(공격력 +15%)' }),
+    U('lemonadealpha', '레모네이드 알파', 4, 'PECS_LemonadeAlpha_N', { type: 'chain', dmg: 0, rate: 1.0, range: 4.8, chain: 5, fx: 'lightning', color: 0xffe14d, sfx: 'elec', mana: 12, ult: 'domain', ultName: '알파의 지배', desc: '연쇄 공격 / 궁극기: 전장 약화(받는 피해 +30%) + 넉백 + 보스 방어막 봉인' }),
+    U('sleipnir', '슬레이프니르', 4, 'BR_Sleipnir_N', { type: 'stun', dmg: 0, rate: 1.0, range: 4.6, splash: 1.4, stun: 0.25, stunDur: 0.8, fx: 'missile', color: 0xffb070, sfx: 'missile', mana: 12, ult: 'rowlaser', ultName: '고정 레이저', desc: '범위 공격 + 기절 / 궁극기: 일직선 레이저로 2초 속박' }),
+    U('blacklilith', '블랙 릴리스', 4, '3P_BlackLilith_N', { type: 'melee', dmg: 0, rate: 0.4, range: 2.8, splash: 1.0, crit: 0.25, fx: 'slash', color: 0xd0405a, sfx: 'slash', mana: 12, ult: 'taunt', ultName: '도발의 칼날', desc: '근접 참격 / 궁극기: 주변 적 도발·속박 + 약화(받는 피해 +25%)' }),
+    // ── UR (SSS 3기 합성) ──
+    U('brunhild', '브륀힐드', 5, 'BR_Brunhild_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.0, splash: 1.8, fx: 'fireball', color: 0xff5530, sfx: 'expM', mana: 10, ult: 'wolfpack', ultName: '화염 늑대 무리', desc: '화염 폭격 / 궁극기: 늑대 무리 광역 화염 + 화상 중첩' }),
+    U('tiamat', '티아멧', 5, 'ST_Tiamat_N', { type: 'laser', dmg: 0, rate: 1.25, range: 5.4, width: 0.7, fx: 'laser', color: 0x6ef0ff, sfx: 'laserBig', mana: 10, ult: 'execute', ultName: '격멸 포격', desc: '대구경 관통 레이저 / 궁극기: 장갑 파괴 후 단일 대상 초고화력(빈사 적 처형)' }),
+    U('khan', '칸', 5, 'BR_Khan_N', { type: 'single', dmg: 0, rate: 0.5, range: 5.0, crit: 0.3, fx: 'snipe', color: 0xffcf7a, sfx: 'rifle', mana: 10, ult: 'sandstorm', ultName: '신속의 모래폭풍', desc: '고속 사격 / 궁극기: 방어 무시 모래폭풍(전체) + 처치하면 공격 속도 증가' }),
+    U('labiata', '라비아타', 5, '3P_Labiata_N', { type: 'melee', dmg: 0, rate: 0.38, range: 3.0, splash: 1.1, crit: 0.3, fx: 'slash', color: 0xffd36e, sfx: 'swing', mana: 10, ult: 'sweep', ultName: '분쇄 연격', desc: '연속 타격 / 궁극기: 가로·세로 연격 + 아군 공격력 +25%' }),
+    // ── 유일 (조합, 필드에 1기만) ──
+    U('constantia', '콘스탄챠 S2', 6, '3P_ConstantiaS2_N', { type: 'laser', dmg: 0, rate: 1.0, range: 5.6, width: 0.7, fx: 'laser', color: 0xff6af0, sfx: 'laserBig', mana: 12, ult: 'snipe', ultName: '정밀 저격', desc: '관통 레이저 / 궁극기: 가장 강한 적 저격 + 속박 + 표식(받는 피해 +35%)' }),
+    U('titania', '티타니아', 6, '3P_Titania_N', { type: 'chain', dmg: 0, rate: 0.9, range: 5.2, chain: 6, slow: 0.3, slowDur: 1.2, fx: 'iceChain', color: 0xaef4ff, sfx: 'ice', mana: 10, ult: 'freeze', ultName: '서리 폭풍', desc: '빙결 연쇄 / 궁극기: 전장 빙결 후 55% 둔화' }),
+    U('mercury', '머큐리', 6, 'ST_Mercury_N', { type: 'melee', dmg: 0, rate: 0.3, range: 3.2, splash: 1.1, crit: 0.4, fx: 'slash', color: 0x7dffb0, sfx: 'slash', mana: 6, ult: 'blades', ultName: '신속의 바람', desc: '초고속 참격 / 궁극기: 아군 전원 가속 + 가장 강한 적 둔화 + 난무' }),
+    U('empress', '엠프레스', 6, 'PECS_Empress_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.2, splash: 1.9, fx: 'missile', color: 0x9fe6ff, sfx: 'expM', mana: 12, ult: 'iceage', ultName: '빙하기', desc: '대형 포격 / 궁극기: 전장 빙결 + 펭귄 폭탄' }),
+    U('fafnir', '파프니르', 6, 'BR_Fafnir_N', { type: 'chain', dmg: 0, rate: 0.8, range: 5.2, chain: 6, fx: 'lightning', color: 0x5aa8ff, sfx: 'elec', mana: 12, ult: 'thunder', ultName: '뇌룡의 분노', desc: '연쇄 번개 / 궁극기: 낙뢰 폭풍(적이 몰려 있을수록 강함)' }),
+    U('ramiel', '라미엘', 6, 'DS_Ramiel_N', { type: 'stun', dmg: 0, rate: 0.9, range: 5.0, splash: 1.5, stun: 0.12, stunDur: 0.6, fx: 'holy', color: 0xfff1b8, sfx: 'energy', mana: 12, ult: 'pillar', ultName: '심판의 성화', desc: '성광 폭발 / 궁극기: 성화 기둥 + 불타는 땅' }),
   ];
 
   // the middle row's inner cells sit 3.75 units from the path: every ranged unit gets enough reach to cover a stretch
@@ -53,20 +70,22 @@
   // Damage from one rule instead of per-unit guesses: every rank is ~4x the one below (so each merge is a clear
   // power spike over the three units it eats), and within a rank the attack type only shifts single-target damage
   // (area / chain / utility units trade it for coverage; spread <= 1.6x). Expected crit damage is included.
-  const TIER_DPS = [12, 48, 190, 750, 2700];
+  // UR (three SSS) ~3.5x an SSS; a 유일 costs two SSS and an SS, so it sits between them but brings the strongest skill
+  const TIER_DPS = [12, 48, 190, 750, 2700, 9500, 6500];
   const TYPE_K = { single: 1.2, melee: 1.25, splash: 0.85, chain: 0.8, laser: 0.9, slow: 0.8, stun: 0.9 };
   UNITS.forEach((u) => {
     u.dmg = Math.round(TIER_DPS[u.tier] * TYPE_K[u.type] * u.rate / (1 + 1.2 * (u.crit || 0)));
     u.dps = TIER_DPS[u.tier] * TYPE_K[u.type]; // single-target damage per second at upgrade level 0
   });
 
+  // 유일 recipes: two SSS and one SS each (every SSS feeds two recipes); only one 유일 may be on the board at a time
   const RECIPES = [
-    { result: 'constantia', parts: ['valkyrie', 'leona', 'tiamat'] },
-    { result: 'titania', parts: ['nymph', 'undine', 'hela'] },
-    { result: 'mercury', parts: ['raven', 'zero', 'labiata'] },
-    { result: 'empress', parts: ['harpy', 'phoenix', 'sleipnir'] },
-    { result: 'fafnir', parts: ['sylphid', 'thetis', 'azazel'] },
-    { result: 'ramiel', parts: ['impet', 'banshee', 'azazel'] },
+    { result: 'constantia', parts: ['ullr', 'blacklilith', 'leona'] },
+    { result: 'titania', parts: ['lemonadealpha', 'eternity', 'saraqael'] },
+    { result: 'mercury', parts: ['sleipnir', 'harpy', 'zero'] },
+    { result: 'empress', parts: ['harpy', 'eternity', 'azazel'] },
+    { result: 'fafnir', parts: ['sleipnir', 'lemonadealpha', 'hela'] },
+    { result: 'ramiel', parts: ['blacklilith', 'ullr', 'azazel'] },
   ];
 
   // Normal enemy roster cycles every wave; `hp`/`spd` are multipliers.
@@ -115,7 +134,7 @@
     eliteWeight: 10,         // ... and then counts as this many enemies
     vuln: 1.15,              // slowed or stunned enemies take this much more damage
     callGold: (w) => 4 + Math.floor(w / 2),   // parts per second skipped when calling the next wave early
-    reroll: [0, 1, 1, 2],    // tuna to swap one unit of a rank for another of the same rank (B can't)
+    reroll: [0, 1, 1, 2, 3], // tuna to swap one unit of a rank for another of the same rank (B, UR and 유일 can't)
     // difficulty: enemy HP multiplier
     // difficulty: enemy HP multiplier from wave 1 (hp0) to wave 80 (hp1): hard bites late, not at the first boss
     diffs: [{ key: 'easy', name: '쉬움', hp0: 0.4, hp1: 0.55, bossTime: 15 }, { key: 'normal', name: '보통', hp0: 1, hp1: 1 }, { key: 'hard', name: '어려움', hp0: 1.1, hp1: 1.38 }],
@@ -125,13 +144,16 @@
     startGems: 3,
     summonBase: 20,
     partBias: 0.35,          // chance a summon / merge / gamble of a rank gives the last missing part of a 2/3 recipe
+    stackBias: 0.7,          // chance an S..SSS from a merge / summon / gamble is one already stacking on the board
     pity: 15,                // summons below S in a row before an S is guaranteed
     // enemy HP from the measured player power (tools/lab/balance.js probe, expert play): a normal wave holds about
     // 5 s (wave 1) .. 13 s (wave 79) of that damage, a boss 30 .. 48 s of its single-target damage (70 s limit).
-    // Anchors [wave, HP]; geometric in between.
-    hpTable: [[1, 75], [3, 147], [5, 288], [8, 726], [11, 1832], [14, 4559], [17, 11345], [21, 38260], [25, 129024], [29, 287731], [33, 432905], [37, 521735], [41, 646816], [45, 824840], [49, 1095252], [55, 1428626], [59, 1607931], [65, 1919954], [69, 2160925], [75, 2580257], [79, 2904103]],
+    // Anchors [wave, HP]; geometric in between. Re-scaled for the SSS / UR / 유일 ranks (2026-10): an SSS now takes
+    // three of one SS, so the board's power per wave (tools/lab/power.js) fell to ~25-75% of the old crafted-SSS
+    // curve; tools/lab/winrate.js keeps the expert bot's normal win rate where it was (~90%).
+    hpTable: [[1, 70], [3, 137], [5, 266], [8, 662], [11, 1649], [14, 3419], [17, 7091], [21, 17217], [25, 48384], [29, 97109], [33, 129872], [37, 146738], [41, 169789], [45, 231986], [49, 328576], [55, 500019], [59, 623073], [65, 767982], [69, 891382], [75, 1193369], [79, 1430271]],
     // smooth from wave 30 (x1.62 per boss); each boss's own trick is priced by BOSSES[].hpK instead of this curve
-    bossTable: [[10, 20726], [20, 702812], [30, 3712379], [40, 8567714], [50, 14903996], [60, 30267399], [70, 58749642], [80, 87736785]],
+    bossTable: [[10, 18731], [20, 347013], [30, 1218124], [40, 2289186], [50, 4595399], [60, 11791674], [70, 24723808], [80, 43868392]],
     lerpTable(t, w) {
       if (w <= t[0][0]) return t[0][1];
       for (let i = 1; i < t.length; i++) {
@@ -195,7 +217,7 @@
   const bossFor = (w) => (w >= BAL.lastWave ? BOSSES[4] : BOSSES[(w / 10 - 1) % 4]);
 
   window.DATA = {
-    TIERS, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL, bossFor,
+    TIERS, UR, UNIQUE, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL, bossFor,
     unit: Object.fromEntries(UNITS.map((u) => [u.id, u])),
     byTier: (t) => UNITS.filter((u) => u.tier === t),
   };

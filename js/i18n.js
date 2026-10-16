@@ -67,6 +67,7 @@
     if (!G) return;
     const swap = (o, f) => { if (!o || o[f] == null) return; const k = '_ko_' + f; if (o[k] == null) o[k] = o[f]; o[f] = t(o[k]); };
     G.UNITS.forEach((u) => { swap(u, 'name'); swap(u, 'desc'); swap(u, 'ultName'); });
+    G.TIERS.forEach((r) => swap(r, 'name')); // 유일 (the letter ranks stay as they are)
     [...G.NORMALS, ...G.ELITES, ...G.BOSSES].forEach((e) => swap(e, 'name'));
     (G.BAL.gamble || []).forEach((g) => swap(g, 'label'));
     (G.BAL.upgrades || []).forEach((u) => swap(u, 'name'));

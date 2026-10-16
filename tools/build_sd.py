@@ -19,7 +19,7 @@ import sys
 import yaml
 from PIL import Image
 
-ROOT = r"E:/LAO/Google_QA/Assets"
+ROOT = r"E:/LAO_Google_QA/Assets"
 CHAR_DIRS = [ROOT + "/AssetBundleResource/Character", ROOT + "/AssetBundleResourceSub/Character"]
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "js", "sd")
 FPS = 24
@@ -34,6 +34,10 @@ UNITS = {
     "hela": "BR_Hela_N", "tiamat": "ST_Tiamat_N", "labiata": "3P_Labiata_N", "sleipnir": "BR_Sleipnir_N",
     "constantia": "3P_ConstantiaS2_N", "titania": "3P_Titania_N", "mercury": "ST_Mercury_N",
     "empress": "PECS_Empress_N", "fafnir": "BR_Fafnir_N", "ramiel": "DS_Ramiel_N",
+    # added with the SSS / UR tiers (2026-10)
+    "blacklilith": "3P_BlackLilith_N", "brunhild": "BR_Brunhild_N", "khan": "BR_Khan_N", "daphne": "3P_Daphne_N",
+    "andvari": "BR_Andvari_N", "hraesvelgr": "BR_Hraesvelgr_N", "lemonadealpha": "PECS_LemonadeAlpha_N",
+    "eternity": "3P_Eternity_N", "ullr": "ST_Ullr_N", "saraqael": "DS_Saraqael_N",
 }
 
 # enemy image key (data.js) -> monster prefab

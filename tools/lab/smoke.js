@@ -65,6 +65,40 @@
       eq(G().selected, -1, 'nothing selected after the merge'); eq(document.getElementById('popup').hidden, true, 'the unit window closed');
     });
 
+    test('SSS stack to three and merge into a UR; a UR stands alone', () => {
+      fresh();
+      for (let k = 0; k < 3; k++) GAME.debugAdd('ullr');
+      const i = GAME.findCellOf('ullr'); eq(G().cells[i].units.length, 3, 'three SSS in one cell');
+      GAME.merge(i);
+      eq(nUnits(), 1, 'units after merge');
+      eq(G().cells.some((c) => c.units.length && c.units[0].def.tier === DATA.UR), true, 'a UR came out');
+      const ur = G().cells.find((c) => c.units.length).units[0].def.id;
+      GAME.debugAdd(ur); eq(G().cells.filter((c) => c.units.length).length, 2, 'a second UR takes its own cell');
+    });
+
+    test('유일: crafted from its parts, only one on the board at a time', () => {
+      fresh();
+      const r = DATA.RECIPES[0];
+      r.parts.forEach((id) => GAME.debugAdd(id));
+      eq(GAME.canCraft(r), true, 'craftable'); GAME.craft(0);
+      eq(G().cells.filter((c) => c.units.some((u) => u.def.tier === DATA.UNIQUE)).length, 1, 'one 유일');
+      DATA.RECIPES[1].parts.forEach((id) => GAME.debugAdd(id));
+      eq(GAME.canCraft(DATA.RECIPES[1]), false, 'a second 유일 is refused'); GAME.craft(1);
+      eq(G().cells.filter((c) => c.units.some((u) => u.def.tier === DATA.UNIQUE)).length, 1, 'still one');
+      GAME.sell(GAME.findCellOf(r.result)); eq(GAME.canCraft(DATA.RECIPES[1]), true, 'sold: craftable again');
+    });
+
+    test('every SSS / UR / 유일 ultimate runs without errors', () => {
+      fresh();
+      DATA.UNITS.filter((d) => d.ult).forEach((d) => {
+        G().cells.forEach((c, i) => { while (c.units.length) GAME.sell(i); });
+        for (let k = 0; k < 8; k++) GAME.tutSpawn(30);
+        GAME.debugAdd(d.id); const u = G().cells[GAME.findCellOf(d.id)].units[0];
+        u.mana = 100; eq(GAME.castUlt(u), true, d.id + ' cast');
+        GAME.simulate(3, false);
+      });
+    });
+
     test('pause blocks summon / upgrade / ult', () => {
       fresh(); G().gold = 1e6; UI.togglePause(true);
       const n = nUnits(), lv = G().upg.atk;
