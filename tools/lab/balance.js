@@ -25,7 +25,7 @@
       const g = G();
       if (g.reward) GAME.autoReward(true);
       DATA.RECIPES.forEach((r, i) => { if (GAME.canCraft(r) && GAME.craftRoom(r)) GAME.craft(i, true); });
-      g.cells.forEach((c, i) => { if (c.units.length === 3 && c.units[0].def.tier < 3) GAME.merge(i, true); });
+      g.cells.forEach((c, i) => { if (c.units.length === 3 && c.units[0].def.tier < DATA.LR) GAME.merge(i, true); }); // up to SSS -> LR
       while (g.gold >= GAME.summonCost() && g.cells.some((c) => !c.units.length)) GAME.summon();
       if (!g.cells.some((c) => !c.units.length)) {
         const u = DATA.BAL.upgrades.filter((x) => g.upg[x.key] < x.max).sort((a, b) => a.cost(g.upg[a.key]) - b.cost(g.upg[b.key]))[0];
@@ -35,7 +35,7 @@
     // a new player: summons and merges, never upgrades, crafts or gambles
     casual: () => {
       const g = G();
-      g.cells.forEach((c, i) => { if (c.units.length === 3 && c.units[0].def.tier < 3) GAME.merge(i, true); });
+      g.cells.forEach((c, i) => { if (c.units.length === 3 && c.units[0].def.tier < DATA.LR) GAME.merge(i, true); }); // up to SSS -> LR
       while (g.gold >= GAME.summonCost() && g.cells.some((c) => !c.units.length)) GAME.summon();
     },
   };
@@ -46,7 +46,7 @@
     GAME.autoReward();
     DATA.RECIPES.forEach((r, i) => { if (GAME.canCraft(r) && GAME.craftRoom(r)) GAME.craft(i, true); });
     // merge full stacks (a craft only takes one copy of a part, so stacks of parts merge too)
-    g.cells.forEach((c, i) => { if (c.units.length === 3 && c.units[0].def.tier < 3) GAME.merge(i, true); });
+    g.cells.forEach((c, i) => { if (c.units.length === 3 && c.units[0].def.tier < DATA.LR) GAME.merge(i, true); }); // up to SSS -> LR
     // melee units on inner cells trade places with a ranged unit (or an empty cell) on the outside
     g.cells.forEach((c, i) => {
       if (!c.units.length || c.units[0].def.type !== 'melee' || GAME.isOuter(i)) return;

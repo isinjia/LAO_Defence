@@ -133,6 +133,7 @@
 <script defer src="js/vendor/ShaderPass.js"></script>
 <script defer src="js/vendor/UnrealBloomPass.js"></script>
 <script defer src="js/assets.js"></script>
+<script defer src="js/commander.js"></script>
 <script defer src="js/data.js"></script>
 <script defer src="js/i18n_data.js"></script>
 <script defer src="js/i18n.js"></script>
@@ -180,6 +181,8 @@ if (/[?&]lab=/.test(location.search)) {
       const s = document.createElement('script');
       s.src = 'tools/lab/balance.js?' + Date.now();
       s.onload = async () => {
+        // a sweep may override the difficulty's enemy HP curve: plan.hp = [hp0, hp1]
+        if (plan.hp) plan.runs.forEach((p) => p.diffs.forEach((d) => Object.assign(DATA.BAL.diffs[d], { hp0: plan.hp[0], hp1: plan.hp[1] })));
         for (const p of plan.runs) await BALANCE.evaluate(p);
         fetch('tools/lab/out/lab_done_' + plan.id + '.json', { method: 'PUT', body: '{}' });
       };

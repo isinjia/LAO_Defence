@@ -30,6 +30,7 @@
     U('sylphid', '실피드', 1, 'BR_Sylphid_N', { type: 'stun', dmg: 20, rate: 0.9, range: 3.4, stun: 0.15, stunDur: 0.7, fx: 'bullet', color: 0xd78bff, sfx: 'gun', desc: '15% 확률 기절' }),
     U('raven', '레이븐', 1, 'BR_Raven_N', { type: 'single', dmg: 55, rate: 1.5, range: 4.6, crit: 0.25, fx: 'snipe', color: 0xfff2b0, sfx: 'handgun', desc: '저격, 치명타 25%' }),
     U('nymph', '님프', 1, 'BR_Nymph_N', { type: 'slow', dmg: 16, rate: 0.9, range: 3.4, slow: 0.4, slowDur: 1.8, splash: 0.8, fx: 'wave', color: 0x6fe3ff, sfx: 'laser', desc: '범위 둔화 40%' }),
+    U('amy', '에이미 레이저', 1, 'BR_Amy_N', { type: 'single', dmg: 0, rate: 1.4, range: 4.6, crit: 0.2, fx: 'snipe', color: 0xd9ff8a, sfx: 'handgun', desc: '방사능 탄 저격, 치명타 20%' }),
     U('andvari', '안드바리', 1, 'BR_Andvari_N', { type: 'splash', dmg: 26, rate: 1.1, range: 3.4, splash: 1.1, fx: 'grenade', color: 0xffc070, sfx: 'cannon', desc: '포격 범위 공격' }),
     // ── S ──
     U('phoenix', '피닉스', 2, 'BR_Phoenix_N', { type: 'splash', dmg: 70, rate: 1.15, range: 3.8, splash: 1.5, fx: 'fireball', color: 0xff5a1f, sfx: 'expS', desc: '화염탄 광역 폭발' }),
@@ -50,11 +51,15 @@
     U('lemonadealpha', '레모네이드 알파', 4, 'PECS_LemonadeAlpha_N', { type: 'chain', dmg: 0, rate: 1.0, range: 4.8, chain: 5, fx: 'lightning', color: 0xffe14d, sfx: 'elec', mana: 12, ult: 'domain', ultName: '케스토스 히마스: 출력전개', desc: '연쇄 공격 / 궁극기: 지정 범위 보호 무시 피해 + 고정 피해, 1칸 밀쳐내기, 모든 보호 효과 해제, 회피 -61%' }),
     U('sleipnir', '슬레이프니르', 4, 'BR_Sleipnir_N', { type: 'stun', dmg: 0, rate: 1.0, range: 4.6, splash: 1.4, stun: 0.25, stunDur: 0.8, fx: 'missile', color: 0xffb070, sfx: 'missile', mana: 12, ult: 'rowlaser', ultName: '한계돌파', desc: '범위 공격 + 기절 / 궁극기: 목표 지점 돌진, 보호 무시·방어 관통, 표식 + 이동 불가' }),
     U('blacklilith', '블랙 릴리스', 4, '3P_BlackLilith_N', { type: 'melee', dmg: 0, rate: 0.4, range: 2.8, splash: 1.0, crit: 0.25, fx: 'slash', color: 0xd0405a, sfx: 'slash', mana: 12, ult: 'taunt', ultName: '듀얼 버스트', desc: '근접 참격 / 궁극기: 단일 대상 아킴보 사격 + 도발, 이미 도발된 대상 +48%, 정조준(단일 대상) +47.5%' }),
+    U('cyclopsprincess', '사이클롭스 프린세스', 4, 'PECS_CyclopsePrincess_N', { type: 'melee', dmg: 0, rate: 0.6, range: 2.8, splash: 1.0, crit: 0.2, fx: 'slash', color: 0xff3a5a, sfx: 'slash', mana: 12, ult: 'crimson', ultName: '영원한 진조의 섬광', desc: '마검 참격 / 궁극기: 안대를 풀고 지정 범위에 넓은 진홍빛 섬광, 피해 감소 약화 -19%(2라운드)' }),
+    U('blindprincess', '블라인드 프린세스', 4, 'PECS_BlindPrincess_N', { type: 'single', dmg: 0, rate: 0.9, range: 4.4, fx: 'holy', color: 0xfff1b8, sfx: 'energy', mana: 12, ult: 'lovelight', ultName: '작열하는 사랑의 빛', desc: '성검 일격 / 궁극기: 지정 범위에 성검 강림(멀수록 최대 50% 감소), 치명타 시 강화 해제, 사이클롭스 프린세스·LRL과 함께면 +47.5%' }),
     // ── LR (SSS 3기 합성) ──
     U('brunhild', '브륀힐드', 5, 'BR_Brunhild_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.0, splash: 1.8, fx: 'fireball', color: 0xff5530, sfx: 'expM', mana: 10, ult: 'wolfpack', ultName: '핏빛 효후', desc: '화염 폭격 / 궁극기: 늑대가 지정 범위에 보호 무시 화염 피해, 효과·화염 저항 -28.5%, 치명타 시 +47.5% + 지속 화염 해제' }),
     U('tiamat', '티아멧', 5, 'ST_Tiamat_N', { type: 'laser', dmg: 0, rate: 1.25, range: 5.4, width: 0.7, fx: 'laser', color: 0x6ef0ff, sfx: 'laserBig', mana: 10, ult: 'execute', ultName: '풀 웨폰 어썰트', desc: '대구경 관통 레이저 / 궁극기: 가장 강한 적 하나에 방어막·피해 감소 무시 초고화력, 치명타 시 +29%' }),
     U('khan', '칸', 5, 'BR_Khan_N', { type: 'single', dmg: 0, rate: 0.5, range: 5.0, crit: 0.3, fx: 'snipe', color: 0xffcf7a, sfx: 'rifle', mana: 10, ult: 'sandstorm', ultName: '데저트 스톰', desc: '고속 사격 / 궁극기: 단일 대상 보호 무시 고속 연계 공격, 표식 + 받는 피해 +19%, 치명타 시 +58%' }),
     U('labiata', '라비아타', 5, '3P_Labiata_N', { type: 'melee', dmg: 0, rate: 0.38, range: 3.0, splash: 1.1, crit: 0.3, fx: 'slash', color: 0xffd36e, sfx: 'swing', mana: 10, ult: 'sweep', ultName: '백화요란', desc: '연속 타격 / 궁극기: 지정 범위(가로줄) 보호 무시 강타, 플라즈마 중첩마다 +19%, 3중첩 치명타 시 강화 해제, 처치 시 중첩 +1' }),
+    // LR, crafted only (never from an SSS merge): 에이미 + 사이클롭스 프린세스 + 블라인드 프린세스 (RECIPES)
+    U('lrl', 'LRL', 5, 'PECS_LRL_N', { type: 'splash', dmg: 0, rate: 0.9, range: 5.0, splash: 1.6, fx: 'holy', color: 0xb46bff, sfx: 'energy', mana: 10, ult: 'eternalbeam', ultName: '사이클롭스 이터널 빔', crafted: true, desc: '용살자 도끼 / 궁극기: 넓은 범위에 빔, 행동력 감소(둔화), 치명타 시 방어막·피해 감소 해제, 사이클롭스 프린세스가 있으면 영원한 진조의 섬광 협동 공격' }),
     // ── UR (조합, 같은 UR은 필드에 1기만) ──
     U('constantia', '콘스탄챠 S2', 6, '3P_ConstantiaS2_N', { type: 'laser', dmg: 0, rate: 1.0, range: 5.6, width: 0.7, fx: 'laser', color: 0xff6af0, sfx: 'laserBig', mana: 12, ult: 'snipe', ultName: '발목 잡기', desc: '관통 레이저 / 궁극기: 가장 강한 적 하나에 표식 + 이동 불가 + 행동력 -34%' }),
     U('titania', '티타니아', 6, '3P_Titania_N', { type: 'chain', dmg: 0, rate: 0.9, range: 5.2, chain: 6, slow: 0.3, slowDur: 1.2, fx: 'iceChain', color: 0xaef4ff, sfx: 'ice', mana: 10, ult: 'freeze', ultName: '서리 폭풍', desc: '빙결 연쇄 / 궁극기: 지정 범위 보호 무시 냉기 피해, 행동력 감소(천년서리), 치명타 시 +38%, 사용 후 자신 행동력 -50%' }),
@@ -62,7 +67,8 @@
     U('empress', '엠프레스', 6, 'PECS_Empress_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.2, splash: 1.9, fx: 'missile', color: 0x9fe6ff, sfx: 'expM', mana: 12, ult: 'iceage', ultName: '펭귄 서프라이즈!', desc: '대형 포격 / 궁극기: 가장 강한 적에 냉기 피해(치명타 시 +43.5%), 침수(둔화)면 행동 불가 + 빙결(받는 피해 +38.5%)' }),
     U('fafnir', '파프니르', 6, 'BR_Fafnir_N', { type: 'chain', dmg: 0, rate: 0.8, range: 5.2, chain: 6, fx: 'lightning', color: 0x5aa8ff, sfx: 'elec', mana: 12, ult: 'thunder', ultName: '뇌정벽력', desc: '연쇄 번개 / 궁극기: 우레와 함께 강하해 대상과 주변(25%)에 전격, 인접한 적마다 +14.5%, 2기 이상이면 강화 효과 해제' }),
     // ── GOD (소환 0.0001%, 확률 강화 무관) ──
-    U('lrl', 'LRL', 7, 'PECS_LRL_N', { type: 'splash', dmg: 0, rate: 0.7, range: 7.0, splash: 2.2, fx: 'holy', color: 0xb46bff, sfx: 'energy', mana: 8, ult: 'apocalypse', ultName: '칠흑의 종언', desc: '흑염 대폭발 / 궁극기: 전장을 암흑으로 덮고 흑염 운석과 빛의 기둥으로 모든 적을 섬멸(보호 무시, 전원 속박)' }),
+    // the commander: no rig, drawn by js/commander.js (from 라켓몬스터); img 'Commander' is that drawing's icon
+    U('commander', '사령관', 7, 'Commander', { type: 'splash', dmg: 0, rate: 0.7, range: 7.0, splash: 2.2, fx: 'holy', color: 0xfff6e0, sfx: 'energy', mana: 8, ult: 'allout', ultName: '전군, 돌격하라!', drawn: true, desc: '링크 코어 투척 / 궁극기: 전 부대 공격력 2배(8초)와 모든 궁극기 즉시 충전, 이어서 전장을 덮는 흑염 운석·빛의 기둥·최후의 섬광(보호 무시)' }),
     U('ramiel', '라미엘', 6, 'DS_Ramiel_N', { type: 'stun', dmg: 0, rate: 0.9, range: 5.0, splash: 1.5, stun: 0.12, stunDur: 0.6, fx: 'holy', color: 0xfff1b8, sfx: 'energy', mana: 12, ult: 'pillar', ultName: '억겁의 성화', desc: '성광 폭발 / 궁극기: 3x3 범위 보호 무시 화염 피해 + 고정 화염, 원죄의 굴레(배치 30초 후) 시 방어막 무시 + 강한 지속 화염, 사용 후 잠시 스킬 사용 불가' }),
   ];
 
@@ -92,6 +98,8 @@
     { result: 'empress', parts: ['lemonadealpha', 'undine'], tag: 'PECS · 침수 연계' },
     { result: 'fafnir', parts: ['andvari', 'hela', 'sleipnir'], tag: '북유럽 신화 · 안드바리의 황금' },
     { result: 'ramiel', parts: ['azazel', 'saraqael', 'zero'], tag: 'DS 계열 · 코헤이 교단' },
+    // an LR recipe: LRL 「철의 파멸」 from the two princesses she idolises and Amy (as the players asked, 2026-10)
+    { result: 'lrl', parts: ['amy', 'cyclopsprincess', 'blindprincess'], tag: '진조의 일족 · 철의 파멸' },
   ];
 
   // Normal enemy roster cycles every wave; `hp`/`spd` are multipliers.
@@ -141,9 +149,10 @@
     vuln: 1.15,              // slowed or stunned enemies take this much more damage
     callGold: (w) => 4 + Math.floor(w / 2),   // parts per second skipped when calling the next wave early
     reroll: [0, 1, 1, 2, 3], // tuna to swap one unit of a rank for another of the same rank (B, LR and UR can't)
-    // difficulty: enemy HP multiplier
-    // difficulty: enemy HP multiplier from wave 1 (hp0) to wave 80 (hp1): hard bites late, not at the first boss
-    diffs: [{ key: 'easy', name: '쉬움', hp0: 0.4, hp1: 0.55, bossTime: 15 }, { key: 'normal', name: '보통', hp0: 1, hp1: 1 }, { key: 'hard', name: '어려움', hp0: 1.1, hp1: 1.38 }],
+    // difficulty: enemy HP multiplier from wave 1 (hp0) to wave 80 (hp1): hard bites late, not at the first boss.
+    // Late curves are steep: with LR / UR merges the board's power grows far faster than the HP table (2026-10 sweep,
+    // tools/lab/balance_score.py: strong player 84 / 47 / 19% wins on normal / hard / very hard, score 99.9)
+    diffs: [{ key: 'easy', name: '쉬움', hp0: 0.4, hp1: 0.55, bossTime: 15 }, { key: 'normal', name: '보통', hp0: 1.05, hp1: 2.6 }, { key: 'hard', name: '어려움', hp0: 1.35, hp1: 5.3 }, { key: 'veryhard', name: '매우 어려움', hp0: 1.5, hp1: 8.5 }],
     diffHp(d, w) { const o = this.diffs[d] || this.diffs[1]; return o.hp0 + (o.hp1 - o.hp0) * Math.min(1, w / this.lastWave); },
     enemySpeed: 1.55,
     startGold: 125,
@@ -226,6 +235,6 @@
   window.DATA = {
     TIERS, LR, UNIQUE, GOD, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL, bossFor,
     unit: Object.fromEntries(UNITS.map((u) => [u.id, u])),
-    byTier: (t) => UNITS.filter((u) => u.tier === t),
+    byTier: (t) => UNITS.filter((u) => u.tier === t && !u.crafted), // summon / merge / reroll pools (no crafted LR)
   };
 })();

@@ -280,7 +280,7 @@
       if (o.sfx != null) SFX.setVolume('sfx', o.sfx);
       if (o.mute) SFX.setMuted(true);
       if (o.q != null && o.q !== 'auto') GAME.setQuality(+o.q, 'manual');
-      if (o.diff != null) GAME.G.opt.diff = Math.max(0, Math.min(2, +o.diff));
+      if (o.diff != null) GAME.G.opt.diff = Math.max(0, Math.min(BAL.diffs.length - 1, +o.diff));
     } catch (e) { /* ignore */ }
   }
 
@@ -704,7 +704,7 @@
       return T('다음 목표 · {0}웨이브 돌파', m);
     }
     if (stars < 3) return T('다음 목표 · 최대 적 개체 수 {0} 미만으로 클리어', starLoads()[stars < 2 ? 0 : 1]);
-    if (d < 2) return T('다음 목표 · {0} 난이도 도전', T(BAL.diffs[d + 1].name));
+    if (d < BAL.diffs.length - 1) return T('다음 목표 · {0} 난이도 도전', T(BAL.diffs[d + 1].name));
     return T('모든 목표 달성! 최고 기록을 갱신해 보세요');
   }
 

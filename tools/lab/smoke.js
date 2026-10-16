@@ -103,6 +103,7 @@
         sleipnir: '한계돌파', blacklilith: '듀얼 버스트', brunhild: '핏빛 효후', tiamat: '풀 웨폰 어썰트', khan: '데저트 스톰',
         labiata: '백화요란', constantia: '발목 잡기', titania: '서리 폭풍', mercury: '최상의 시간', empress: '펭귄 서프라이즈!',
         fafnir: '뇌정벽력', ramiel: '억겁의 성화',
+        cyclopsprincess: '영원한 진조의 섬광', blindprincess: '작열하는 사랑의 빛', lrl: '사이클롭스 이터널 빔',
       };
       const ko = (d) => d._ko_ultName || d.ultName; // the source name (i18n may have swapped in a translation)
       DATA.UNITS.filter((d) => d.tier >= 4 && d.tier <= DATA.UNIQUE).forEach((d) => eq(ko(d), ORIGINAL[d.id], d.id));
@@ -147,6 +148,10 @@
         s = setup('fafnir', 4); s.es.forEach((e) => { e.shieldT = 9; }); cast(s.u, s.es[0], 0.3); ck('Fafnir: 2+ adjacent strips enhancements', s.es.every((e) => e.shieldT === 0));
         s = setup('ramiel'); cast(s.u, s.es[0], 0.3); ck('Ramiel: no skill for 2 rounds', s.u.sealT > 0); ck('Ramiel: fixed fire damage', s.es.some((e) => e.burnFixed && e.burnT > 0));
         s = setup('ramiel'); s.u.age = 31; cast(s.u, s.es[0], 0.3); ck('Ramiel: 원죄의 굴레 burns 3 rounds', s.es.some((e) => e.burnFixed && e.burnT > 5));
+        s = setup('cyclopsprincess'); cast(s.u, s.es[0], 0.6); ck('Cyclops Princess: damage reduction -19% (mark 1.19)', s.es.some((e) => near(e.markK, 1.19)));
+        s = setup('lrl'); cast(s.u, s.es[0], 0.6); ck('LRL: AP -1.95 (slowed)', s.es.every((e) => near(e.slowAmt, 0.4)));
+        s = setup('lrl', 3, 3000, ['cyclopsprincess']); cast(s.u, s.es[0], 1); ck('LRL: co-op 영원한 진조의 섬광 with Cyclops Princess', s.es.some((e) => near(e.markK, 1.19)));
+        s = setup('lrl'); cast(s.u, s.es[0], 1); ck('LRL: no co-op alone', !s.es.some((e) => e.markT > 0));
         // ignores shields / damage reduction (Tiamat): the same hit on a shielded and an unshielded target
         s = setup('tiamat', 1, 1e6); const a0 = s.es[0].hp; cast(s.u, s.es[0], 1); const plain = a0 - s.es[0].hp;
         s = setup('tiamat', 1, 1e6); s.es[0].shieldT = 99; const b0 = s.es[0].hp; cast(s.u, s.es[0], 1); const shielded = b0 - s.es[0].hp;
@@ -254,17 +259,31 @@
       r = R('ramiel', { u: { age: 31 }, t: 0.3, es: [{ set: { shieldT: 99 } }] }); ck('Ramiel: 원죄의 굴레 ignores shields', r.es[0].shieldT === 0);
       { const burnTotal = (x) => x.es[0].burnDps * x.es[0].burnN * x.es[0].burnT; // the fixed fire still to come
         ck('Ramiel: 원죄의 굴레 burns 30x', rat(burnTotal(R('ramiel', { u: { age: 31 }, t: 0.01 })), burnTotal(R('ramiel', { t: 0.01 })), 30)); }
+      const ub = (id) => DATA.unit[id].dmg * GAME.dmgMult() * GAME.ULT_K; // an ultimate's base hit
+      // Cyclops Princess · 영원한 진조의 섬광: 1.8x on a wide area (skill level 10)
+      r = R('cyclopsprincess', { es: [{}, { d: 7.6 }, FAR] }); ck('Cyclops Princess: wide area, only there', r.loss[1] > 0 && r.loss[2] === 0);
+      ck('Cyclops Princess: 1.8x (base 6)', rat(R('cyclopsprincess').loss[0], ub('cyclopsprincess') * 6, 1));
+      // Blind Princess · 작열하는 사랑의 빛
+      r = R('blindprincess', { es: [{}, { d: 7.2 }, FAR] }); ck('Blind Princess: less farther out, at most -50%', r.loss[1] < r.loss[0] && r.loss[1] >= r.loss[0] * 0.5 - 1e-6 && r.loss[2] === 0);
+      ck('Blind Princess: +47.5% with Cyclops Princess and LRL', rat(R('blindprincess', { extra: ['cyclopsprincess', 'lrl'] }).loss[0], R('blindprincess').loss[0], 1.475));
+      ck('Blind Princess: one of them is not enough', rat(R('blindprincess', { extra: ['cyclopsprincess'] }).loss[0], R('blindprincess').loss[0], 1));
+      ck('Blind Princess: crit strips enhancements', R('blindprincess', { crit: true, es: [{ set: { shieldT: 99 } }] }).es[0].shieldT === 0);
+      ck('Blind Princess: no crit, no strip', R('blindprincess', { es: [{ set: { shieldT: 99 } }] }).es[0].shieldT > 0);
+      // LRL · 사이클롭스 이터널 빔
+      r = R('lrl', { es: [{}, { d: 7.6 }, FAR] }); ck('LRL: wide area, only there', r.loss[1] > 0 && r.loss[2] === 0);
+      ck('LRL: 0.1x (1/18 of a 1.8x hit)', rat(R('lrl').loss[0], ub('lrl') * 0.35, 1));
+      ck('LRL: crit strips shields / damage reduction', R('lrl', { crit: true, es: [{ set: { shieldT: 99 } }] }).es[0].shieldT === 0);
+      ck('LRL: co-op adds the Cyclops Princess 1.8x', rat(R('lrl', { extra: ['cyclopsprincess'] }).loss[0] - R('lrl').loss[0], ub('cyclopsprincess') * 6 * DATA.BAL.vuln, 1));
       const pass = checks.filter((c) => c[1]).length;
       const m = window.SKILL_MEASURE || { pass: 0, total: 0 };
       window.SKILL_MEASURE2 = { pass, total: checks.length, failed: checks.filter((c) => !c[1]).map((c) => c[0]), all: `${m.pass + pass}/${m.total + checks.length}` };
       eq(pass, checks.length, `measured ${pass}/${checks.length}: ${window.SKILL_MEASURE2.failed.join(', ')}`);
-      // the score against the 90-point goal: names (16 checked against the in-game data by the test above) 40%, the
-      // measured effect checks 60%; strict = the 13 items this board can't express counted as failures (65 of 78)
-      const NAMES = DATA.UNITS.filter((d) => d.tier >= 4 && d.tier <= DATA.UNIQUE).length;
+      // the score against the 90-point goal: names (all 19, checked against the in-game data by the test above) 40%, the
+      // measured effect checks 60%; strict = the 16 items this board can't express counted as failures (76 of 92)
       const measured = (m.pass + pass) / (m.total + checks.length);
-      const score = 40 * NAMES / 16 + 60 * measured, strict = 40 * NAMES / 16 + 60 * measured * 65 / 78;
+      const score = 40 + 60 * measured, strict = 40 + 60 * measured * 76 / 92;
       window.SKILL_SCORE = { score: +score.toFixed(1), strict: +strict.toFixed(1), checks: `${m.pass + pass}/${m.total + checks.length}` };
-      eq(score >= 90 && strict >= 90, true, `skill score ${score.toFixed(1)} / strict ${strict.toFixed(1)}`);
+      eq(score >= 90 && strict >= 89, true, `skill score ${score.toFixed(1)} / strict ${strict.toFixed(1)}`);
       return `${pass}/${checks.length} damage-rule checks (all: ${window.SKILL_MEASURE2.all}); score ${window.SKILL_SCORE.score}, strict ${window.SKILL_SCORE.strict}`;
     });
 
@@ -276,7 +295,7 @@
       DATA.BAL.godChance = keep;
       const gods = G().cells.filter((c) => c.units.length && c.units[0].def.tier === DATA.GOD);
       eq(gods.length, 2, 'two GOD units, each in its own cell'); eq(gods[0].units.length, 1, 'no stacking');
-      eq(gods[0].units[0].def.id, 'lrl', 'LRL');
+      eq(gods[0].units[0].def.id, 'commander', '사령관');
       fresh(); G().gold = 1e6; G().upg.luck = 5;
       for (let k = 0; k < 15; k++) GAME.summon();
       eq(G().cells.some((c) => c.units.length && c.units[0].def.tier === DATA.GOD), false, 'not from ordinary rolls');

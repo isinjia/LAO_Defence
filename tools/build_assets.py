@@ -25,7 +25,10 @@ BR_Phoenix_N DS_KunoichiZero_N BR_Thetis_N BR_Leona_N BR_Undine_N
 DS_Azazel_N BR_Hela_N ST_Tiamat_N 3P_Labiata_N BR_Sleipnir_N
 3P_ConstantiaS2_N 3P_Titania_N ST_Mercury_N PECS_Empress_N BR_Fafnir_N DS_Ramiel_N
 3P_BlackLilith_N BR_Brunhild_N BR_Khan_N 3P_Daphne_N BR_Andvari_N BR_Hraesvelgr_N
-PECS_LemonadeAlpha_N 3P_Eternity_N ST_Ullr_N DS_Saraqael_N PECS_LRL_N""".split()
+PECS_LemonadeAlpha_N 3P_Eternity_N ST_Ullr_N DS_Saraqael_N PECS_LRL_N
+BR_Amy_N PECS_CyclopsePrincess_N PECS_BlindPrincess_N""".split()
+# icon skins: LRL wears her rose eyepatch (「철의 파멸」, NS3), as in the recipe the players asked for
+ICON = {"PECS_LRL_N": "PECS_LRL_NS3"}
 
 ENEMIES = """NightChick_N Drone_N PuppHead_N Legion_N Centurion_N Fallen_N Gigantes_N
 Predator_N Rampart_N Harvester_N Intruder_N Juggernaut_N Phalangites_N Raider_B04
@@ -113,7 +116,7 @@ def sfx_to_mp3(src, dst):
 def main():
     images = {}
     for c in CHARS:
-        images["c_" + c] = data_uri(fit(TEX + "/FormationIcon/FormationIcon_%s.png" % c, 128))
+        images["c_" + c] = data_uri(fit(TEX + "/FormationIcon/FormationIcon_%s.png" % ICON.get(c, c), 128))
     for e in ENEMIES:
         images["e_" + e] = data_uri(fit(TEX + "/TbarIcon/TbarIcon_MP_%s.png" % e, 112))
     images["bg_field"] = data_uri(fit(TEX + "/BGImg/BG_4_8_1.png", 1024, "RGB"), quality=80)

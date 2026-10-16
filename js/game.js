@@ -19,7 +19,7 @@
     // an S..LR from a merge / summon / gamble often is one already stacking on the board: three of one SS (for an
     // SSS) and of one SSS (for an LR) stay reachable with five or six kinds per rank (LR stacks save cells)
     if (t >= 2 && t <= LR && k !== 'reroll' && k !== 'reward') {
-      const stacking = UNITS.filter((d) => d.tier === t && G.cells.some((c) => c.units.length && c.units.length < 3 && c.units[0].def.id === d.id));
+      const stacking = UNITS.filter((d) => d.tier === t && !d.crafted && G.cells.some((c) => c.units.length && c.units.length < 3 && c.units[0].def.id === d.id));
       if (stacking.length && luck(k) < BAL.stackBias) return pickL(stacking, k);
     }
     return pickL(DATA.byTier(t), k);
@@ -339,6 +339,7 @@
     return shadowTex;
   }
 
+  let cmdTex = null;
   function makeUnit(def) {
     const u = { def, x: 0, y: 0, tx: 0, ty: 0, cd: Math.random() * def.rate, mana: 0, pulse: 0, cell: -1, face: 1, lastAtk: -9, casting: false };
     u.size = def.tier >= 4 ? 1.5 : 0.92;
@@ -349,6 +350,17 @@
     if (def.tier >= 3) u.aura = FX.sprite({ x: 0, y: 0, size: 1, aspect: 1.1, color: TIERS[def.tier].hex, alpha: 0.3, tex: FX.tex.glow, order: L.UNIT - 0.5 });
     u.holder = new THREE.Group();
     scene.add(u.holder);
+    if (def.drawn && window.CMD) {
+      // the commander has no rig: his drawn figure (js/commander.js), feet on the cell
+      const H = u.h * 1.3;
+      u.drawnH = H;
+      u.s = new THREE.Sprite(spriteMat(cmdTex || (cmdTex = new THREE.CanvasTexture(CMD.body())), 0xc8c8c8)); // dimmed: a white figure blooms otherwise
+      u.s.scale.set(H * 0.8, H, 1);
+      u.s.position.set(0, H * 0.5, 0);
+      u.s.renderOrder = L.UNIT;
+      u.holder.add(u.s);
+      return u;
+    }
     prepareOrig(def.id);
     if (window.SD && SD.ready(def.id)) attachSD(u);
     else {
@@ -570,7 +582,7 @@
     const full = !anyEmpty();
     if (full && !stackable().length) { UI.toast(T('칸이 모두 찼습니다. 합성하거나 판매해 자리를 만드세요'), 'warn'); SFX.play('fail'); return; }
     // the GOD rank: a flat 0.0001% before the normal roll (no luck upgrade, pity or bias touches it; needs a free cell)
-    if (!full && !G.tut && luck('summon') < BAL.godChance) { G.gold -= cost; G.summons++; godDescends(); UI.update(true); return; }
+    if (!full && !G.tut && DATA.byTier(GOD).length && luck('summon') < BAL.godChance) { G.gold -= cost; G.summons++; godDescends(); UI.update(true); return; }
     const rolled = rollTier();
     const def = full ? pickStackable(rolled) : pickRank(rolled, 'summon');
     G.gold -= cost;
@@ -792,7 +804,7 @@
     const def = DATA.unit[r.result];
     const i = addUnit(def, at, sx, sy);
     SFX.play('pickSS');
-    UI.announce(def, T('UR 조합!'));
+    UI.announce(def, def.tier === UNIQUE ? T('UR 조합!') : T('LR 조합!'));
     if (quiet) keepSelection();
     else { G.selected = i; UI.onSelect(); }
     UI.update(true);
@@ -1724,7 +1736,57 @@
         });
         break;
       }
+      case 'crimson': { // Cyclops Princess · 영원한 진조의 섬광: the eyepatch's seal undone, a crimson flash on the chosen area
+        // (1.8x; at skill level 10 the area grows a lot), damage-reduction weakened -19% for 2 rounds (counterattacks
+        // removed: enemies here have none)
+        crimsonFlash(u, densest(1.9, 1)[0] || e, base, d);
+        break;
+      }
+      case 'lovelight': { // Blind Princess · 작열하는 사랑의 빛: the holy sword on the chosen area (1.8x), up to 50% less the
+        // farther from the target point; a critical hit strips the target's enhancements; +47.5% while Cyclops Princess
+        // and LRL are both in the squad (the field)
+        const c = densest(1.6, 1)[0] || e;
+        const cx = c.x, cy = c.y, R = BAL.cell * 1.3;
+        const both = !!(findCellOf('cyclopsprincess') >= 0 && findCellOf('lrl') >= 0);
+        FX.later(0.2, () => {
+          FX.pillar(cx, cy, 0.9, d.color);
+          FX.ring(cx, cy, 0.2, R, d.color, 0.5, 0.8);
+          FX.explosion(cx, cy, 1.4, d.color, true);
+          SFX.play('expB');
+          for (const o of enemiesNear(cx, cy, R)) {
+            const crit = ultCrit(u);
+            if (crit) o.shieldT = 0;
+            const fall = 1 - 0.5 * Math.min(1, Math.hypot(o.x - cx, o.y - cy) / R);
+            damage(o, base * 6 * fall * (both ? 1.475 : 1), d.color, crit, d);
+          }
+        });
+        break;
+      }
       // ── LR ──
+      case 'eternalbeam': { // LRL · 사이클롭스 이터널 빔: the seal undone, a beam on the chosen area (0.1x; a large area at skill
+        // level 10), AP -1.95 (slowed) hit or miss (accuracy and its buffs: enemies here have none); a critical hit
+        // (진조를 계승한 자) also strips shields / damage reduction; with Cyclops Princess in the squad she joins in with
+        // 영원한 진조의 섬광 (the co-op attack of 용살자의 징표)
+        const c = densest(1.9, 1)[0] || e;
+        const cx = c.x, cy = c.y, R = BAL.cell * 1.6;
+        const crit = ultCrit(u);
+        FX.beam(u.x, u.y, cx, cy, 0.4, d.color, 0.35);
+        FX.later(0.15, () => {
+          FX.ring(cx, cy, 0.2, R, d.color, 0.5, 0.8);
+          SFX.play('laserBig');
+          for (const o of enemiesNear(cx, cy, R)) {
+            if (crit) o.shieldT = 0;
+            damage(o, base * 0.35, d.color, crit, d);
+            slow(o, 0.4, 5);
+          }
+        });
+        const cp = findCellOf('cyclopsprincess');
+        if (cp >= 0) {
+          const cu = G.cells[cp].units[0];
+          FX.later(0.35, () => crimsonFlash(cu, c, cu.def.dmg * dmgMult() * ULT_K, cu.def));
+        }
+        break;
+      }
       case 'wolfpack': { // Brunhild · 핏빛 효후: her wolf over the chosen area ignoring protection, fire; effect resistance
         // and fire resistance -28.5% for 2 rounds; a critical hit +47.5% and removes burning on the target
         const pts = [0, 1, 2, 3, 4, 5].map((k) => pathPos(Math.max(0, e.d - k * 0.9)));
@@ -1881,12 +1943,15 @@
         break;
       }
       // ── GOD ──
-      case 'apocalypse': { // LRL · 칠흑의 종언 (this game's own): the field drowns in darkness, black-flame meteors fall on
+      case 'allout': { // 사령관 · 전군, 돌격하라! (this game's own): the commander's order to every unit: the whole squad's attack
+        // x2 for 8 s and every other ultimate gauge filled at once, then the field drowns in darkness, meteors fall on
         // every crowd, light pillars sweep the path, then one blinding blast: everything held, protection ignored
         FX.flash(0x000000, 0.7);
         UI.banner('GOD', d.ultName);
+        rally(2, 8);
+        G.cells.forEach((c) => c.units.forEach((x) => { if (x !== u && x.def.ult) x.mana = 100; }));
         SFX.play('warning');
-        // 1) darkness gathers: rings closing in on LRL
+        // 1) darkness gathers: rings closing in on the commander
         for (let k = 0; k < 6; k++) FX.later(k * 0.06, () => FX.ring(u.x, u.y, 8 - k, 0.3, k % 2 ? 0xb46bff : 0x1a0030, 0.35, 0.9));
         for (const o of G.enemies) if (o.alive) stun(o, 3.5);
         // 2) black-flame meteors on every crowd
@@ -1926,6 +1991,18 @@
   }
 
   // ── ultimate helpers ──
+  // Cyclops Princess's 영원한 진조의 섬광 (her own ultimate, and LRL's co-op attack): 1.8x on a wide area, -19% damage
+  // reduction (a mark) for 2 rounds
+  function crimsonFlash(u, c, base, d) {
+    const cx = c.x, cy = c.y, R = BAL.cell * 1.6;
+    FX.later(0.15, () => {
+      FX.beam(u.x, u.y, cx, cy, 0.3, 0xff3a5a, 0.25);
+      FX.ring(cx, cy, 0.2, R, 0xff3a5a, 0.5, 0.8);
+      FX.explosion(cx, cy, 1.3, 0xff3a5a, true);
+      SFX.play('laserBig');
+      for (const o of enemiesNear(cx, cy, R)) { damage(o, base * 6, 0xff3a5a, false, d); mark(o, 1.19, 5); }
+    });
+  }
   // an ultimate's own crit roll (skill crit bonuses are per hit in the original)
   function ultCrit(u) { return Math.random() < 0.3 + (u.def.crit || 0) + critBonus(); }
   function inLine(x0, y0, x1, y1, w) { return G.enemies.filter((o) => o.alive && distToSeg(o.x, o.y, x0, y0, x1, y1) < w); }
@@ -2207,6 +2284,11 @@
           u.sd.setOrder(L.UNIT + (6 - fy) * 0.01);
         } else if (u.s) {
           u.s.renderOrder = L.UNIT + (6 - fy) * 0.01;
+          if (u.drawnH) { // the commander: a little bob, a hop when he throws, and never mirrored ("사" reads right)
+            const hop = Math.max(0, 1 - (G.time - u.lastAtk) * 4);
+            u.s.position.y = u.drawnH * (0.5 + 0.02 * Math.abs(Math.sin(time * 2.2)) + 0.06 * hop);
+            u.s.scale.x = u.drawnH * 0.8 * u.face;
+          }
         }
       }
     }

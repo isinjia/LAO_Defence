@@ -1,6 +1,6 @@
 """Run balance batches in headless Chrome (no window, never throttled), several in parallel.
   python tools/lab/headless.py v27n:smart,auto:1:40 v27eh:smart,auto:0,2:20 ...
-Each job is tag:strategies:diffs:runs[:seed0] -> tools/lab/out/balance_<tag>.json (needs tools/serve.py on :8765).
+Each job is tag:strategies:diffs:runs[:seed0[:hp0,hp1]] -> tools/lab/out/balance_<tag>.json (needs tools/serve.py on :8765).
 """
 import json, os, shutil, subprocess, sys, tempfile, time, urllib.parse
 
@@ -10,8 +10,11 @@ CHROME = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
 
 
 def job(spec):
-    tag, strats, diffs, runs, *seed = spec.split(':')
-    return {'id': tag, 'runs': [{'runs': int(runs), 'strategies': strats.split(','), 'diffs': [int(d) for d in diffs.split(',')], 'tag': tag, 'seed0': int(seed[0]) if seed else 1000}]}
+    tag, strats, diffs, runs, *rest = spec.split(':')
+    plan = {'id': tag, 'runs': [{'runs': int(runs), 'strategies': strats.split(','), 'diffs': [int(d) for d in diffs.split(',')], 'tag': tag, 'seed0': int(rest[0]) if rest and rest[0] else 1000}]}
+    if len(rest) > 1:  # hp0,hp1: override the enemy HP curve of those difficulties (sweeps)
+        plan['hp'] = [float(x) for x in rest[1].split(',')]
+    return plan
 
 
 def launch(i, spec):
