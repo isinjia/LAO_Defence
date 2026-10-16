@@ -529,7 +529,22 @@ body.paused #bottom { pointer-events: none; filter: brightness(0.55) saturate(0.
 .logo .sub::after { transform: scaleX(-1); }
 .logo h1 { margin: 0; font-size: clamp(30px, 5vw, 50px); font-weight: 700; letter-spacing: 6px; text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8); }
 #titleChars { display: flex; gap: 6px; margin: 22px 0 18px; flex-wrap: wrap; justify-content: center; }
-#titleChars .hx { width: 82px; height: 82px; animation: pop 0.5s backwards; }
+#titleChars .hx { width: 72px; height: 72px; animation: pop 0.5s backwards; }
+/* the two top ranks side by side, each under its rank name */
+#titleChars .tg { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+#titleChars .tg > div { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+#titleChars .tg > b { font: 900 italic 13px/1 var(--en); letter-spacing: 2px; padding: 2px 10px; border-radius: 3px; color: #111; }
+#titleChars .tg.lr > b { background: #d06bff; }
+#titleChars .tg.ur > b { background: var(--rainbow); animation: urhue 5s linear infinite; }
+#titleChars { column-gap: 22px; }
+
+/* UR (crafted, one on the field): the whole rainbow at once, its hues slowly turning, instead of one rank colour */
+:root { --rainbow: linear-gradient(90deg, #ff4d6d, #ffb347, #fff35c, #5dff8a, #4dc3ff, #b06bff); }
+@keyframes urhue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+.hx.ur::before { background: conic-gradient(from 200deg, #ff4d6d, #ffb347, #fff35c, #5dff8a, #4dc3ff, #b06bff, #ff4d6d); animation: urhue 5s linear infinite; }
+.hx.ur .hrk, #popup.ur::before { background: var(--rainbow); animation: urhue 5s linear infinite; }
+.ann.ur small { background: var(--rainbow); -webkit-background-clip: text; background-clip: text; color: transparent; }
+@media (prefers-reduced-motion: reduce) { .hx.ur::before, .hx.ur .hrk, #popup.ur::before, #titleChars .tg.ur > b { animation: none; } }
 @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(0.8); } }
 #titleChars.wait .hx { animation: none; opacity: 0; }
 .brief { width: min(860px, 100%); margin-bottom: 22px; background: rgba(10, 11, 13, 0.82); border: 1px solid rgba(255, 255, 255, 0.1); text-align: left; }

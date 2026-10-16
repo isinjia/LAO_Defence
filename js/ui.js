@@ -20,7 +20,7 @@
   const rank = (t) => S('rank' + Math.min(t, 4));
   // hexagon portrait in the tier colour (frame_Cha_formation_icon)
   // the rank letter rides on the frame too: the tier is never told by colour alone (colour-blind players, screen readers)
-  const hex = (def, cls = '') => `<span class="hx ${cls}" style="--img:url(${img(def)});--c:${TIERS[def.tier].color}" role="img" aria-label="${def.name} (${TIERS[def.tier].name})"><i class="hrk">${TIERS[def.tier].name}</i></span>`;
+  const hex = (def, cls = '') => `<span class="hx ${cls}${def.tier === DATA.UNIQUE ? ' ur' : ''}" style="--img:url(${img(def)});--c:${TIERS[def.tier].color}" role="img" aria-label="${def.name} (${TIERS[def.tier].name})"><i class="hrk">${TIERS[def.tier].name}</i></span>`;
   const gearI = '<i class="ri"></i>';
   const tunaI = '<i class="rt"></i>';
 
@@ -118,9 +118,13 @@
     const li = $('#logoImg');
     li.style.setProperty('--logo', `url(${lg.u})`);
     li.style.setProperty('--ar', lg.w / lg.h);
-    const featured = ['constantia', 'titania', 'mercury', 'empress', 'fafnir', 'ramiel'];
+    // the two top ranks: LR (three SSS) and UR (crafted, one on the field)
+    const groups = [DATA.LR, DATA.UNIQUE].map((t) => DATA.byTier(t).map((d) => d.id));
+    const featured = groups.flat();
     const tc = $('#titleChars');
-    tc.innerHTML = featured.map((id, i) => hex(DATA.unit[id]).replace('style="', `style="animation-delay:${i * 0.1}s;`)).join('');
+    let n = 0;
+    tc.innerHTML = groups.map((ids, g) => `<div class="tg ${g ? 'ur' : 'lr'}"><b>${TIERS[g ? DATA.UNIQUE : DATA.LR].name}</b><div>${
+      ids.map((id) => hex(DATA.unit[id]).replace('style="', `style="animation-delay:${(n++) * 0.08}s;`)).join('')}</div></div>`).join('');
     // the six portraits pop in as one row once all are decoded (not one by one as each image arrives)
     tc.classList.add('wait');
     const decode = (src) => { const im = new Image(); im.src = src; return im.decode ? im.decode().catch(() => {}) : Promise.resolve(); };
@@ -395,6 +399,7 @@
     const max = d.tier >= DATA.LR ? 1 : 3;
     const stat = (icon, label, v) => `<span><i class="si" style="background-image:${S(icon)}"></i>${label}<b>${v}</b></span>`;
     el.popup.style.setProperty('--c', t.color);
+    el.popup.classList.toggle('ur', d.tier === DATA.UNIQUE);
     el.popup.innerHTML = `
       <div class="ph">
         ${hex(d)}
@@ -616,7 +621,7 @@
     const wait = bannerUntil + 250 - performance.now();
     if (wait > 0) { setTimeout(() => announce(def, text), wait); return; }
     const t = TIERS[def.tier];
-    el.announce.innerHTML = `<div class="ann ${def.tier >= 4 ? 'r4' : ''}" style="--c:${t.color}">${hex(def)}
+    el.announce.innerHTML = `<div class="ann ${def.tier >= 4 ? 'r4' : ''} ${def.tier === DATA.UNIQUE ? 'ur' : ''}" style="--c:${t.color}">${hex(def)}
       <div><small>${text}</small><b>${def.name}</b></div><span class="rk" style="background-image:${rank(def.tier)}"></span></div>`;
     const a = el.announce.firstChild;
     setTimeout(() => a.classList.add('out'), 1700);

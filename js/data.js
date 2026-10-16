@@ -8,7 +8,7 @@
     { key: 'L', name: 'SS', color: '#ff9420', hex: 0xff9420, sell: 120 },
     { key: 'M', name: 'SSS', color: '#ff3d5a', hex: 0xff3d5a, sell: 300 },
     { key: 'U', name: 'LR', color: '#d06bff', hex: 0xd06bff, sell: 900 },
-    { key: 'X', name: 'UR', color: '#38f2e8', hex: 0x38f2e8, sell: 700 },
+    { key: 'X', name: 'UR', color: '#ff9de2', hex: 0xff9de2, sell: 700 }, // drawn as a flowing rainbow (css .ur, game.js rainbow)
   ];
   const LR = 5, UNIQUE = 6;
 

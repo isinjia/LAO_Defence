@@ -450,6 +450,8 @@
   // a cell next to the path (the middle row's inner cells are ~3.7 away from it)
   function isOuter(i) { const r = Math.floor(i / BAL.cols), c = i % BAL.cols; return r !== 1 || c === 0 || c === BAL.cols - 1; }
   // B..SSS stack to three and merge one rank up (three SSS make an LR); LR and UR stand alone
+  const _rc = new THREE.Color();
+  function rainbow(t) { return _rc.setHSL(((t % 1) + 1) % 1, 0.95, 0.62).getHex(); }
   function stackMax(def) { return def.tier >= LR ? 1 : 3; }
   function canMerge(def) { return def.tier < LR; }
   function hasUnique() { return G.cells.some((c) => c.units.some((u) => u.def.tier === UNIQUE)); }
@@ -1990,9 +1992,15 @@
       if (c.t > 0.7) c.e.sd.setOpacity(Math.max(0, 1 - (c.t - 0.7) / 0.4));
       if (c.t > 1.1) { disposeEnemy(c.e); G.corpses.splice(i, 1); }
     }
+    // UR (the crafted one-of): its cell, ring and aura cycle through the rainbow
+    G.cells.forEach((cell, i) => {
+      const m = stat.cellMeshes[i];
+      if (m && cell.units.length && cell.units[0].def.tier === UNIQUE && !(cell.silT > 0)) m.material.color.setHex(rainbow(time * 0.25 + i * 0.1));
+    });
     // units
     for (const cell of G.cells) {
       for (const u of cell.units) {
+        if (u.def.tier === UNIQUE) { const c = rainbow(time * 0.25 + u.x * 0.05); if (u.ring) u.ring.color = c; if (u.aura) u.aura.color = c; }
         u.x += (u.tx - u.x) * Math.min(1, rdt * 12);
         u.y += (u.ty - u.y) * Math.min(1, rdt * 12);
         u.pulse = Math.max(0, u.pulse - rdt * 6);
