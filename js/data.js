@@ -155,7 +155,7 @@
     // tools/lab/balance_score.py: strong player 84 / 47 / 19% wins on normal / hard / very hard, score 99.9)
     diffs: [{ key: 'easy', name: '쉬움', hp0: 0.4, hp1: 0.55, bossTime: 15 }, { key: 'normal', name: '보통', hp0: 1.05, hp1: 2.6 }, { key: 'hard', name: '어려움', hp0: 1.35, hp1: 5.3 }, { key: 'veryhard', name: '매우 어려움', hp0: 1.5, hp1: 8.5 },
       // nightmare: 120 waves (the final boss at 120) and crueler bosses (cruel: BOSSES[].cruel added, stronger tricks)
-      { key: 'nightmare', name: '나이트메어', hp0: 1.5, hp1: 12, waves: 120, cruel: true } // wave 80 = very hard's 8.5x, then on to 12x],
+      { key: 'nightmare', name: '나이트메어', hp0: 1.5, hp1: 12, waves: 120, cruel: true }], // nightmare: wave 80 = very hard's 8.5x, then on to 12x
     diffHp(d, w) { const o = this.diffs[d] || this.diffs[1]; return o.hp0 + (o.hp1 - o.hp0) * Math.min(1, w / this.lastWave); },
     enemySpeed: 1.55,
     startGold: 125,
