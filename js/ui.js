@@ -118,8 +118,8 @@
     const li = $('#logoImg');
     li.style.setProperty('--logo', `url(${lg.u})`);
     li.style.setProperty('--ar', lg.w / lg.h);
-    // the top ranks: LR (three SSS), UR (crafted, one on the field) and the GOD miracle
-    const tiers = [DATA.LR, DATA.UNIQUE, DATA.GOD], cls = ['lr', 'ur', 'god'];
+    // the top ranks: LR (three SSS) and UR (crafted, one on the field)
+    const tiers = [DATA.LR, DATA.UNIQUE], cls = ['lr', 'ur']; // (GOD is kept a surprise: not shown here)
     const groups = tiers.map((t) => DATA.byTier(t).map((d) => d.id));
     const featured = groups.flat();
     const tc = $('#titleChars');

@@ -117,7 +117,7 @@ def main():
     for e in ENEMIES:
         images["e_" + e] = data_uri(fit(TEX + "/TbarIcon/TbarIcon_MP_%s.png" % e, 112))
     images["bg_field"] = data_uri(fit(TEX + "/BGImg/BG_4_8_1.png", 1024, "RGB"), quality=80)
-    images["bg_title"] = data_uri(fit(TEX + "/BGImg/BG_13_20.png", 1024, "RGB"), quality=80)
+    images["bg_title"] = data_uri(fit(TEX + "/BGImg/BG_13_1.png", 1024, "RGB"), quality=80)  # title + loading (was BG_13_20)
     for k, (p, s) in FXTEX.items():
         images["fx_" + k] = data_uri(fit(FX + "/" + p, s))
     # portraits for the title/result screens
