@@ -920,7 +920,7 @@
       lifeT: kind === 'elite' ? BAL.eliteTime : 0, info,
       armor: mut && mut.key === 'armor' ? 0.65 : 1, split: !!(mut && mut.key === 'split'), mutated: !!(mut || G.spawningMini),
       regen: !!(mut && mut.key === 'regen'), resist: !!(mut && mut.key === 'resist'),
-      gim: kind === 'boss' ? info.gim || [] : null, done: {}, shieldT: 0, quietT: 0, silT: 12,
+      gim: kind === 'boss' ? (cruel() ? [...new Set([...(info.gim || []), ...(info.cruel || [])])] : info.gim || []) : null, done: {}, shieldT: 0, quietT: 0, silT: 12,
     };
     if (mut && mut.key === 'fast') e.spd *= 1.35;
     grp.position.set(x, y, 0);
@@ -969,7 +969,7 @@
     if (!fixed && e.markT > 0) amount *= e.markK;
     if (fixed) { /* as it is */ } else if (typeof pierce === 'number') amount *= e.armor + (1 - e.armor) * pierce; // shields ignored, armour partly
     else if (!pierce) {
-      if (e.shieldT > 0) amount *= 0.2;
+      if (e.shieldT > 0) amount *= e.shieldK || 0.2; // a nightmare boss's shield: 0.1
       amount *= e.armor;
     }
     if (!fixed && e.resist && src) amount *= src.type === 'melee' ? 1.3 : 0.75;
@@ -984,22 +984,27 @@
   }
 
   // ── boss tricks ── (data.js BOSSES[].gim)
+  const cruel = () => !!(BAL.diffs[G.diff] || {}).cruel; // nightmare bosses
   function hpTricks(e) {
     const f = e.hp / e.maxHp;
-    if (e.gim.includes('summon') && !e.done.summon && f <= 0.5) {
-      e.done.summon = 1;
-      const n = 10;
+    const cr = cruel();
+    // nightmare: 20 minions at 50% and again at 20%
+    const sk = cr && e.done.summon && !e.done.summon2 && f <= 0.2 ? 'summon2' : !e.done.summon && f <= 0.5 ? 'summon' : null;
+    if (e.gim.includes('summon') && sk) {
+      e.done[sk] = 1;
+      const n = cr ? 20 : 10;
       for (let k = 0; k < n; k++) { const m = spawnEnemy('normal', NORMALS[(G.wave + k) % NORMALS.length]); m.d = Math.max(0, e.d - 0.4 - k * 0.35); }
       UI.toast(T('{0}: 부하 소환!', e.name), 'warn');
       SFX.play('warning');
       FX.ring(e.x, e.y, 0.3, 3, 0xff3355, 0.6);
     }
     if (e.gim.includes('shield')) {
-      [2 / 3, 1 / 3].forEach((th, k) => {
+      // nightmare: three shields of 6 s at 90% (3/4, 1/2, 1/4)
+      (cr ? [3 / 4, 1 / 2, 1 / 4] : [2 / 3, 1 / 3]).forEach((th, k) => {
         if (!e.done['s' + k] && f <= th) {
           e.done['s' + k] = 1;
-          e.shieldT = 4;
-          UI.toast(T('{0}: 방어막 전개! 4초간 피해 80% 감소', e.name), 'warn');
+          e.shieldT = cr ? 6 : 4; e.shieldK = cr ? 0.1 : 0.2;
+          UI.toast(cr ? T('{0}: 방어막 전개! 6초간 피해 90% 감소', e.name) : T('{0}: 방어막 전개! 4초간 피해 80% 감소', e.name), 'warn');
           SFX.play('energy', 0.6);
           FX.ring(e.x, e.y, 0.4, 2.2, 0x66ccff, 0.8);
         }
@@ -1010,22 +1015,27 @@
   function bossTricks(e, dt) {
     if (e.shieldT > 0) e.shieldT -= dt;
     e.quietT += dt;
-    if (e.gim.includes('regen') && e.quietT > 1.5 && e.hp < e.maxHp) {
-      e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.03 * dt);
+    const cr = cruel();
+    // nightmare: 5%/s after a 1 s lull (3%/s after 1.5 s otherwise)
+    if (e.gim.includes('regen') && e.quietT > (cr ? 1 : 1.5) && e.hp < e.maxHp) {
+      e.hp = Math.min(e.maxHp, e.hp + e.maxHp * (cr ? 0.05 : 0.03) * dt);
       if (Math.random() < dt * 3) FX.sparks(e.x, e.y + 0.6, 0x7dff9a, 4, 1.5, 0.12, 0.5);
     }
     if (e.gim.includes('silence')) {
       e.silT -= dt;
       if (e.silT <= 0) {
-        e.silT = 14;
-        let best = -1, bv = 0;
-        G.cells.forEach((c, i) => { const v = c.units.reduce((a, u) => a + u.def.dps, 0); if (v > bv && !(c.silT > 0)) { bv = v; best = i; } });
+        // nightmare: every 9 s, the two strongest cells for 7 s
+        e.silT = cr ? 9 : 14;
+        const dur = cr ? 7 : 5;
+        const order = G.cells.map((c, i) => [i, c.units.reduce((a, u) => a + u.def.dps, 0)]).filter(([i, v]) => v > 0 && !(G.cells[i].silT > 0)).sort((a, b) => b[1] - a[1]);
+        if (cr && order[1]) { G.cells[order[1][0]].silT = dur; const c2 = lay.cells[order[1][0]]; FX.ring(c2.x, c2.y, 0.3, 1.4, 0xff2040, 0.7); }
+        const best = order.length ? order[0][0] : -1;
         if (best >= 0) {
-          G.cells[best].silT = 5;
+          G.cells[best].silT = dur;
           refreshCells();
           const c = lay.cells[best];
           FX.ring(c.x, c.y, 0.3, 1.4, 0xff2040, 0.7);
-          UI.toast(T('{0}: {1} 봉인! (5초)', e.name, G.cells[best].units[0].def.name), 'warn');
+          UI.toast(cr ? T('{0}: {1} 외 1칸 봉인! (7초)', e.name, G.cells[best].units[0].def.name) : T('{0}: {1} 봉인! (5초)', e.name, G.cells[best].units[0].def.name), 'warn');
           SFX.play('warning', 0.5);
         }
       }
@@ -1173,6 +1183,7 @@
     if (w % 10 === 0) {
       const info = DATA.bossFor(w);
       G.boss = spawnEnemy('boss', info);
+      if (cruel() && !G.buff.nullify) UI.toast(T('나이트메어 · {0}의 기믹이 강화되었습니다', info.name), 'warn');
       if (G.buff.nullify) { G.boss.gim = []; G.buff.nullify = false; UI.toast(T('기믹 해제 · {0}의 기믹이 무효화되었습니다', info.name), 'gem'); }
       G.bossT = G.bossMax = BAL.bossTime + G.buff.time + ((BAL.diffs[G.diff] || {}).bossTime || 0);
       G.waveT = G.bossT;
@@ -2555,6 +2566,7 @@
       diff: G.daily ? 1 : G.opt.diff == null ? 1 : G.opt.diff,
       rng: G.daily ? makeStreams(G.daily) : null, focus: null, hintUpg: false, tut: null,
     });
+    BAL.lastWave = (BAL.diffs[G.diff] || {}).waves || 80; // nightmare runs to 120
     G.cells.forEach((c) => { c.silT = 0; });
     G.opt.auto = false; // every battle starts manual at x1 (AUTO and speed are per battle, not saved settings)
     refreshCells();
@@ -2569,7 +2581,7 @@
   // (an 80-wave run is ~30 min; a reload or a phone killing the tab must not lose it). The daily operation is not
   // saved: its seeded luck streams cannot be resumed mid-run.
   const RUN_KEY = 'lao_rd_run';
-  const ENEMY_KEYS = ['kind', 'hp', 'maxHp', 'd', 'spd', 'armor', 'split', 'mutated', 'regen', 'resist', 'enraged', 'lastStand', 'lifeT', 'gim', 'done', 'shieldT', 'silT', 'tint'];
+  const ENEMY_KEYS = ['kind', 'hp', 'maxHp', 'd', 'spd', 'armor', 'split', 'mutated', 'regen', 'resist', 'enraged', 'lastStand', 'lifeT', 'gim', 'done', 'shieldT', 'shieldK', 'silT', 'tint'];
   function saveRun() {
     if (G.phase !== 'play' || G.rng || G.won || !G.wave) return;
     const lists = [NORMALS, ELITES, BOSSES];

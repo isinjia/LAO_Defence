@@ -128,11 +128,11 @@
   ];
   // every boss has one trick the player must answer (gim: summon | shield | silence | regen; the Iron Prince uses all)
   const BOSSES = [
-    { img: 'EmperorChick_N', name: '엠페러 칙', gim: ['summon'], hpK: 1, tip: '체력 50%에서 부하를 대거 소환합니다. 범위 공격을 준비하세요' },
-    { img: 'Goltarion_N', name: '골타리온', gim: ['shield'], hpK: 0.85, tip: '체력 2/3·1/3에서 방어막(피해 80% 감소). 둔화·기절 상태에서는 피해가 늘어납니다' },
-    { img: 'Executioner_EW', name: '엑스큐셔너', gim: ['silence'], hpK: 0.9, tip: '주기적으로 가장 강한 칸을 봉인합니다. 화력을 여러 칸에 나누세요' },
-    { img: 'Nidhogg_N', name: '니드호그', gim: ['regen'], hpK: 1, tip: '공격이 끊기면 빠르게 재생합니다. 쉬지 않고 몰아치세요' },
-    { img: 'IronPrince_N', name: '철의 왕자', gim: ['summon', 'shield', 'silence'], hpK: 1, tip: '최종 보스: 소환 · 방어막 · 봉인을 모두 사용합니다' },
+    { img: 'EmperorChick_N', name: '엠페러 칙', gim: ['summon'], cruel: ['regen'], hpK: 1, tip: '체력 50%에서 부하를 대거 소환합니다. 범위 공격을 준비하세요' },
+    { img: 'Goltarion_N', name: '골타리온', gim: ['shield'], cruel: ['summon'], hpK: 0.85, tip: '체력 2/3·1/3에서 방어막(피해 80% 감소). 둔화·기절 상태에서는 피해가 늘어납니다' },
+    { img: 'Executioner_EW', name: '엑스큐셔너', gim: ['silence'], cruel: ['shield'], hpK: 0.9, tip: '주기적으로 가장 강한 칸을 봉인합니다. 화력을 여러 칸에 나누세요' },
+    { img: 'Nidhogg_N', name: '니드호그', gim: ['regen'], cruel: ['silence'], hpK: 1, tip: '공격이 끊기면 빠르게 재생합니다. 쉬지 않고 몰아치세요' },
+    { img: 'IronPrince_N', name: '철의 왕자', gim: ['summon', 'shield', 'silence'], cruel: ['regen'], hpK: 1, tip: '최종 보스: 소환 · 방어막 · 봉인을 모두 사용합니다' },
   ];
 
   const BAL = {
@@ -153,7 +153,9 @@
     // difficulty: enemy HP multiplier from wave 1 (hp0) to wave 80 (hp1): hard bites late, not at the first boss.
     // Late curves are steep: with LR / UR merges the board's power grows far faster than the HP table (2026-10 sweep,
     // tools/lab/balance_score.py: strong player 84 / 47 / 19% wins on normal / hard / very hard, score 99.9)
-    diffs: [{ key: 'easy', name: '쉬움', hp0: 0.4, hp1: 0.55, bossTime: 15 }, { key: 'normal', name: '보통', hp0: 1.05, hp1: 2.6 }, { key: 'hard', name: '어려움', hp0: 1.35, hp1: 5.3 }, { key: 'veryhard', name: '매우 어려움', hp0: 1.5, hp1: 8.5 }],
+    diffs: [{ key: 'easy', name: '쉬움', hp0: 0.4, hp1: 0.55, bossTime: 15 }, { key: 'normal', name: '보통', hp0: 1.05, hp1: 2.6 }, { key: 'hard', name: '어려움', hp0: 1.35, hp1: 5.3 }, { key: 'veryhard', name: '매우 어려움', hp0: 1.5, hp1: 8.5 },
+      // nightmare: 120 waves (the final boss at 120) and crueler bosses (cruel: BOSSES[].cruel added, stronger tricks)
+      { key: 'nightmare', name: '나이트메어', hp0: 1.5, hp1: 12, waves: 120, cruel: true } // wave 80 = very hard's 8.5x, then on to 12x],
     diffHp(d, w) { const o = this.diffs[d] || this.diffs[1]; return o.hp0 + (o.hp1 - o.hp0) * Math.min(1, w / this.lastWave); },
     enemySpeed: 1.55,
     startGold: 125,
