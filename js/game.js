@@ -1747,7 +1747,7 @@
         // and LRL are both in the squad (the field)
         const c = densest(1.6, 1)[0] || e;
         const cx = c.x, cy = c.y, R = BAL.cell * 1.3;
-        const both = !!(findCellOf('cyclopsprincess') >= 0 && findCellOf('lrl') >= 0);
+        const both = !!(findCellOf('cyclopsprincess') >= 0 && (findCellOf('lrl') >= 0 || findCellOf('lrlrose') >= 0));
         FX.later(0.2, () => {
           FX.pillar(cx, cy, 0.9, d.color);
           FX.ring(cx, cy, 0.2, R, d.color, 0.5, 0.8);

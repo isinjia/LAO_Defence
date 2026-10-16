@@ -40,7 +40,7 @@ UNITS = {
     "eternity": "3P_Eternity_N", "ullr": "ST_Ullr_N", "saraqael": "DS_Saraqael_N",
     "lrl": "PECS_LRL_N",  # LR, crafted (2026-10)
     # the LRL recipe (2026-10)
-    "amy": "BR_Amy_N", "cyclopsprincess": "PECS_CyclopsePrincess_N", "blindprincess": "PECS_BlindPrincess_N",
+    "lrlrose": "PECS_LRL_N", "amy": "BR_Amy_N", "cyclopsprincess": "PECS_CyclopsePrincess_N", "blindprincess": "PECS_BlindPrincess_N",
 }
 
 # enemy image key (data.js) -> monster prefab

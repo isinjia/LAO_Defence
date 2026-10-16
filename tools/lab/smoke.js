@@ -103,7 +103,7 @@
         sleipnir: '한계돌파', blacklilith: '듀얼 버스트', brunhild: '핏빛 효후', tiamat: '풀 웨폰 어썰트', khan: '데저트 스톰',
         labiata: '백화요란', constantia: '발목 잡기', titania: '서리 폭풍', mercury: '최상의 시간', empress: '펭귄 서프라이즈!',
         fafnir: '뇌정벽력', ramiel: '억겁의 성화',
-        cyclopsprincess: '영원한 진조의 섬광', blindprincess: '작열하는 사랑의 빛', lrl: '사이클롭스 이터널 빔',
+        cyclopsprincess: '영원한 진조의 섬광', blindprincess: '작열하는 사랑의 빛', lrl: '사이클롭스 이터널 빔', lrlrose: '사이클롭스 이터널 빔',
       };
       const ko = (d) => d._ko_ultName || d.ultName; // the source name (i18n may have swapped in a translation)
       DATA.UNITS.filter((d) => d.tier >= 4 && d.tier <= DATA.UNIQUE).forEach((d) => eq(ko(d), ORIGINAL[d.id], d.id));
