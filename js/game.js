@@ -927,15 +927,16 @@
   // pierce: true ignores shields and armour; a number ignores shields and that share of armour (defense penetration)
   function damage(e, amount, color, crit, src, pierce) {
     if (!e.alive) return;
-    if (e.slowT > 0 || e.stunT > 0) amount *= BAL.vuln;
-    if (e.markT > 0) amount *= e.markK;
-    if (typeof pierce === 'number') amount *= e.armor + (1 - e.armor) * pierce; // shields ignored, armour partly
+    const fixed = pierce === 'fixed'; // fixed damage: no armour, shield, mark, vulnerability or boss multiplier
+    if (!fixed && (e.slowT > 0 || e.stunT > 0)) amount *= BAL.vuln;
+    if (!fixed && e.markT > 0) amount *= e.markK;
+    if (fixed) { /* as it is */ } else if (typeof pierce === 'number') amount *= e.armor + (1 - e.armor) * pierce; // shields ignored, armour partly
     else if (!pierce) {
       if (e.shieldT > 0) amount *= 0.2;
       amount *= e.armor;
     }
-    if (e.resist && src) amount *= src.type === 'melee' ? 1.3 : 0.75;
-    if (e.kind !== 'normal') amount *= bossMult();
+    if (!fixed && e.resist && src) amount *= src.type === 'melee' ? 1.3 : 0.75;
+    if (!fixed && e.kind !== 'normal') amount *= bossMult();
     e.quietT = 0;
     if (src) G.dmgBy[src.id] = (G.dmgBy[src.id] || 0) + Math.min(amount, Math.max(0, e.hp)); // battle report
     e.hp -= amount;
@@ -1667,7 +1668,7 @@
           o.shieldT = 0; // every protective effect stripped
           FX.ring(o.x, o.y, 0.1, 0.8, d.color, 0.3);
           damage(o, base * 1.4, d.color, true, d, true); // physical, ignores protection
-          damage(o, base * 1.35, d.color, false, d, true); // fixed
+          damage(o, base * 1.35, d.color, false, d, 'fixed'); // fixed physical
           mark(o, 1.61, 5);
         }
         break;
@@ -1843,7 +1844,8 @@
             for (const z of G.enemies) {
               if (!z.alive || Math.abs(z.x - c.x) > BAL.cell * 1.5 || Math.abs(z.y - c.y) > BAL.cell * 1.5) continue; // all 9 tiles
               damage(z, base * 2, d.color, false, d, true);
-              if (k === 0) { if (bound) { z.shieldT = 0; burn(z, base * 1.5, 7, d); } else burn(z, base * 0.5, 2.5, d); }
+              // fixed fire: 1.25x base over 2.5 s, or 30x that (37.5x base over 7 s) in 원죄의 굴레
+              if (k === 0) { if (bound) { z.shieldT = 0; burn(z, base * 37.5 / 7, 7, d, true); } else burn(z, base * 0.5, 2.5, d, true); }
             }
           });
         }
@@ -1904,7 +1906,12 @@
   // a mark: the enemy takes k times the damage for t seconds (the strongest mark holds)
   function mark(e, k, t) { if (!(e.markT > 0) || k >= e.markK) e.markK = k; e.markT = Math.max(e.markT || 0, t); }
   // a burn: dps per stack (up to 3 stacks) for t seconds, refreshed by each new burn
-  function burn(e, dps, t, src) { e.burnN = Math.min(3, (e.burnT > 0 ? e.burnN : 0) + 1); e.burnDps = Math.max(e.burnT > 0 ? e.burnDps : 0, dps); e.burnT = t; e.burnSrc = src; e.burnAcc = e.burnAcc || 0; }
+  // fixed: the burn deals fixed damage, applied once (Ramiel's 고정 화염 피해: no stacking)
+  function burn(e, dps, t, src, fixed) {
+    e.burnN = fixed ? 1 : Math.min(3, (e.burnT > 0 ? e.burnN : 0) + 1);
+    e.burnDps = fixed ? Math.max(e.burnT > 0 && e.burnFixed ? e.burnDps : 0, dps) : Math.max(e.burnT > 0 ? e.burnDps : 0, dps);
+    e.burnT = Math.max(e.burnT > 0 ? e.burnT : 0, t); e.burnSrc = src; e.burnAcc = e.burnAcc || 0; e.burnFixed = !!fixed;
+  }
   // the squad's attack x k for t seconds (the stronger rally holds)
   function rally(k, t) {
     if (!(G.rallyT > 0) || k >= G.rallyK) G.rallyK = k;
@@ -1967,7 +1974,7 @@
       if (e.burnT > 0) {
         e.burnT -= dt;
         e.burnAcc += e.burnDps * e.burnN * dt;
-        if (e.burnAcc >= e.burnDps * 0.5 || e.burnT <= 0) { const a = e.burnAcc; e.burnAcc = 0; damage(e, a, 0xff6a2a, false, e.burnSrc); }
+        if (e.burnAcc >= e.burnDps * 0.5 || e.burnT <= 0) { const a = e.burnAcc; e.burnAcc = 0; damage(e, a, 0xff6a2a, false, e.burnSrc, e.burnFixed ? 'fixed' : undefined); }
         if (!e.alive) continue;
       }
       if (e.kind === 'elite' && !e.enraged && (e.lifeT -= dt) <= 0) enrageElite(e);

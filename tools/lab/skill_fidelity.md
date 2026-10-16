@@ -42,5 +42,8 @@ own 고행 burn) = 30 s on the field.
 - Score (name 40% + effects 60%): **100**. Strict, counting the 13 "nothing to act on" items as failures:
   40 + 60 x 65/78 = **90.0**.
 
-Caveats the audit noted (not counted as ✗): Ramiel's two burn branches differ ~8x here against ~30x in the text;
-Lemonade Alpha's "fixed" 135% still takes the mark / boss multipliers.
+The two caveats the audit noted are fixed as well: Ramiel's burns are fixed damage at the source's 30x ratio
+(1.25x base over 2.5 s, 37.5x base over 7 s in 원죄의 굴레), and Lemonade Alpha's 135% is true fixed damage
+(`damage(..., 'fixed')`: no armour, shield, mark, vulnerability or boss multiplier).
+
+Balance after these changes (expert bot, tools/lab/winrate.js, normal): 11 / 12 wins; smoke 21 / 21.
