@@ -581,7 +581,7 @@
     // one of those (so it always has a place); only a board with no such stack refuses
     const full = !anyEmpty();
     if (full && !stackable().length) { UI.toast(T('칸이 모두 찼습니다. 합성하거나 판매해 자리를 만드세요'), 'warn'); SFX.play('fail'); return; }
-    // the GOD rank: a flat 0.0001% before the normal roll (no luck upgrade, pity or bias touches it; needs a free cell)
+    // the GOD rank: a flat 0.05% before the normal roll (no luck upgrade, pity or bias touches it; needs a free cell)
     if (!full && !G.tut && DATA.byTier(GOD).length && luck('summon') < BAL.godChance) { G.gold -= cost; G.summons++; godDescends(); UI.update(true); return; }
     const rolled = rollTier();
     const def = full ? pickStackable(rolled) : pickRank(rolled, 'summon');

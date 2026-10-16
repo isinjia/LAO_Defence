@@ -9,7 +9,7 @@
     { key: 'M', name: 'SSS', color: '#ff3d5a', hex: 0xff3d5a, sell: 300 },
     { key: 'U', name: 'LR', color: '#c8d4ff', hex: 0xc8d4ff, sell: 900 }, // prism, with sparkles of every hue (css .lr, game.js GLINT)
     { key: 'X', name: 'UR', color: '#f4d78a', hex: 0xf4d78a, sell: 900 }, // gold, with sparkles (css .ur, game.js GLINT)
-    { key: 'G', name: 'GOD', color: '#fff6e0', hex: 0xfff6e0, sell: 5000 }, // a summon's 0.0001% miracle (BAL.godChance)
+    { key: 'G', name: 'GOD', color: '#fff6e0', hex: 0xfff6e0, sell: 5000 }, // a summon's 0.05% miracle (BAL.godChance)
   ];
   const LR = 5, UNIQUE = 6, GOD = 7;
 
@@ -67,7 +67,7 @@
     U('fafnir', '파프니르', 6, 'BR_Fafnir_N', { type: 'chain', dmg: 0, rate: 0.8, range: 5.2, chain: 6, fx: 'lightning', color: 0x5aa8ff, sfx: 'elec', mana: 12, ult: 'thunder', ultName: '뇌정벽력', desc: '연쇄 번개 / 궁극기: 우레와 함께 강하해 대상과 주변(25%)에 전격, 인접한 적마다 +14.5%, 2기 이상이면 강화 효과 해제' }),
     // the skin LRL (rose eyepatch, NS3 icon; same rig): 에이미 + 사이클롭스 프린세스 + 블라인드 프린세스 (RECIPES)
     U('lrlrose', '철의 파멸 LRL', 6, 'PECS_LRL_NS3', { type: 'splash', dmg: 0, rate: 0.9, range: 5.0, splash: 1.6, fx: 'holy', color: 0xb46bff, sfx: 'energy', mana: 10, ult: 'eternalbeam', ultName: '사이클롭스 이터널 빔', desc: '용살자 도끼 / 궁극기: 넓은 범위에 빔, 행동력 감소(둔화), 치명타 시 방어막·피해 감소 해제, 사이클롭스 프린세스가 있으면 영원한 진조의 섬광 협동 공격' }),
-    // ── GOD (소환 0.0001%, 확률 강화 무관) ──
+    // ── GOD (소환 0.05%, 확률 강화 무관) ──
     // the commander: no rig, drawn by js/commander.js (from 라켓몬스터); img 'Commander' is that drawing's icon
     U('commander', '사령관', 7, 'Commander', { type: 'splash', dmg: 0, rate: 0.7, range: 7.0, splash: 2.2, fx: 'holy', color: 0xfff6e0, sfx: 'energy', mana: 8, ult: 'allout', ultName: '전군, 돌격하라!', drawn: true, desc: '링크 코어 투척 / 궁극기: 전 부대 공격력 2배(8초)와 모든 궁극기 즉시 충전, 이어서 전장을 덮는 흑염 운석·빛의 기둥·최후의 섬광(보호 무시)' }),
     U('ramiel', '라미엘', 6, 'DS_Ramiel_N', { type: 'stun', dmg: 0, rate: 0.9, range: 5.0, splash: 1.5, stun: 0.12, stunDur: 0.6, fx: 'holy', color: 0xfff1b8, sfx: 'energy', mana: 12, ult: 'pillar', ultName: '억겁의 성화', desc: '성광 폭발 / 궁극기: 3x3 범위 보호 무시 화염 피해 + 고정 화염, 원죄의 굴레(배치 30초 후) 시 방어막 무시 + 강한 지속 화염, 사용 후 잠시 스킬 사용 불가' }),
@@ -162,7 +162,7 @@
     startGems: 3,
     summonBase: 20,
     partBias: 0.35,          // chance a summon / merge / gamble of a rank gives the last missing part of a 2/3 recipe
-    godChance: 0.000001,     // 0.0001% per summon for the GOD rank, flat (summon luck upgrades don't touch it)
+    godChance: 0.0005,       // 0.05% per summon for the GOD rank, flat (summon luck upgrades don't touch it)
     stackBias: 0.7,          // chance an S..SSS from a merge / summon / gamble is one already stacking on the board
     pity: 15,                // summons below S in a row before an S is guaranteed
     // enemy HP from the measured player power (tools/lab/balance.js probe, expert play): a normal wave holds about

@@ -287,8 +287,8 @@
       return `${pass}/${checks.length} damage-rule checks (all: ${window.SKILL_MEASURE2.all}); score ${window.SKILL_SCORE.score}, strict ${window.SKILL_SCORE.strict}`;
     });
 
-    test('GOD: a flat 0.0001% summon (luck upgrades do not change it), one per cell, never merges', () => {
-      eq(DATA.BAL.godChance, 0.000001, '0.0001%');
+    test('GOD: a flat 0.05% summon (luck upgrades do not change it), one per cell, never merges', () => {
+      eq(DATA.BAL.godChance, 0.0005, '0.05%');
       fresh(); G().gold = 1e6; G().upg.luck = 5;
       const keep = DATA.BAL.godChance; DATA.BAL.godChance = 1; // force the miracle
       GAME.summon(); GAME.summon();

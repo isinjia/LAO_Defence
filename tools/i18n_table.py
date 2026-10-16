@@ -514,7 +514,7 @@ T = [
     # ── GOD rank (2026-10) ──
     ("GOD 강림!", "GOD降臨！", "GOD descends!", "GOD降临！", "GOD降臨！", "¡Desciende un GOD!", "Um GOD desce!", "Нисхождение GOD!"),
     ("{0} 강림", "{0}降臨", "{0} descends", "{0}降临", "{0}降臨", "Desciende {0}", "{0} desce", "Нисхождение: {0}"),
-    ("소환할 때마다 확률 강화와 무관하게 0.0001%", "召喚のたびに確率強化と無関係に0.0001%", "0.0001% on every summon, untouched by summon-luck upgrades", "每次召唤0.0001%，不受概率强化影响", "每次召喚0.0001%，不受機率強化影響", "0,0001% en cada invocación, sin efecto de las mejoras de suerte", "0,0001% a cada invocação, sem efeito das melhorias de sorte", "0,0001% при каждом призыве, улучшения удачи не влияют"),
+    ("소환할 때마다 확률 강화와 무관하게 0.05%", "召喚のたびに確率強化と無関係に0.05%", "0.05% on every summon, untouched by summon-luck upgrades", "每次召唤0.05%，不受概率强化影响", "每次召喚0.05%，不受機率強化影響", "0,0001% en cada invocación, sin efecto de las mejoras de suerte", "0,0001% a cada invocação, sem efeito das melhorias de sorte", "0,0001% при каждом призыве, улучшения удачи не влияют"),
     ("흑염 대폭발", "黒炎大爆発", "Black-flame blast", "黑炎大爆炸", "黑炎大爆炸", "Explosión de llama negra", "Explosão de chama negra", "Взрыв чёрного пламени"),
     ("칠흑의 종언", "漆黒の終焉", "Pitch-Black Finale", "漆黑终焉", "漆黑終焉", "Final negro azabache", "Fim negro absoluto", "Чёрный финал"),
     ("사령관", "司令官", "Commander", "司令官", "司令官", "Comandante", "Comandante", "Командир"),
