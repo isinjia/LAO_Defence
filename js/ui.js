@@ -20,7 +20,7 @@
   const rank = (t) => S('rank' + Math.min(t, 4));
   // hexagon portrait in the tier colour (frame_Cha_formation_icon)
   // the rank letter rides on the frame too: the tier is never told by colour alone (colour-blind players, screen readers)
-  const hex = (def, cls = '') => `<span class="hx ${cls}${def.tier === DATA.UNIQUE ? ' ur' : ''}" style="--img:url(${img(def)});--c:${TIERS[def.tier].color}" role="img" aria-label="${def.name} (${TIERS[def.tier].name})"><i class="hrk">${TIERS[def.tier].name}</i>${def.tier === DATA.UNIQUE ? '<i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i><i class="spk s3"></i>' : ''}</span>`;
+  const hex = (def, cls = '') => `<span class="hx ${cls}${def.tier === DATA.UNIQUE ? ' ur' : def.tier === DATA.LR ? ' lr' : ''}" style="--img:url(${img(def)});--c:${TIERS[def.tier].color}" role="img" aria-label="${def.name} (${TIERS[def.tier].name})"><i class="hrk">${TIERS[def.tier].name}</i>${def.tier === DATA.UNIQUE ? '<i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i><i class="spk s3"></i>' : def.tier === DATA.LR ? '<i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i>' : ''}</span>`;
   const gearI = '<i class="ri"></i>';
   const tunaI = '<i class="rt"></i>';
 
@@ -400,6 +400,7 @@
     const stat = (icon, label, v) => `<span><i class="si" style="background-image:${S(icon)}"></i>${label}<b>${v}</b></span>`;
     el.popup.style.setProperty('--c', t.color);
     el.popup.classList.toggle('ur', d.tier === DATA.UNIQUE);
+    el.popup.classList.toggle('lr', d.tier === DATA.LR);
     el.popup.innerHTML = `
       <div class="ph">
         ${hex(d)}
@@ -621,7 +622,7 @@
     const wait = bannerUntil + 250 - performance.now();
     if (wait > 0) { setTimeout(() => announce(def, text), wait); return; }
     const t = TIERS[def.tier];
-    el.announce.innerHTML = `<div class="ann ${def.tier >= 4 ? 'r4' : ''} ${def.tier === DATA.UNIQUE ? 'ur' : ''}" style="--c:${t.color}">${hex(def)}
+    el.announce.innerHTML = `<div class="ann ${def.tier >= 4 ? 'r4' : ''} ${def.tier === DATA.UNIQUE ? 'ur' : def.tier === DATA.LR ? 'lr' : ''}" style="--c:${t.color}">${hex(def)}
       <div><small>${text}</small><b>${def.name}</b></div><span class="rk" style="background-image:${rank(def.tier)}"></span></div>`;
     const a = el.announce.firstChild;
     setTimeout(() => a.classList.add('out'), 1700);

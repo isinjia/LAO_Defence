@@ -450,12 +450,16 @@
   // a cell next to the path (the middle row's inner cells are ~3.7 away from it)
   function isOuter(i) { const r = Math.floor(i / BAL.cols), c = i % BAL.cols; return r !== 1 || c === 0 || c === BAL.cols - 1; }
   // B..SSS stack to three and merge one rank up (three SSS make an LR); LR and UR stand alone
-  // UR (the crafted one-of): glints of light rise around it
-  const UR_GLINT = [0xffffff, 0xfff0b8, 0xffd98a, 0xcfeaff];
-  function urGlints(u, x, y, dt) {
-    if (Math.random() > dt * 10) return;
-    FX.particle({ x: x + rnd(-0.55, 0.55), y: y + rnd(0.1, u.h * 0.9), vy: rnd(0.3, 0.9), life: rnd(0.6, 1.1), size: rnd(0.14, 0.28), size1: 0,
-      color: UR_GLINT[Math.floor(Math.random() * UR_GLINT.length)], tex: FX.tex.cross, spin: rnd(-2, 2), alpha: 0.95, fadeIn: 0.15 });
+  // the two top ranks shine on the field: gold glints rise around a UR, violet motes drift up around an LR
+  const GLINT = {
+    [UNIQUE]: { rate: 10, cols: [0xffffff, 0xfff0b8, 0xffd98a, 0xcfeaff], tex: 'cross', size: [0.14, 0.28], vy: [0.3, 0.9] },
+    [LR]: { rate: 7, cols: [0xffffff, 0xe2bcff, 0xc47bff, 0x9a5cff], tex: 'dot', size: [0.08, 0.16], vy: [0.5, 1.2] },
+  };
+  function rankGlints(u, x, y, dt) {
+    const g = GLINT[u.def.tier];
+    if (!g || Math.random() > dt * g.rate) return;
+    FX.particle({ x: x + rnd(-0.55, 0.55), y: y + rnd(0.1, u.h * 0.9), vy: rnd(g.vy[0], g.vy[1]), life: rnd(0.6, 1.1), size: rnd(g.size[0], g.size[1]), size1: 0,
+      color: g.cols[Math.floor(Math.random() * g.cols.length)], tex: FX.tex[g.tex], spin: rnd(-2, 2), alpha: 0.95, fadeIn: 0.15 });
   }
   function stackMax(def) { return def.tier >= LR ? 1 : 3; }
   function canMerge(def) { return def.tier < LR; }
@@ -2009,7 +2013,7 @@
         const sk = (u.stackK || 1) * (1 + u.pulse * 0.06);
         u.holder.scale.set(u.face * sk, sk, 1);
         u.shadow.x = ux; u.shadow.y = uy + 0.02; u.shadow.sz = u.h * 0.75;
-        if (u.def.tier === UNIQUE && !G.paused) urGlints(u, ux, uy, rdt);
+        if (u.def.tier >= LR && !G.paused) rankGlints(u, ux, uy, rdt);
         if (u.ring) {
           u.ring.x = u.x; u.ring.y = fy + 0.02; u.ring.sz = u.h * 0.8;
           u.ring.alpha = 0.55 + Math.sin(time * 3 + u.x) * 0.15;
