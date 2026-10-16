@@ -8,7 +8,7 @@
     { key: 'L', name: 'SS', color: '#ff9420', hex: 0xff9420, sell: 120 },
     { key: 'M', name: 'SSS', color: '#ff3d5a', hex: 0xff3d5a, sell: 300 },
     { key: 'U', name: 'LR', color: '#d06bff', hex: 0xd06bff, sell: 900 },
-    { key: 'X', name: 'UR', color: '#ff9de2', hex: 0xff9de2, sell: 700 }, // drawn as a flowing rainbow (css .ur, game.js rainbow)
+    { key: 'X', name: 'UR', color: '#f4d78a', hex: 0xf4d78a, sell: 700 }, // gold, with sparkles (css .ur, game.js urGlints)
   ];
   const LR = 5, UNIQUE = 6;
 

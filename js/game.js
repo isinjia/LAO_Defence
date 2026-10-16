@@ -450,8 +450,13 @@
   // a cell next to the path (the middle row's inner cells are ~3.7 away from it)
   function isOuter(i) { const r = Math.floor(i / BAL.cols), c = i % BAL.cols; return r !== 1 || c === 0 || c === BAL.cols - 1; }
   // B..SSS stack to three and merge one rank up (three SSS make an LR); LR and UR stand alone
-  const _rc = new THREE.Color();
-  function rainbow(t) { return _rc.setHSL(((t % 1) + 1) % 1, 0.95, 0.62).getHex(); }
+  // UR (the crafted one-of): glints of light rise around it
+  const UR_GLINT = [0xffffff, 0xfff0b8, 0xffd98a, 0xcfeaff];
+  function urGlints(u, x, y, dt) {
+    if (Math.random() > dt * 10) return;
+    FX.particle({ x: x + rnd(-0.55, 0.55), y: y + rnd(0.1, u.h * 0.9), vy: rnd(0.3, 0.9), life: rnd(0.6, 1.1), size: rnd(0.14, 0.28), size1: 0,
+      color: UR_GLINT[Math.floor(Math.random() * UR_GLINT.length)], tex: FX.tex.cross, spin: rnd(-2, 2), alpha: 0.95, fadeIn: 0.15 });
+  }
   function stackMax(def) { return def.tier >= LR ? 1 : 3; }
   function canMerge(def) { return def.tier < LR; }
   function hasUnique() { return G.cells.some((c) => c.units.some((u) => u.def.tier === UNIQUE)); }
@@ -1992,15 +1997,9 @@
       if (c.t > 0.7) c.e.sd.setOpacity(Math.max(0, 1 - (c.t - 0.7) / 0.4));
       if (c.t > 1.1) { disposeEnemy(c.e); G.corpses.splice(i, 1); }
     }
-    // UR (the crafted one-of): its cell, ring and aura cycle through the rainbow
-    G.cells.forEach((cell, i) => {
-      const m = stat.cellMeshes[i];
-      if (m && cell.units.length && cell.units[0].def.tier === UNIQUE && !(cell.silT > 0)) m.material.color.setHex(rainbow(time * 0.25 + i * 0.1));
-    });
     // units
     for (const cell of G.cells) {
       for (const u of cell.units) {
-        if (u.def.tier === UNIQUE) { const c = rainbow(time * 0.25 + u.x * 0.05); if (u.ring) u.ring.color = c; if (u.aura) u.aura.color = c; }
         u.x += (u.tx - u.x) * Math.min(1, rdt * 12);
         u.y += (u.ty - u.y) * Math.min(1, rdt * 12);
         u.pulse = Math.max(0, u.pulse - rdt * 6);
@@ -2010,6 +2009,7 @@
         const sk = (u.stackK || 1) * (1 + u.pulse * 0.06);
         u.holder.scale.set(u.face * sk, sk, 1);
         u.shadow.x = ux; u.shadow.y = uy + 0.02; u.shadow.sz = u.h * 0.75;
+        if (u.def.tier === UNIQUE && !G.paused) urGlints(u, ux, uy, rdt);
         if (u.ring) {
           u.ring.x = u.x; u.ring.y = fy + 0.02; u.ring.sz = u.h * 0.8;
           u.ring.alpha = 0.55 + Math.sin(time * 3 + u.x) * 0.15;

@@ -20,7 +20,7 @@
   const rank = (t) => S('rank' + Math.min(t, 4));
   // hexagon portrait in the tier colour (frame_Cha_formation_icon)
   // the rank letter rides on the frame too: the tier is never told by colour alone (colour-blind players, screen readers)
-  const hex = (def, cls = '') => `<span class="hx ${cls}${def.tier === DATA.UNIQUE ? ' ur' : ''}" style="--img:url(${img(def)});--c:${TIERS[def.tier].color}" role="img" aria-label="${def.name} (${TIERS[def.tier].name})"><i class="hrk">${TIERS[def.tier].name}</i></span>`;
+  const hex = (def, cls = '') => `<span class="hx ${cls}${def.tier === DATA.UNIQUE ? ' ur' : ''}" style="--img:url(${img(def)});--c:${TIERS[def.tier].color}" role="img" aria-label="${def.name} (${TIERS[def.tier].name})"><i class="hrk">${TIERS[def.tier].name}</i>${def.tier === DATA.UNIQUE ? '<i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i><i class="spk s3"></i>' : ''}</span>`;
   const gearI = '<i class="ri"></i>';
   const tunaI = '<i class="rt"></i>';
 
