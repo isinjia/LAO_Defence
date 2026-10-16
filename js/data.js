@@ -70,9 +70,9 @@
   // Damage from one rule instead of per-unit guesses: every rank is ~4x the one below (so each merge is a clear
   // power spike over the three units it eats), and within a rank the attack type only shifts single-target damage
   // (area / chain / utility units trade it for coverage; spread <= 1.6x). Expected crit damage is included.
-  // LR (three SSS) ~3.5x an SSS. UR is the same top rank as LR (crafted from two SSS and an SS, one on the field),
-  // a little under an LR in damage but with the strongest skills
-  const TIER_DPS = [12, 48, 190, 750, 2700, 9500, 9000];
+  // LR (three SSS) ~3.5x an SSS. UR is the same top rank as LR (crafted from two SSS and an SS) but only one may be
+  // on the field, so it hits 1.5x as hard as an LR
+  const TIER_DPS = [12, 48, 190, 750, 2700, 9500, 14250];
   const TYPE_K = { single: 1.2, melee: 1.25, splash: 0.85, chain: 0.8, laser: 0.9, slow: 0.8, stun: 0.9 };
   UNITS.forEach((u) => {
     u.dmg = Math.round(TIER_DPS[u.tier] * TYPE_K[u.type] * u.rate / (1 + 1.2 * (u.crit || 0)));

@@ -553,6 +553,13 @@ body.paused #bottom { pointer-events: none; filter: brightness(0.55) saturate(0.
 @keyframes urspark { 0%, 60%, 100% { opacity: 0; transform: scale(0) rotate(0deg); } 75% { opacity: 1; transform: scale(1) rotate(45deg); } }
 .hx.ur .hrk, #popup.ur::before { background: linear-gradient(90deg, #c9963a, #fff2c8 50%, #c9963a); }
 .ann.ur small { color: #ffe6a0; text-shadow: 0 0 8px rgba(255, 220, 140, 0.8); }
+/* UR shines brightest: a pulsing gold halo behind the hexagon, a brighter sweep and a fourth, larger sparkle */
+.hx .glo { position: absolute; inset: -14%; z-index: -1; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 120, 0.75) 0 35%, rgba(255, 190, 80, 0.3) 55%, transparent 70%); animation: urglow 2.2s ease-in-out infinite; }
+@keyframes urglow { 0%, 100% { opacity: 0.45; transform: scale(0.92); } 50% { opacity: 1; transform: scale(1.04); } }
+.hx.ur .shn { background-image: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.8) 50%, transparent 62%); animation-duration: 2.6s; }
+.hx.ur .spk { width: 40%; height: 40%; }
+.hx.ur .spk.s4 { right: -10%; top: -8%; width: 48%; height: 48%; animation-delay: 1.2s; }
 /* LR (three SSS): a holographic rim (soft prism colours over pearl), a light sweep and sparkles each in its own hue */
 :root { --prism: linear-gradient(100deg, #ffb3c7, #ffd9a3, #fff4a8, #b9ffcf, #a8e4ff, #d2b8ff, #ffb3e6); }
 .hx.lr::before { background: conic-gradient(from 210deg, #ffc2d4, #ffe2b0, #fff6c0, #c8ffd9, #b8ecff, #dcc8ff, #ffc2ec, #ffc2d4); }
@@ -563,7 +570,7 @@ body.paused #bottom { pointer-events: none; filter: brightness(0.55) saturate(0.
 .hx.lr .spk.s3 { background: radial-gradient(circle, #fff 0 18%, rgba(190, 255, 170, 0.95) 32%, transparent 62%); animation-delay: 1.8s; }
 .hx.lr .hrk, #popup.lr::before { background: var(--prism); }
 .ann.lr small { background: var(--prism); -webkit-background-clip: text; background-clip: text; color: transparent; }
-@media (prefers-reduced-motion: reduce) { .hx .shn, .hx .spk { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .hx .shn, .hx .spk, .hx .glo { animation: none; } }
 @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(0.8); } }
 #titleChars.wait .hx { animation: none; opacity: 0; }
 .brief { width: min(860px, 100%); margin-bottom: 22px; background: rgba(10, 11, 13, 0.82); border: 1px solid rgba(255, 255, 255, 0.1); text-align: left; }

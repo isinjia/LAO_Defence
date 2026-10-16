@@ -455,12 +455,15 @@
   const _gc = new THREE.Color();
   const prism = () => _gc.setHSL(Math.random(), 0.9, 0.72).getHex();
   const GLINT = {
-    [UNIQUE]: { rate: 10, cols: [0xffffff, 0xfff0b8, 0xffd98a, 0xcfeaff], tex: 'cross', size: [0.14, 0.28], vy: [0.3, 0.9] },
+    [UNIQUE]: { rate: 16, cols: [0xffffff, 0xfff0b8, 0xffd98a, 0xffc35a], tex: 'cross', size: [0.16, 0.34], vy: [0.3, 0.9], pulse: 0xffd06a },
     [LR]: { rate: 12, cols: prism, tex: 'cross', size: [0.12, 0.24], vy: [0.4, 1.0] },
   };
   function rankGlints(u, x, y, dt) {
     const g = GLINT[u.def.tier];
-    if (!g || Math.random() > dt * g.rate) return;
+    if (!g) return;
+    // UR: a gold ring now and then swells from its feet
+    if (g.pulse && Math.random() < dt * 0.8) FX.ring(x, y + 0.05, 0.2, 1.2, g.pulse, 0.7, 0.55);
+    if (Math.random() > dt * g.rate) return;
     FX.particle({ x: x + rnd(-0.55, 0.55), y: y + rnd(0.1, u.h * 0.9), vy: rnd(g.vy[0], g.vy[1]), life: rnd(0.6, 1.1), size: rnd(g.size[0], g.size[1]), size1: 0,
       color: typeof g.cols === 'function' ? g.cols() : g.cols[Math.floor(Math.random() * g.cols.length)], tex: FX.tex[g.tex], spin: rnd(-2, 2), alpha: 0.95, fadeIn: 0.15 });
   }
@@ -520,15 +523,34 @@
   }
 
   function summonCost() { return BAL.summonBase + G.summons; }
+  // summonable units (B..SS) on the board whose stack still has room
+  function stackable() {
+    const out = [];
+    G.cells.forEach((c) => { const d = c.units.length && c.units[0].def; if (d && d.tier <= 3 && c.units.length < stackMax(d) && !out.includes(d)) out.push(d); });
+    return out;
+  }
+  // a full board's summon: a stackable unit of the rolled rank, else of the nearest rank below it (never above: an
+  // open SS stack must not turn every summon into an SS); null when the roll fits nowhere
+  function pickStackable(t) {
+    const st = stackable();
+    for (let k = t; k >= 0; k--) { const a = st.filter((d) => d.tier === k); if (a.length) return pickL(a, 'summon'); }
+    return null;
+  }
+  function canSummon() { return anyEmpty() || stackable().length > 0; }
 
   function summon() {
     if (G.phase !== 'play' || G.paused) return;
     const cost = summonCost();
     if (G.gold < cost) { UI.toast(T('부품이 부족합니다'), 'warn'); SFX.play('fail'); return; }
-    // a summon always needs a free cell (it may still join a matching stack): the roll can never be refused
-    if (!anyEmpty()) { UI.toast(T('배치할 칸이 없습니다'), 'warn'); SFX.play('fail'); return; }
-    const tier = rollTier();
-    const def = pickRank(tier, 'summon');
+    // a full board still summons while some summonable unit (B..SS) stacks below three: the roll then comes out as
+    // one of those (so it always has a place); only a board with no such stack refuses
+    const full = !anyEmpty();
+    if (full && !stackable().length) { UI.toast(T('칸이 모두 찼습니다. 합성하거나 판매해 자리를 만드세요'), 'warn'); SFX.play('fail'); return; }
+    const pity = G.pity;
+    const rolled = rollTier();
+    const def = full ? pickStackable(rolled) : pickRank(rolled, 'summon');
+    if (!def) { G.pity = pity; UI.toast(T('나온 랭크가 들어갈 칸이 없어 소환을 취소했습니다 (부품은 그대로)'), 'warn'); SFX.play('fail'); return; }
+    const tier = def.tier;
     G.gold -= cost;
     G.summons++;
     addUnit(def);
@@ -2428,7 +2450,8 @@
         else if (!empty || bv > summonValue() * 2) return; // save up for it
       }
     }
-    while (G.gold >= summonCost() && anyEmpty() && !G.paused && G.phase === 'play') summon(); // (a paused run refuses summons)
+    // (a paused run, or a full board's roll that fits nowhere, spends nothing: stop there)
+    while (G.gold >= summonCost() && canSummon() && !G.paused && G.phase === 'play') { const g = G.gold; summon(); if (G.gold === g) break; }
     if (!anyEmpty() && G.gold >= summonCost()) {
       // sell the weakest single to make room
       const i = G.cells.findIndex((c) => c.units.length && c.units[0].def.tier === 0 && c.units.length < 3);
@@ -2440,7 +2463,7 @@
   window.GAME = {
     G, lay, boot, newGame, summon, gamble, merge, sell, craft, canCraft, upgrade, summonCost,
     worldToScreen, simulate, autoplay, endGame, findCellOf, enemyLoad, craftRoom, enemyWeight, target, rewardScore, bossMult,
-    bestUpgrade, upgradeValue, summonValue, wantedParts, setFocus, takeReward, autoReward, castUlt, readyUlts, ecoMult, critBonus,
+    canSummon, bestUpgrade, upgradeValue, summonValue, wantedParts, setFocus, takeReward, autoReward, castUlt, readyUlts, ecoMult, critBonus,
     callNext, canCallNext, reroll, swapCells, isOuter, dmgMult, saveRun, savedRun, resumeRun, clearRun, REWARD_WAIT,
     // tutorial: screen rects of a cell / the whole field, and its practice enemies
     cellRect: (i) => screenRect(lay.cells[i].x - BAL.cell / 2, lay.cells[i].y + BAL.cell / 2, lay.cells[i].x + BAL.cell / 2, lay.cells[i].y - BAL.cell / 2),

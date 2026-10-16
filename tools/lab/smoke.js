@@ -102,6 +102,18 @@
       });
     });
 
+    test('a full board still summons into stacks with room, and refuses only when none is left', () => {
+      fresh(); G().gold = 1e6;
+      const ids = DATA.UNITS.filter((d) => d.tier <= 3).map((d) => d.id);
+      // 17 full stacks and one B pair: any roll (B or higher) can come out as that B
+      ids.slice(1, 18).forEach((id) => { for (let k = 0; k < 3; k++) GAME.debugAdd(id); });
+      GAME.debugAdd(ids[0]); GAME.debugAdd(ids[0]);
+      eq(G().cells.every((c) => c.units.length), true, 'board full');
+      const n = nUnits(); GAME.summon();
+      eq(nUnits(), n + 1, 'summoned into the open stack'); eq(G().cells[GAME.findCellOf(ids[0])].units.length, 3, 'it joined the two');
+      GAME.summon(); eq(nUnits(), n + 1, 'no room left: refused');
+    });
+
     test('pause blocks summon / upgrade / ult', () => {
       fresh(); G().gold = 1e6; UI.togglePause(true);
       const n = nUnits(), lv = G().upg.atk;
