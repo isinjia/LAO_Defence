@@ -8,12 +8,12 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAMES = {0: '쉬움', 1: '보통', 2: '어려움', 3: '매우 어려움', 4: '나이트메어'}
+NAMES = {0: '쉬움', 1: '보통', 2: '어려움', 3: '매우 어려움', 4: '나이트메어', 5: '헬'}
 # target win rates (easy is left out: it is meant to be won): a strong player and a beginner. The in-game AUTO is
 # not scored: it leaves crafting and upgrades to the player by design, so alone it is not a player model.
 TARGET = {
-    'smart': {1: 0.85, 2: 0.50, 3: 0.20, 4: 0.05},
-    'novice': {1: 0.25, 2: 0.05, 3: 0.00, 4: 0.00},
+    'smart': {1: 0.85, 2: 0.50, 3: 0.20, 4: 0.05, 5: 0.02},
+    'novice': {1: 0.25, 2: 0.05, 3: 0.00, 4: 0.00, 5: 0.00},
 }
 WEIGHT = {'smart': 2, 'novice': 1}
 TOL = 0.05

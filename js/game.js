@@ -983,6 +983,166 @@
     else if (e.gim && !e.enraged) hpTricks(e);
   }
 
+
+  // ── 헬: the boss roulette and six tricks the player must answer (tap, move) ──
+  // G.roulette: the spin at a boss's arrival (the battle holds still); G.hell: the trick that won, its timers and marks
+  const HELL_KEYS = ['curse', 'rift', 'core', 'bomb', 'charm', 'doom'];
+  const hellOn = () => !!(BAL.diffs[G.diff] || {}).roulette;
+  function startRoulette(boss) {
+    const pick = Math.floor(Math.random() * HELL_KEYS.length);
+    G.roulette = { t: 2.8, key: HELL_KEYS[pick], boss };
+    UI.roulette(HELL_KEYS.map((k) => T(BAL.hellGims[k].name)), pick, 2.8);
+    SFX.play('warning');
+  }
+  function endRoulette() {
+    const r = G.roulette;
+    G.roulette = null;
+    if (!r.boss.alive) return;
+    const g = BAL.hellGims[r.key];
+    G.hell = { key: r.key, boss: r.boss, t: 2, marks: [] };
+    UI.toast(T('{0}: {1}', T(g.name), T(g.tip)), 'warn');
+  }
+  function hellMark(o) { // a tap / move target with its pulsing marker
+    o.s = FX.sprite({ x: o.x, y: o.y, size: o.size || 1.2, color: o.color, alpha: 0.85, tex: FX.tex.ring, order: L.TOP - 1 });
+    o.g = FX.sprite({ x: o.x, y: o.y, size: (o.size || 1.2) * 1.3, color: o.color, alpha: 0.4, tex: FX.tex.glow, order: L.TOP - 1.1 });
+    G.hell.marks.push(o);
+    return o;
+  }
+  function hellUnmark(o) { FX.kill(o.s); FX.kill(o.g); if (G.hell) G.hell.marks = G.hell.marks.filter((m) => m !== o); }
+  function hellClear() {
+    if (G.hell) G.hell.marks.slice().forEach(hellUnmark);
+    G.cells.forEach((c) => c.units.forEach((u) => { u.charmT = 0; }));
+    G.hell = null;
+  }
+  // cells by firepower (strongest first), sealed ones and `skip` left out
+  const strongestCells = (skip) => G.cells.map((c, i) => [i, c.units.reduce((a, u) => a + u.def.dps, 0)])
+    .filter(([i, v]) => v > 0 && !(G.cells[i].silT > 0) && !(skip || []).includes(i)).sort((a, b) => b[1] - a[1]).map(([i]) => i);
+  function hellTick(dt) {
+    const h = G.hell, b = h.boss;
+    // markers pulse; timed marks run out
+    for (const m of h.marks.slice()) {
+      const k = 1 + 0.15 * Math.sin(G.time * 8);
+      m.s.sz = (m.size || 1.2) * k; m.g.alpha = 0.3 + 0.2 * Math.sin(G.time * 8);
+      if (m.kind === 'core' || m.kind === 'doom') { m.x = b.x + (m.kind === 'core' ? 1.1 : 0); m.y = b.y + (m.kind === 'core' ? 0.4 : 1.6); m.s.x = m.g.x = m.x; m.s.y = m.g.y = m.y; }
+      if (m.t != null) { m.t -= dt; if (m.t <= 0) hellExpire(m); }
+    }
+    // an open rift sends one enemy a second
+    for (const m of h.marks) {
+      if (m.kind !== 'rift') continue;
+      m.acc = (m.acc || 0) + dt;
+      while (m.acc >= 1) { m.acc -= 1; const e = spawnEnemy('normal', NORMALS[(G.wave + G.kills) % NORMALS.length]); e.d = m.d; }
+    }
+    h.t -= dt;
+    if (h.t > 0) return;
+    const c = (i) => lay.cells[i];
+    switch (h.key) {
+      case 'curse': { // two cells branded: move their units away within 4 s or they are sealed for 10 s
+        h.t = 12;
+        strongestCells().slice(0, 2).forEach((i) => hellMark({ kind: 'curse', cell: i, x: c(i).x, y: c(i).y, t: 4, color: 0xb040ff, size: 1.6 }));
+        UI.toast(T('저주의 낙인! 4초 안에 표시된 칸의 유닛을 옮기세요'), 'warn');
+        break;
+      }
+      case 'rift': { // a rift on the path: tap it 3 times to close it
+        h.t = 14;
+        if (h.marks.some((m) => m.kind === 'rift')) break;
+        const d = Math.max(0, b.d - 3 - Math.random() * 4), [x, y] = pathPos(d);
+        hellMark({ kind: 'rift', d, x, y, hits: 3, color: 0xff3060, size: 1.3 });
+        UI.toast(T('균열이 열렸습니다! 3번 터치해 닫으세요'), 'warn');
+        break;
+      }
+      case 'core': { // a weak point beside the boss for 5 s: tap it for a heavy blow, or the boss heals 10%
+        h.t = 14;
+        hellMark({ kind: 'core', x: b.x + 1.1, y: b.y + 0.4, t: 5, color: 0xffe040, size: 1.0 });
+        UI.toast(T('약점 노출! 5초 안에 빛나는 핵을 터치하세요'), 'gem');
+        break;
+      }
+      case 'bomb': { // a bomb on a cell: tap that cell within 3 s, or it is sealed for 15 s
+        h.t = 13;
+        const i = strongestCells()[0];
+        if (i != null) hellMark({ kind: 'bomb', cell: i, x: c(i).x, y: c(i).y, t: 3, color: 0xff5020, size: 1.4 });
+        UI.toast(T('시한폭탄! 3초 안에 폭탄이 놓인 칸을 터치하세요'), 'warn');
+        break;
+      }
+      case 'charm': { // the strongest unit stops fighting until its cell is tapped
+        h.t = 16;
+        const i = strongestCells(h.marks.filter((m) => m.kind === 'charm').map((m) => m.cell))[0];
+        if (i == null) break;
+        G.cells[i].units.forEach((u) => { u.charmT = 1; });
+        hellMark({ kind: 'charm', cell: i, x: c(i).x, y: c(i).y, color: 0xff70c0, size: 1.5 });
+        UI.toast(T('매혹! 하트가 뜬 칸을 터치해 깨우세요'), 'warn');
+        break;
+      }
+      case 'doom': { // 15 s to take 25% of its HP, or it heals 30% behind a shield
+        h.t = 25;
+        hellMark({ kind: 'doom', x: b.x, y: b.y + 1.6, t: 15, hp0: b.hp, color: 0xff2020, size: 0.8 });
+        UI.toast(T('파멸의 카운트다운! 15초 안에 보스 체력을 25% 깎으세요'), 'warn');
+        break;
+      }
+    }
+  }
+  function hellExpire(m) {
+    const b = G.hell.boss;
+    hellUnmark(m);
+    if (m.kind === 'curse' || m.kind === 'bomb') {
+      const cell = G.cells[m.cell];
+      FX.explosion(m.x, m.y, 1.2, m.color, true); SFX.play('expM');
+      if (cell.units.length) {
+        cell.silT = m.kind === 'bomb' ? 15 : 10; refreshCells();
+        UI.toast(m.kind === 'bomb' ? T('폭탄이 터졌습니다! 칸 봉인 (15초)') : T('낙인이 발동했습니다! 칸 봉인 (10초)'), 'warn');
+      }
+    } else if (m.kind === 'core') {
+      b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.1); FX.sparks(b.x, b.y + 0.6, 0x7dff9a, 10, 2, 0.15, 0.6);
+      UI.toast(T('약점을 놓쳤습니다! 보스가 10% 회복'), 'warn');
+    } else if (m.kind === 'doom') {
+      if (b.hp > m.hp0 - b.maxHp * 0.25) {
+        b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.3); b.shieldT = 5; b.shieldK = 0.1;
+        FX.ring(b.x, b.y, 0.4, 2.4, 0xff2020, 0.8); SFX.play('warning');
+        UI.toast(T('카운트다운 실패! 보스가 30% 회복하고 방어막을 펼칩니다'), 'warn');
+      } else UI.toast(T('카운트다운을 막아냈습니다!'), 'gem');
+    }
+  }
+  // a tap on the field (world x, y; cell i): answers a mark under it; true when it did
+  function hellTap(x, y, i) {
+    const h = G.hell;
+    if (!h || G.paused) return false;
+    for (const m of h.marks) {
+      const near = Math.hypot(m.x - x, m.y - y) < Math.max(0.7, (m.size || 1.2) * 0.6);
+      if ((m.kind === 'bomb' || m.kind === 'charm') && (m.cell === i || near)) {
+        if (m.kind === 'charm') G.cells[m.cell].units.forEach((u) => { u.charmT = 0; });
+        hellUnmark(m); SFX.play('click'); FX.ring(m.x, m.y, 0.2, 1.4, m.color, 0.6);
+        UI.toast(m.kind === 'bomb' ? T('폭탄 해체!') : T('매혹이 풀렸습니다!'), 'gem');
+        return true;
+      }
+      if (m.kind === 'core' && near) {
+        hellUnmark(m); stun(h.boss, 3);
+        damage(h.boss, h.boss.maxHp * 0.08, 0xffe040, true, null, 'fixed');
+        FX.explosion(h.boss.x, h.boss.y, 1.4, 0xffe040, true); SFX.play('expB');
+        UI.toast(T('약점 적중! 큰 피해 + 기절'), 'gem');
+        return true;
+      }
+      if (m.kind === 'rift' && near) {
+        m.hits--; FX.ring(m.x, m.y, 0.2, 1.2, m.color, 0.5); SFX.play('click');
+        if (m.hits <= 0) { hellUnmark(m); UI.toast(T('균열을 닫았습니다!'), 'gem'); }
+        return true;
+      }
+    }
+    return false;
+  }
+  // a player who answers every trick at once (the balance bot's smart model): taps, and moves branded units away
+  function hellRespond() {
+    const h = G.hell;
+    if (!h) return;
+    for (const m of h.marks.slice()) {
+      if (m.kind === 'curse') {
+        if (!G.cells[m.cell].units.length) continue;
+        const j = G.cells.findIndex((c, k) => !c.units.length && !h.marks.some((o) => o.cell === k));
+        if (j >= 0) swapCells(m.cell, j);
+      } else if (m.kind === 'rift') {
+        for (let k = 0; k < 3 && G.hell && G.hell.marks.includes(m); k++) hellTap(m.x, m.y, -1);
+      } else if (m.kind !== 'doom') hellTap(m.x, m.y, m.cell != null ? m.cell : -1);
+    }
+  }
+
   // ── boss tricks ── (data.js BOSSES[].gim)
   const cruel = () => !!(BAL.diffs[G.diff] || {}).cruel; // nightmare bosses
   function hpTricks(e) {
@@ -1184,6 +1344,7 @@
       const info = DATA.bossFor(w);
       G.boss = spawnEnemy('boss', info);
       if (cruel() && !G.buff.nullify) UI.toast(T('나이트메어 · {0}의 기믹이 강화되었습니다', info.name), 'warn');
+      if (hellOn()) startRoulette(G.boss);
       if (G.buff.nullify) { G.boss.gim = []; G.buff.nullify = false; UI.toast(T('기믹 해제 · {0}의 기믹이 무효화되었습니다', info.name), 'gem'); }
       G.bossT = G.bossMax = BAL.bossTime + G.buff.time + ((BAL.diffs[G.diff] || {}).bossTime || 0);
       G.waveT = G.bossT;
@@ -2042,6 +2203,10 @@
     // the boss reward pick runs on the player's clock (x3 speed does not shorten it)
     if (G.reward) G.rewardWait = (G.rewardWait || 0) + dt / Math.max(1, G.speed);
     if (G.won) { G.winT -= dt; if (G.winT <= 0) endGame(true); return; }
+    // 헬: the battle holds still while the boss roulette spins
+    if (G.roulette) { G.roulette.t -= dt / Math.max(1, G.speed); if (G.roulette.t <= 0) endRoulette(); return; }
+    if (G.hell && !G.hell.boss.alive) hellClear();
+    else if (G.hell) hellTick(dt);
     // AUTO: the player's own toggle (summon / merge; never upgrades, crafts UR, sells units or bets tuna)
     // every AUTO_EVERY real seconds (x3 speed does not hurry it); the first round as soon as it is switched on
     if (G.opt.auto && G.phase === 'play') {
@@ -2107,6 +2272,7 @@
     for (const cell of G.cells) {
       if (cell.silT > 0) { cell.silT -= dt; if (cell.silT <= 0) refreshCells(); continue; } // sealed by the Executioner
       for (const u of cell.units) {
+        if (u.charmT > 0) continue; // 헬 매혹: idle until its cell is tapped
         if (u.act) stepAttack(u, dt);
         u.cd -= dt;
         if (u.hasteT > 0) { u.hasteT -= dt; u.cd -= dt * 0.5; }
@@ -2392,6 +2558,7 @@
         return;
       }
       if (ev.pointerType !== 'mouse') hoverCell = -1;
+      { const [hx, hy] = screenToWorld(ev.clientX, ev.clientY); if (hellTap(hx, hy, i)) return; }
       if (!(i >= 0 && G.cells[i].units.length)) {
         // a tap on an enemy: focus fire on it (tap it again to clear)
         const [x, y] = screenToWorld(ev.clientX, ev.clientY);
@@ -2566,6 +2733,7 @@
       diff: G.daily ? 1 : G.opt.diff == null ? 1 : G.opt.diff,
       rng: G.daily ? makeStreams(G.daily) : null, focus: null, hintUpg: false, tut: null,
     });
+    hellClear(); G.roulette = null;
     BAL.lastWave = (BAL.diffs[G.diff] || {}).waves || 80; // nightmare runs to 120
     G.cells.forEach((c) => { c.silT = 0; });
     G.opt.auto = false; // every battle starts manual at x1 (AUTO and speed are per battle, not saved settings)
@@ -2710,7 +2878,7 @@
   window.GAME = {
     G, lay, boot, newGame, summon, gamble, merge, sell, craft, canCraft, hasUnique, upgrade, summonCost,
     worldToScreen, simulate, autoplay, endGame, findCellOf, enemyLoad, craftRoom, enemyWeight, target, rewardScore, bossMult,
-    ULT_K, toggleKeep, canSummon, bestUpgrade, upgradeValue, summonValue, wantedParts, setFocus, takeReward, autoReward, castUlt, readyUlts, ecoMult, critBonus,
+    ULT_K, hellRespond, hellTap, get hell() { return G.hell; }, toggleKeep, canSummon, bestUpgrade, upgradeValue, summonValue, wantedParts, setFocus, takeReward, autoReward, castUlt, readyUlts, ecoMult, critBonus,
     callNext, canCallNext, reroll, swapCells, isOuter, dmgMult, saveRun, savedRun, resumeRun, clearRun, REWARD_WAIT,
     // tutorial: screen rects of a cell / the whole field, and its practice enemies
     cellRect: (i) => screenRect(lay.cells[i].x - BAL.cell / 2, lay.cells[i].y + BAL.cell / 2, lay.cells[i].x + BAL.cell / 2, lay.cells[i].y - BAL.cell / 2),

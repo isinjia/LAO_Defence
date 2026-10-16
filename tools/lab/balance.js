@@ -44,6 +44,7 @@
   function smartBot(ults = true) {
     const g = G(), B = DATA.BAL;
     GAME.autoReward();
+    GAME.hellRespond(); // 헬: taps every mark and moves branded units away at once
     DATA.RECIPES.forEach((r, i) => { if (GAME.canCraft(r) && GAME.craftRoom(r)) GAME.craft(i, true); });
     // merge full stacks (a craft only takes one copy of a part, so stacks of parts merge too)
     g.cells.forEach((c, i) => { if (c.units.length === 3 && c.units[0].def.tier < DATA.LR) GAME.merge(i, true); }); // up to SSS -> LR

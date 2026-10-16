@@ -608,6 +608,30 @@
   }
 
   // MISSION START / BATTLE START + wave / CAUTION boss
+  // 헬: the boss roulette in the middle of the screen: names scroll past and slow down onto the pick
+  let rouT = 0;
+  function roulette(names, pick, dur) {
+    const el = document.getElementById('roulette');
+    if (!el || GAME.G.headless || window.LAB_NO_RENDER) return;
+    const ROW = 44, loops = 4, list = [];
+    for (let k = 0; k < loops; k++) list.push(...names);
+    list.push(...names);
+    const end = loops * names.length + pick;
+    el.innerHTML = `<div class="rhead">HELL ROULETTE</div><div class="rwin"><div class="rstrip">${list.map((n) => `<div>${n}</div>`).join('')}</div><i class="rsel"></i></div>`;
+    el.hidden = false; el.classList.remove('done');
+    const strip = el.querySelector('.rstrip');
+    strip.style.transform = 'translateY(0)';
+    void strip.offsetHeight;
+    strip.style.transition = `transform ${dur * 0.85}s cubic-bezier(0.12, 0.6, 0.15, 1)`;
+    strip.style.transform = `translateY(${-(end - 1) * ROW}px)`; // the pick lands in the middle row
+    clearTimeout(rouT);
+    rouT = setTimeout(() => {
+      el.classList.add('done'); SFX.play('rankUpSS');
+      strip.children[end].classList.add('on');
+      rouT = setTimeout(() => { el.hidden = true; }, 1400);
+    }, dur * 850);
+  }
+
   function banner(title, sub, boss) {
     let h;
     if (title === 'MISSION START') {
@@ -803,5 +827,5 @@
     return (L && !L.hidden) || (el.title && !el.title.hidden);
   }
 
-  window.UI = { tip, ask, closeDrawer, covered, loading, loaded, init, update, toast, banner, announce, dmgNumber, ultCallout, result, reward, onSelect, onCellsChanged, closePopup, togglePause };
+  window.UI = { tip, ask, closeDrawer, covered, loading, loaded, init, update, toast, banner, roulette, announce, dmgNumber, ultCallout, result, reward, onSelect, onCellsChanged, closePopup, togglePause };
 })();

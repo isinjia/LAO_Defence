@@ -843,3 +843,13 @@ html:not(:lang(ko)) .act b, html:not(:lang(ko)) .act small { white-space: nowrap
   .nextw { height: 30px; bottom: 8px; } .nextw b { font-size: 13px; }
 }
 @media (max-width: 360px) { .round .rlabel { width: 70px; padding-right: 14px; } .res b.gold { width: 4.6ch; } }
+
+/* 헬: boss roulette */
+#roulette { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 8; pointer-events: none; text-align: center; }
+#roulette .rhead { font: 900 18px/1 sans-serif; letter-spacing: 4px; color: #ff4a4a; text-shadow: 0 0 12px #ff0000, 0 2px 0 #000; margin-bottom: 8px; }
+#roulette .rwin { position: relative; width: 260px; height: 132px; overflow: hidden; border: 2px solid #ff3a3a; border-radius: 10px; background: rgba(20, 0, 0, 0.85); box-shadow: 0 0 30px rgba(255, 0, 0, 0.5); }
+#roulette .rstrip > div { height: 44px; line-height: 44px; font: 800 20px/44px sans-serif; color: #d8c0c0; }
+#roulette .rstrip > div.on { color: #fff; text-shadow: 0 0 14px #ff3030; transform: scale(1.15); }
+#roulette .rsel { position: absolute; left: 6px; right: 6px; top: 44px; height: 44px; border-top: 2px solid #ffd040; border-bottom: 2px solid #ffd040; background: rgba(255, 200, 60, 0.08); }
+#roulette.done .rwin { animation: rouFlash 0.5s 2; }
+@keyframes rouFlash { 50% { box-shadow: 0 0 50px #ff3030; border-color: #ffd040; } }

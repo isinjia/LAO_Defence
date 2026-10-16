@@ -10,7 +10,7 @@ import statistics as st
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DIFF = {0: 'easy', 1: 'normal', 2: 'hard', 3: 'veryhard', 4: 'nightmare'}
+DIFF = {0: 'easy', 1: 'normal', 2: 'hard', 3: 'veryhard', 4: 'nightmare', 5: 'hell'}
 
 
 def wilson(k, n, z=1.96):
