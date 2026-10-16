@@ -365,7 +365,8 @@
 
   // parts of an original rig the game leaves out (still in the data, never drawn): Hela's summoned mechs, which her
   // attack clip brings in, do not fit this game's chain-lightning attack
-  const RIG_HIDE = { hela: /^(Meca_\d+|Summons)$/ };
+  // parts left out of a rig: Hela's mechs, and Andvari's cargo box (it covered the units in the next cells)
+  const RIG_HIDE = { hela: /^(Meca_\d+|Summons)$/, andvari: /^(Bone_Cargo_Box|Bone_InBox|bone_shadow_box)$/ };
   function attachSD(u) {
     const c = SD.create(u.def.id);
     if (!c) return;
