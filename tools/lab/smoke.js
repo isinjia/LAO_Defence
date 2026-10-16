@@ -91,10 +91,10 @@
       GAME.sell(GAME.findCellOf(r.result)); eq(GAME.canCraft(DATA.RECIPES[1]), true, 'sold: craftable again');
     });
 
-    // the original skill names, checked word for word in the rendered namu.wiki pages and lo.swaytwig.com (2026-10)
+    // the original skill names, checked word for word in the in-game data on lo.swaytwig.com (2026-10)
     test('SSS / LR / UR ultimates carry their original skill names', () => {
       const ORIGINAL = {
-        ullr: '포커스 샷', harpy: 'NARAAK 미사일', eternity: '편히 잠드소서', lemonadealpha: '케스토스 히마스: 출력전개',
+        ullr: '전방위 사격', harpy: 'NARAAK 미사일', eternity: '편히 잠드소서', lemonadealpha: '케스토스 히마스: 출력전개',
         sleipnir: '한계돌파', blacklilith: '듀얼 버스트', brunhild: '핏빛 효후', tiamat: '풀 웨폰 어썰트', khan: '데저트 스톰',
         labiata: '백화요란', constantia: '발목 잡기', titania: '서리 폭풍', mercury: '최상의 시간', empress: '펭귄 서프라이즈!',
         fafnir: '뇌정벽력', ramiel: '억겁의 성화',
