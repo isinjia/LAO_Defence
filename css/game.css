@@ -544,6 +544,7 @@ body.paused #bottom { pointer-events: none; filter: brightness(0.55) saturate(0.
 #titleChars .tg.lr > b { background: var(--prism); box-shadow: 0 0 10px rgba(200, 220, 255, 0.6); }
 #titleChars .tg.ur > b { background: linear-gradient(90deg, #c9963a, #fff2c8 50%, #c9963a); box-shadow: 0 0 10px rgba(255, 220, 140, 0.6); }
 #titleChars { column-gap: 22px; }
+#titleChars .tg.god > b { background: linear-gradient(90deg, #b46bff, #fff6e0 35%, #ffe08a 65%, #b46bff); box-shadow: 0 0 14px rgba(180, 107, 255, 0.8); }
 
 /* UR (crafted, one on the field): a gold rim with a light sweeping across it and sparkles twinkling on the rim */
 :root { --urgold: linear-gradient(160deg, #fffaf0, #f4d78a 40%, #c9963a 70%, #fff2c8); }
@@ -577,7 +578,20 @@ body.paused #bottom { pointer-events: none; filter: brightness(0.55) saturate(0.
 .hx.lr .spk.s3 { background: radial-gradient(circle, #fff 0 18%, rgba(190, 255, 170, 0.95) 32%, transparent 62%); animation-delay: 1.8s; }
 .hx.lr .hrk, #popup.lr::before { background: var(--prism); }
 .ann.lr small { background: var(--prism); -webkit-background-clip: text; background-clip: text; color: transparent; }
-@media (prefers-reduced-motion: reduce) { .hx .shn, .hx .spk, .hx .glo { animation: none; } }
+.hx.god::before { background: conic-gradient(from 0deg, #fff6e0, #d9b8ff, #fff, #ffe08a, #b46bff, #fff6e0); }
+.hx.god .glo { background: radial-gradient(circle, rgba(255, 246, 224, 0.9) 0 30%, rgba(180, 107, 255, 0.45) 55%, transparent 72%); animation-duration: 1.6s; }
+.hx .ray { position: absolute; inset: -30%; z-index: -2; pointer-events: none; border-radius: 50%; opacity: 0.8;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 246, 224, 0.55) 0 6deg, transparent 6deg 24deg);
+  -webkit-mask: radial-gradient(circle, #000 25%, transparent 70%); mask: radial-gradient(circle, #000 25%, transparent 70%); animation: godspin 9s linear infinite; }
+@keyframes godspin { to { transform: rotate(360deg); } }
+.hx.god .shn { background-image: linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, 0.9) 50%, transparent 64%); animation-duration: 1.8s; }
+.hx.god .spk { width: 44%; height: 44%; animation-duration: 1.6s; }
+.hx.god .spk.s2 { background: radial-gradient(circle, #fff 0 18%, rgba(200, 150, 255, 0.95) 32%, transparent 62%); }
+.hx.god .spk.s4 { right: -10%; top: -8%; width: 50%; height: 50%; animation-delay: 0.8s; }
+.hx.god .hrk, #popup.god::before { background: linear-gradient(90deg, #b46bff, #fff6e0 35%, #ffe08a 65%, #b46bff); color: #1a0030; }
+.ann.god small { color: #fff6e0; text-shadow: 0 0 10px rgba(180, 107, 255, 0.95), 0 0 4px #fff; }
+#odds .god { color: #fff6e0; text-shadow: 0 0 6px rgba(180, 107, 255, 0.9); font-family: var(--en); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .hx .shn, .hx .spk, .hx .glo, .hx .ray { animation: none; } }
 @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(0.8); } }
 #titleChars.wait .hx { animation: none; opacity: 0; }
 .brief { width: min(860px, 100%); margin-bottom: 22px; background: rgba(10, 11, 13, 0.82); border: 1px solid rgba(255, 255, 255, 0.1); text-align: left; }

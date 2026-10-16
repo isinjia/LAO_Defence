@@ -91,7 +91,21 @@
       GAME.sell(GAME.findCellOf(r.result)); eq(GAME.canCraft(DATA.RECIPES[1]), true, 'sold: craftable again');
     });
 
-    test('every SSS / LR / UR ultimate runs without errors', () => {
+    test('GOD: a flat 0.0001% summon (luck upgrades do not change it), one per cell, never merges', () => {
+      eq(DATA.BAL.godChance, 0.000001, '0.0001%');
+      fresh(); G().gold = 1e6; G().upg.luck = 5;
+      const keep = DATA.BAL.godChance; DATA.BAL.godChance = 1; // force the miracle
+      GAME.summon(); GAME.summon();
+      DATA.BAL.godChance = keep;
+      const gods = G().cells.filter((c) => c.units.length && c.units[0].def.tier === DATA.GOD);
+      eq(gods.length, 2, 'two GOD units, each in its own cell'); eq(gods[0].units.length, 1, 'no stacking');
+      eq(gods[0].units[0].def.id, 'lrl', 'LRL');
+      fresh(); G().gold = 1e6; G().upg.luck = 5;
+      for (let k = 0; k < 15; k++) GAME.summon();
+      eq(G().cells.some((c) => c.units.length && c.units[0].def.tier === DATA.GOD), false, 'not from ordinary rolls');
+    });
+
+    test('every SSS / LR / UR / GOD ultimate runs without errors', () => {
       fresh();
       DATA.UNITS.filter((d) => d.ult).forEach((d) => {
         G().cells.forEach((c, i) => { while (c.units.length) GAME.sell(i); });

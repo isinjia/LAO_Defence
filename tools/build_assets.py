@@ -25,7 +25,7 @@ BR_Phoenix_N DS_KunoichiZero_N BR_Thetis_N BR_Leona_N BR_Undine_N
 DS_Azazel_N BR_Hela_N ST_Tiamat_N 3P_Labiata_N BR_Sleipnir_N
 3P_ConstantiaS2_N 3P_Titania_N ST_Mercury_N PECS_Empress_N BR_Fafnir_N DS_Ramiel_N
 3P_BlackLilith_N BR_Brunhild_N BR_Khan_N 3P_Daphne_N BR_Andvari_N BR_Hraesvelgr_N
-PECS_LemonadeAlpha_N 3P_Eternity_N ST_Ullr_N DS_Saraqael_N""".split()
+PECS_LemonadeAlpha_N 3P_Eternity_N ST_Ullr_N DS_Saraqael_N PECS_LRL_N""".split()
 
 ENEMIES = """NightChick_N Drone_N PuppHead_N Legion_N Centurion_N Fallen_N Gigantes_N
 Predator_N Rampart_N Harvester_N Intruder_N Juggernaut_N Phalangites_N Raider_B04

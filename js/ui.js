@@ -20,7 +20,7 @@
   const rank = (t) => S('rank' + Math.min(t, 4));
   // hexagon portrait in the tier colour (frame_Cha_formation_icon)
   // the rank letter rides on the frame too: the tier is never told by colour alone (colour-blind players, screen readers)
-  const hex = (def, cls = '') => `<span class="hx ${cls}${def.tier === DATA.UNIQUE ? ' ur' : def.tier === DATA.LR ? ' lr' : ''}" style="--img:url(${img(def)});--c:${TIERS[def.tier].color}" role="img" aria-label="${def.name} (${TIERS[def.tier].name})"><i class="hrk">${TIERS[def.tier].name}</i>${def.tier === DATA.UNIQUE ? '<i class="glo"></i><i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i><i class="spk s3"></i><i class="spk s4"></i>' : def.tier === DATA.LR ? '<i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i><i class="spk s3"></i>' : ''}</span>`;
+  const hex = (def, cls = '') => `<span class="hx ${cls}${def.tier === DATA.GOD ? ' god' : def.tier === DATA.UNIQUE ? ' ur' : def.tier === DATA.LR ? ' lr' : ''}" style="--img:url(${img(def)});--c:${TIERS[def.tier].color}" role="img" aria-label="${def.name} (${TIERS[def.tier].name})"><i class="hrk">${TIERS[def.tier].name}</i>${def.tier === DATA.GOD ? '<i class="ray"></i><i class="glo"></i><i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i><i class="spk s3"></i><i class="spk s4"></i>' : def.tier === DATA.UNIQUE ? '<i class="glo"></i><i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i><i class="spk s3"></i><i class="spk s4"></i>' : def.tier === DATA.LR ? '<i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i><i class="spk s3"></i>' : ''}</span>`;
   const gearI = '<i class="ri"></i>';
   const tunaI = '<i class="rt"></i>';
 
@@ -118,12 +118,13 @@
     const li = $('#logoImg');
     li.style.setProperty('--logo', `url(${lg.u})`);
     li.style.setProperty('--ar', lg.w / lg.h);
-    // the two top ranks: LR (three SSS) and UR (crafted, one on the field)
-    const groups = [DATA.LR, DATA.UNIQUE].map((t) => DATA.byTier(t).map((d) => d.id));
+    // the top ranks: LR (three SSS), UR (crafted, one on the field) and the GOD miracle
+    const tiers = [DATA.LR, DATA.UNIQUE, DATA.GOD], cls = ['lr', 'ur', 'god'];
+    const groups = tiers.map((t) => DATA.byTier(t).map((d) => d.id));
     const featured = groups.flat();
     const tc = $('#titleChars');
     let n = 0;
-    tc.innerHTML = groups.map((ids, g) => `<div class="tg ${g ? 'ur' : 'lr'}"><b>${TIERS[g ? DATA.UNIQUE : DATA.LR].name}</b><div>${
+    tc.innerHTML = groups.map((ids, g) => `<div class="tg ${cls[g]}"><b>${TIERS[tiers[g]].name}</b><div>${
       ids.map((id) => hex(DATA.unit[id]).replace('style="', `style="animation-delay:${(n++) * 0.08}s;`)).join('')}</div></div>`).join('');
     // the six portraits pop in as one row once all are decoded (not one by one as each image arrives)
     tc.classList.add('wait');
@@ -401,6 +402,7 @@
     el.popup.style.setProperty('--c', t.color);
     el.popup.classList.toggle('ur', d.tier === DATA.UNIQUE);
     el.popup.classList.toggle('lr', d.tier === DATA.LR);
+    el.popup.classList.toggle('god', d.tier === DATA.GOD);
     el.popup.innerHTML = `
       <div class="ph">
         ${hex(d)}
@@ -509,6 +511,7 @@
       cache.luck = G.upg.luck; cache.pityLeft = pityLeft; cache.wantN = wantN;
       const o = BAL.odds(G.upg.luck);
       set('odds', el.odds, '<span class="t">SUMMON RATE</span>' + o.map((v, i) => v > 0 ? `<span style="color:${TIERS[i].color}"><i style="background-image:${rank(i)}"></i>${+v.toFixed(1)}%</span>` : '').join('') +
+        `<span class="god" title="${T('소환할 때마다 확률 강화와 무관하게 0.0001%')}">GOD 0.0001%</span>` +
         `<span class="aid" title="${T('S급 미만이 {0}번 연속이면 다음 소환은 S급 보장', BAL.pity)}">${T('S급 보장까지 {0}회', pityLeft)}</span>` +
         (wantN ? `<span class="aid on" title="${T('재료 2종을 모은 UR 조합은 마지막 재료가 더 잘 나옵니다.')}">${T('재료 보정 {0}%', Math.round(BAL.partBias * 100))}</span>` : ''), 'innerHTML');
       // the same aids on the summon button (the rate panel is hidden on narrow screens)
@@ -624,7 +627,7 @@
     const wait = bannerUntil + 250 - performance.now();
     if (wait > 0) { setTimeout(() => announce(def, text), wait); return; }
     const t = TIERS[def.tier];
-    el.announce.innerHTML = `<div class="ann ${def.tier >= 4 ? 'r4' : ''} ${def.tier === DATA.UNIQUE ? 'ur' : def.tier === DATA.LR ? 'lr' : ''}" style="--c:${t.color}">${hex(def)}
+    el.announce.innerHTML = `<div class="ann ${def.tier >= 4 ? 'r4' : ''} ${def.tier === DATA.GOD ? 'god' : def.tier === DATA.UNIQUE ? 'ur' : def.tier === DATA.LR ? 'lr' : ''}" style="--c:${t.color}">${hex(def)}
       <div><small>${text}</small><b>${def.name}</b></div><span class="rk" style="background-image:${rank(def.tier)}"></span></div>`;
     const a = el.announce.firstChild;
     setTimeout(() => a.classList.add('out'), 1700);

@@ -1,6 +1,6 @@
 // Core game: scene setup, entities, waves, combat and input.
 (function () {
-  const { TIERS, LR, UNIQUE, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL } = DATA;
+  const { TIERS, LR, UNIQUE, GOD, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL } = DATA;
   const L = FX.L;
   const rnd = FX.rnd;
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -457,6 +457,7 @@
   const GLINT = {
     [UNIQUE]: { rate: 16, cols: [0xffffff, 0xfff0b8, 0xffd98a, 0xffc35a], tex: 'cross', size: [0.16, 0.34], vy: [0.3, 0.9], pulse: 0xffd06a },
     [LR]: { rate: 12, cols: prism, tex: 'cross', size: [0.12, 0.24], vy: [0.4, 1.0] },
+    [GOD]: { rate: 30, cols: () => (Math.random() < 0.5 ? prism() : [0xfff6e0, 0xb46bff, 0xffffff][Math.floor(Math.random() * 3)]), tex: 'cross', size: [0.18, 0.4], vy: [0.6, 1.6], pulse: 0xb46bff },
   };
   function rankGlints(u, x, y, dt) {
     const g = GLINT[u.def.tier];
@@ -467,7 +468,7 @@
     FX.particle({ x: x + rnd(-0.55, 0.55), y: y + rnd(0.1, u.h * 0.9), vy: rnd(g.vy[0], g.vy[1]), life: rnd(0.6, 1.1), size: rnd(g.size[0], g.size[1]), size1: 0,
       color: typeof g.cols === 'function' ? g.cols() : g.cols[Math.floor(Math.random() * g.cols.length)], tex: FX.tex[g.tex], spin: rnd(-2, 2), alpha: 0.95, fadeIn: 0.15 });
   }
-  function stackMax(def) { return def.tier === UNIQUE ? 1 : 3; }
+  function stackMax(def) { return def.tier >= UNIQUE ? 1 : 3; }
   function canMerge(def) { return def.tier < LR; }
   function hasUnique() { return G.cells.some((c) => c.units.some((u) => u.def.tier === UNIQUE)); }
   // cell indices bottom row first, right to left within a row (world y up, x right; follows the current orientation)
@@ -537,6 +538,23 @@
     for (let k = t; k >= 0; k--) { const a = st.filter((d) => d.tier === k); if (a.length) return pickL(a, 'summon'); }
     return null;
   }
+  // a GOD unit arrives: the field goes dark, light pours down, a banner, then the unit
+  function godDescends() {
+    const def = DATA.byTier(GOD)[0];
+    const i = addUnit(def);
+    const c = lay.cells[i >= 0 ? i : 0];
+    FX.flash(0x000000, 0.6);
+    FX.later(0.25, () => {
+      FX.flash(0xfff6e0, 0.8); FX.shake(0.5);
+      FX.pillar(c.x, c.y, 2.5, 0xfff6e0);
+      for (let k = 0; k < 4; k++) FX.later(k * 0.15, () => FX.ring(c.x, c.y, 0.3, 6 + k * 3, k % 2 ? 0xb46bff : 0xfff6e0, 0.9, 0.9));
+      FX.sparks(c.x, c.y, 0xfff6e0, 60, 8, 0.25, 1.2);
+    });
+    SFX.play('pickSS'); SFX.play('rankUpSS');
+    buzz([30, 60, 30, 60, 30, 60, 120]);
+    UI.announce(def, T('GOD 강림!'));
+    UI.banner('GOD', T('{0} 강림', def.name), true);
+  }
   function canSummon() { return anyEmpty() || stackable().length > 0; }
 
   function summon() {
@@ -547,6 +565,8 @@
     // one of those (so it always has a place); only a board with no such stack refuses
     const full = !anyEmpty();
     if (full && !stackable().length) { UI.toast(T('칸이 모두 찼습니다. 합성하거나 판매해 자리를 만드세요'), 'warn'); SFX.play('fail'); return; }
+    // the GOD rank: a flat 0.0001% before the normal roll (no luck upgrade, pity or bias touches it; needs a free cell)
+    if (!full && !G.tut && luck('summon') < BAL.godChance) { G.gold -= cost; G.summons++; godDescends(); UI.update(true); return; }
     const rolled = rollTier();
     const def = full ? pickStackable(rolled) : pickRank(rolled, 'summon');
     G.gold -= cost;
@@ -1445,6 +1465,8 @@
   // ultimate gauge: per attack, scaled like the damage (k attacks' worth per clip)
   function charge(u, e, k) {
     const d = u.def;
+    // Labiata's plasma generator: each attack adds a stack (max 3), +14.5% attack per stack (passive); 백화요란 scales on it
+    if (d.id === 'labiata') { u.plasma = Math.min(3, (u.plasma || 0) + 1); u.powK = 1 + 0.145 * u.plasma; u.powT = 99; }
     if (!d.ult) return;
     // an SSS / LR / UR fires its ultimate by itself as soon as the gauge is full (no buttons); a full gauge that found no
     // target retries on the next attack
@@ -1550,6 +1572,7 @@
   }
 
   const HUGE_SKILL = new Set(['fafnir']);
+  const ULT_K = 1.8;
   // fire a full gauge at the unit's target (or the enemy furthest along when nothing is in range)
   function castUlt(u, e) {
     if (!u || u.dead || !u.def.ult || u.mana < 100 || G.phase !== 'play' || G.paused) return false;
@@ -1563,7 +1586,8 @@
 
   function ultimate(u, e) {
     const d = u.def;
-    const base = d.dmg * dmgMult();
+    // ULT_K: the faithful skills (narrower areas, fewer freezes than the old generic ones) hit harder to keep their weight
+    const base = d.dmg * dmgMult() * ULT_K;
     UI.ultCallout(u.x, u.y, d.ultName, TIERS[d.tier].color);
     // the original skill clip, except where it is a full-screen cut-in (Fafnir's grows ~5x the board cell)
     const clip = HUGE_SKILL.has(d.id) ? 'atk' : 'skill';
@@ -1579,12 +1603,17 @@
     // the defense board: "ignores protection" = pierce, debuffs = marks / roots / slows, buffs = squad or self)
     switch (d.ult) {
       // ── SSS ──
-      case 'rail': { // Ullr X-02 · 포커스 샷 (sniper mode): the target's whole row, ignores protection, more on held enemies
-        const y = e.y;
+      case 'rail': { // Ullr X-02 · 포커스 샷 (sniper mode): the target and the stretch behind it, ignores protection
+        // (and part of the defense: armour), a critical hit deals more
+        const pts = [0, 1, 2, 3].map((k) => pathPos(Math.max(0, e.d - k * 0.9)));
+        const crit = Math.random() < 0.5;
         FX.later(0.15, () => {
-          FX.orbital(-lay.hw - 2, y, lay.hw + 2, y, d.color);
+          FX.orbital(u.x, u.y, pts[3][0], pts[3][1], d.color);
           SFX.play('laserBig');
-          for (const o of inLine(-lay.hw - 2, y, lay.hw + 2, y, 0.9)) damage(o, base * 8 * (o.stunT > 0 || o.slowT > 0 ? 1.5 : 1), d.color, true, d, true);
+          // the target point takes all of it, the tiles behind 50% then 25%
+          const fall = [1, 0.5, 0.25, 0.25], hit = new Map();
+          pts.forEach(([x, y], k) => { for (const o of enemiesNear(x, y, 1.0)) if (!hit.has(o)) hit.set(o, fall[k]); });
+          for (const [o, f] of hit) damage(o, base * 10 * f * (crit ? 1.5 : 1), d.color, crit, d, true);
         });
         break;
       }
@@ -1597,7 +1626,7 @@
             FX.beam(u.x, u.y, x, y, 0.08, d.color, 0.12);
             FX.explosion(x, y, 1.0, d.color, k % 3 === 0);
             SFX.play('expM', 0.5);
-            for (const z of enemiesNear(x, y, 1.3)) { damage(z, base * 2.5 * (z.markT > 0 || z.stunT > 0 ? 1.3 : 1), d.color, true, d); mark(z, 1.2, 5); }
+            for (const z of enemiesNear(x, y, 1.3)) { damage(z, base * 2.5 * (z.markT > 0 || z.stunT > 0 ? 1.45 : 1), d.color, true, d); mark(z, 1.2, 5); }
           });
         }
         break;
@@ -1623,9 +1652,11 @@
         SFX.play('energy');
         for (const o of enemiesNear(e.x, e.y, 3.2)) {
           mark(o, 1.3, 7);
-          if (o.kind === 'normal') o.d = Math.max(0, o.d - 1.2); else o.shieldT = 0;
+          o.d = Math.max(0, o.d - (o.kind === 'normal' ? 1.2 : 0.5)); // pushed back one tile (heavy ones less)
+          o.shieldT = 0; // every protective effect stripped
           FX.ring(o.x, o.y, 0.1, 0.8, d.color, 0.3);
-          damage(o, base * 4, d.color, true, d);
+          damage(o, base * 2, d.color, true, d); // physical
+          damage(o, base * 2, d.color, false, d, true); // fixed: ignores protection
         }
         break;
       }
@@ -1638,58 +1669,117 @@
         });
         break;
       }
-      case 'taunt': { // Black Lilith · 듀얼 버스트: taunts (held), attack down, +43.5% damage taken
-        FX.ring(e.x, e.y, 0.3, 1.6, d.color, 0.7);
+      case 'taunt': { // Black Lilith · 듀얼 버스트: two shots, the target and the enemy beside it; both taunted (held 1.5 s),
+        // and a taunted enemy takes the shot harder (skill power x1.435). Attack / crit down have no board equivalent.
+        const two = [e, ...enemiesNear(e.x, e.y, 1.6).filter((o) => o !== e).sort((a, b) => Math.hypot(a.x - e.x, a.y - e.y) - Math.hypot(b.x - e.x, b.y - e.y)).slice(0, 1)];
         SFX.play('mg');
-        for (const o of enemiesNear(e.x, e.y, 1.5)) { stun(o, 1.5); mark(o, 1.435, 6); FX.slash(o.x, o.y, d.color, 1.6); damage(o, base * 6, d.color, true, d); }
+        two.forEach((o, k) => FX.later(k * 0.12, () => {
+          if (!o.alive) return;
+          FX.beam(u.x, u.y, o.x, o.y, 0.1, d.color, 0.12);
+          FX.slash(o.x, o.y, d.color, 1.6);
+          const taunted = o.stunT > 0;
+          stun(o, 1.5);
+          damage(o, base * 6 * 1.435 * (taunted ? 1.3 : 1), d.color, true, d);
+        }));
         break;
       }
       // ── LR ──
       case 'wolfpack': { // Brunhild · 핏빛 효후: her wolf runs a staircase of tiles from the target, fire, fire resistance
-        // down (+38% taken, burns), and hits marked enemies 47.5% harder
+        // down (+38% taken, 2 rounds), and hits marked enemies 47.5% harder
         // (on this board the tiles behind the target are the stretch of path it walked: six steps back along it)
         const pts = [0, 1, 2, 3, 4, 5].map((k) => pathPos(Math.max(0, e.d - k * 0.9)));
         pts.forEach(([x, y], k) => FX.later(k * 0.1, () => {
           FX.explosion(x, y, 1.2, d.color, k === pts.length - 1);
           if (k) FX.beam(pts[k - 1][0], pts[k - 1][1], x, y, 0.3, d.color, 0.2);
           SFX.play('expM', 0.5);
-          for (const z of enemiesNear(x, y, 1.3)) { damage(z, base * 4 * (z.markT > 0 ? 1.475 : 1), d.color, true, d); mark(z, 1.38, 4); burn(z, base * 0.5, 4, d); }
+          for (const z of enemiesNear(x, y, 1.3)) { damage(z, base * 4 * (z.markT > 0 ? 1.475 : 1), d.color, true, d); mark(z, 1.38, 4); }
         }));
         break;
       }
-      case 'execute': { // Tiamat X-00 · 풀 웨폰 어썰트: one target, ignores shields and damage reduction, harder the lower its HP
+      case 'execute': { // Tiamat X-00 · 풀 웨폰 어썰트: one target, ignores shields and damage reduction, more against heavy
+        // armour (elites and bosses here) and on a critical hit
         const t = strongest() || e;
         FX.ring(t.x, t.y, 0.3, 1.8, d.color, 0.6);
         FX.later(0.4, () => {
           if (!t.alive) return;
           FX.orbital(u.x, u.y, t.x, t.y, d.color);
           SFX.play('laserBig'); SFX.play('expB');
-          damage(t, base * 30 * (1 + (1 - t.hp / t.maxHp)), d.color, true, d, true);
+          // heavy armour +31%, a critical hit +62%, and more the lower its HP (up to +50%, 2021 rework)
+          damage(t, base * 30 * (t.kind !== 'normal' ? 1.31 : 1) * (Math.random() < 0.4 ? 1.62 : 1) * (1 + 0.5 * (1 - t.hp / t.maxHp)), d.color, true, d, true);
         });
         break;
       }
-      case 'sandstorm': { // Khan · 데저트 스톰: a storm on the target's area, ignores protection, marks (+15% taken); kills
-        // feed her hunger (굶주린 늑대: attack speed up 6 s)
-        FX.ring(e.x, e.y, 0.3, 2.4, d.color, 0.6, 0.8);
+      case 'sandstorm': { // Khan · 데저트 스톰: a rapid combined attack on one target, ignores defense, a critical hit +58%,
+        // and (2023 rework) a mark that raises the damage it takes
+        const t = target(u) || e;
         for (let k = 0; k < 8; k++) {
-          FX.later(k * 0.2, () => {
-            const before = G.kills;
-            for (const o of enemiesNear(e.x, e.y, 2.4)) { FX.sparks(o.x, o.y, d.color, 3, 2, 0.1, 0.4); mark(o, 1.15, 4); damage(o, base * 1.8, d.color, true, d, true); }
-            if (k % 3 === 0) SFX.play('spray', 0.4);
-            if (G.kills > before) u.hasteT = 6;
+          FX.later(k * 0.08, () => {
+            if (!t.alive) return;
+            FX.beam(u.x, u.y, t.x + rnd(-0.2, 0.2), t.y + rnd(-0.2, 0.2), 0.06, d.color, 0.08);
+            FX.sparks(t.x, t.y, d.color, 3, 2, 0.1, 0.3);
+            if (k % 3 === 0) SFX.play('rifle', 0.5);
+            const crit = Math.random() < (d.crit || 0) + critBonus();
+            damage(t, base * 2.2 * (crit ? 1.58 : 1), d.color, crit, d, true);
+            mark(t, 1.25, 6);
           });
         }
         break;
       }
-      case 'sweep': { // Labiata · 백화요란: the target's whole row, ignores protection, spends a plasma charge (+87%); the
-        // plasma generator then keeps her own attack up (+43.5%, 8 s)
+      case 'sweep': { // Labiata · 백화요란: the target's row, ignores protection; damage grows with her plasma generator
+        // stacks (built by her attacks, up to 3, not consumed), and at 3 stacks it removes enhancement effects (boss shields)
         const y = e.y;
         [0, 0.18].forEach((dl, k) => FX.later(dl, () => {
           FX.beam(-lay.hw - 2, y, lay.hw + 2, y, 0.45, d.color, 0.25);
           SFX.play('swing');
-          for (const o of inLine(-lay.hw - 2, y, lay.hw + 2, y, 1.0)) { FX.slash(o.x, o.y, d.color, 1.8); damage(o, base * (k ? 4 : 5) * 1.87, d.color, true, d, true); }
+          for (const o of inLine(-lay.hw - 2, y, lay.hw + 2, y, 1.0)) {
+            FX.slash(o.x, o.y, d.color, 1.8);
+            if (u.plasma >= 3) o.shieldT = 0;
+            damage(o, base * (k ? 4 : 5) * (1 + 0.29 * u.plasma), d.color, true, d, true);
+          }
         }));
-        u.powK = 1.435; u.powT = 8;
+
+        break;
+      }
+      // ── GOD ──
+      case 'apocalypse': { // LRL · 칠흑의 종언 (this game's own): the field drowns in darkness, black-flame meteors fall on
+        // every crowd, light pillars sweep the path, then one blinding blast: everything held, protection ignored
+        FX.flash(0x000000, 0.7);
+        UI.banner('GOD', d.ultName, true);
+        SFX.play('warning');
+        // 1) darkness gathers: rings closing in on LRL
+        for (let k = 0; k < 6; k++) FX.later(k * 0.06, () => FX.ring(u.x, u.y, 8 - k, 0.3, k % 2 ? 0xb46bff : 0x1a0030, 0.35, 0.9));
+        for (const o of G.enemies) if (o.alive) stun(o, 3.5);
+        // 2) black-flame meteors on every crowd
+        densest(1.8, 8).forEach((o, k) => {
+          const x = o.x, y = o.y;
+          FX.later(0.35 + k * 0.12, () => FX.meteor(x, y, () => {
+            SFX.play('expB');
+            FX.explosion(x, y, 2.0, 0xb46bff, true);
+            for (const z of enemiesNear(x, y, 2.2)) damage(z, base * 18, 0xb46bff, true, d, true);
+          }, 0xb46bff));
+        });
+        // 3) pillars of light walking the whole path
+        for (let k = 0; k < 16; k++) {
+          FX.later(1.2 + k * 0.07, () => {
+            const [x, y] = pathPos((k / 16) * lay.perim);
+            FX.pillar(x, y, 0.8, k % 2 ? 0xfff6e0 : 0xd9b8ff);
+            for (const z of enemiesNear(x, y, 1.6)) damage(z, base * 6, 0xfff6e0, false, d, true);
+          });
+        }
+        // 4) the final blast: a cross of orbital beams and a field-wide flash
+        FX.later(2.5, () => {
+          FX.flash(0xfff6e0, 0.9); FX.shake(0.6);
+          FX.orbital(-lay.hw - 2, 0, lay.hw + 2, 0, 0xfff6e0);
+          FX.orbital(0, -lay.hh - 2, 0, lay.hh + 2, 0xb46bff);
+          FX.freezeAll(0, 0, 0xd9b8ff);
+          SFX.play('laserBig'); SFX.play('expB');
+          for (const o of G.enemies) {
+            if (!o.alive) continue;
+            mark(o, 1.5, 8);
+            FX.sparks(o.x, o.y, 0xfff6e0, 6, 3, 0.15, 0.5);
+            damage(o, base * 30, 0xfff6e0, true, d, true);
+          }
+        });
         break;
       }
       // ── UR ──
@@ -1704,17 +1794,15 @@
         });
         break;
       }
-      case 'freeze': { // Titania Frost · 서리폭풍: a 3x3 frost storm on the crowd, ignores protection; frozen briefly, and
-        // Titania herself is spent afterwards (her next attacks come late)
+      case 'freeze': { // Titania Frost · 서리폭풍: a 3x3 frost storm on the crowd, ignores protection, more on enemies with
+        // their cold resistance down (chilled by her chain: slowed); Titania herself is spent afterwards (AP down: late attacks)
         const c = densest(BAL.cell * 1.5, 1)[0] || e;
         FX.freezeAll(c.x, c.y, d.color);
         SFX.play('ice');
         for (const o of G.enemies) {
           if (!o.alive || Math.abs(o.x - c.x) > BAL.cell * 1.5 || Math.abs(o.y - c.y) > BAL.cell * 1.5) continue;
-          stun(o, 1.5);
-          o.frozenT = o.stunT;
           FX.frost(o.x, o.y, 0.7, d.color);
-          damage(o, base * 9, d.color, true, d, true);
+          damage(o, base * 9 * (o.slowT > 0 ? 1.3 : 1), d.color, true, d, true);
         }
         u.cd = Math.max(u.cd, 2.5);
         break;
@@ -1736,9 +1824,11 @@
         FX.meteor(x, y, () => {
           SFX.play('expB');
           if (!t.alive) return;
+          // (2022 rework) a waterlogged (slowed) target can't act and is always frozen; a dry one just takes the cold
           const wet = t.slowT > 0;
-          damage(t, base * 20, d.color, true, d);
-          if (t.alive) { stun(t, wet ? 2.5 : 1); t.frozenT = t.stunT; FX.frost(t.x, t.y, 0.9, d.color); }
+          const crit = Math.random() < 0.3;
+          damage(t, base * 20 * (crit ? 1.5 : 1), d.color, crit, d);
+          if (t.alive && wet) { stun(t, 2.5); t.frozenT = t.stunT; FX.frost(t.x, t.y, 0.9, d.color); }
         }, d.color);
         break;
       }
@@ -1746,12 +1836,14 @@
         // adjacent enemy adds +14.5% (up to 4), and with two or more around, protection is torn off (boss shields)
         const t = densest(1.4, 1)[0] || e;
         const near = enemiesNear(t.x, t.y, 1.4).filter((o) => o !== t);
-        const k2 = 1 + 0.145 * Math.min(4, near.length);
+        const hot = t.stunT > 0 || t.slowT > 0; // 회로 과열 stand-in: counts as having 3+ neighbours
+        const adj = Math.max(near.length, hot ? 3 : 0);
+        const k2 = 1 + 0.145 * Math.min(4, adj);
         FX.flash(0x6fa8ff, 0.25);
         FX.thunderBolt(t.x, t.y, d.color);
         SFX.play('elec');
         near.forEach((o) => FX.lightning([{ x: t.x, y: t.y }, { x: o.x, y: o.y }], d.color, 0.2));
-        if (near.length >= 2) [t, ...near].forEach((o) => { o.shieldT = 0; });
+        if (adj >= 2) [t, ...near].forEach((o) => { o.shieldT = 0; });
         damage(t, base * 16 * k2, d.color, true, d);
         near.forEach((o) => damage(o, base * 16 * k2 * 0.25, d.color, false, d));
         break;
@@ -1764,7 +1856,10 @@
         FX.pillar(c.x, c.y, 3, d.color);
         for (let k = 0; k < 6; k++) {
           FX.later(k * 0.2, () => {
-            for (const z of enemiesNear(c.x, c.y, 2.8)) { damage(z, base * 2, d.color, false, d, true); if (k % 2 === 0) burn(z, base * 0.5, 3, d); }
+            for (const z of G.enemies) {
+              if (!z.alive || Math.abs(z.x - c.x) > BAL.cell * 1.5 || Math.abs(z.y - c.y) > BAL.cell * 1.5) continue; // all 9 tiles
+              damage(z, base * 2, d.color, false, d, true); if (k % 2 === 0) burn(z, base * 0.5, 3, d);
+            }
           });
         }
         u.cd = Math.max(u.cd, 1.5);

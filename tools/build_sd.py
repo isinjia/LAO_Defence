@@ -38,6 +38,7 @@ UNITS = {
     "blacklilith": "3P_BlackLilith_N", "brunhild": "BR_Brunhild_N", "khan": "BR_Khan_N", "daphne": "3P_Daphne_N",
     "andvari": "BR_Andvari_N", "hraesvelgr": "BR_Hraesvelgr_N", "lemonadealpha": "PECS_LemonadeAlpha_N",
     "eternity": "3P_Eternity_N", "ullr": "ST_Ullr_N", "saraqael": "DS_Saraqael_N",
+    "lrl": "PECS_LRL_N",  # the GOD rank (2026-10)
 }
 
 # enemy image key (data.js) -> monster prefab

@@ -9,8 +9,9 @@
     { key: 'M', name: 'SSS', color: '#ff3d5a', hex: 0xff3d5a, sell: 300 },
     { key: 'U', name: 'LR', color: '#c8d4ff', hex: 0xc8d4ff, sell: 900 }, // prism, with sparkles of every hue (css .lr, game.js GLINT)
     { key: 'X', name: 'UR', color: '#f4d78a', hex: 0xf4d78a, sell: 900 }, // gold, with sparkles (css .ur, game.js GLINT)
+    { key: 'G', name: 'GOD', color: '#fff6e0', hex: 0xfff6e0, sell: 5000 }, // a summon's 0.0001% miracle (BAL.godChance)
   ];
-  const LR = 5, UNIQUE = 6;
+  const LR = 5, UNIQUE = 6, GOD = 7;
 
   // type: single | splash | chain | laser | melee | slow | stun
   // fx: projectile/visual style key used by the effect system
@@ -43,23 +44,25 @@
     U('saraqael', '사라쿠엘', 3, 'DS_Saraqael_N', { type: 'stun', dmg: 170, rate: 1.0, range: 4.2, splash: 1.3, stun: 0.25, stunDur: 0.8, fx: 'wave', color: 0xb28cff, sfx: 'energy', desc: '파동 범위 공격 + 25% 기절' }),
     U('leona', '레오나', 3, 'BR_Leona_N', { type: 'laser', dmg: 60, rate: 1.3, range: 4.4, width: 0.5, fx: 'laser', color: 0xff9ad5, sfx: 'laserBig', desc: '관통 레이저' }),
     // ── SSS (SS 3기 합성) ──
-    U('ullr', '울르', 4, 'ST_Ullr_N', { type: 'laser', dmg: 0, rate: 1.4, range: 5.4, width: 0.55, fx: 'laser', color: 0x7fe8ff, sfx: 'laserBig', mana: 12, ult: 'rail', ultName: '포커스 샷', desc: '관통 저격 / 궁극기: 대상의 가로줄 전체 보호 무시 저격, 속박·둔화된 적 추가 피해' }),
+    U('ullr', '울르', 4, 'ST_Ullr_N', { type: 'laser', dmg: 0, rate: 1.4, range: 5.4, width: 0.55, fx: 'laser', color: 0x7fe8ff, sfx: 'laserBig', mana: 12, ult: 'rail', ultName: '포커스 샷', desc: '관통 저격 / 궁극기: 대상과 그 뒤쪽 범위 보호 무시 저격(뒤쪽은 50%·25%), 치명타 시 추가 피해' }),
     U('harpy', '하르페이아', 4, 'BR_Harpy_N', { type: 'splash', dmg: 0, rate: 1.1, range: 4.6, splash: 1.5, fx: 'missile', color: 0xff8a3d, sfx: 'missile', mana: 12, ult: 'salvo', ultName: 'NARAAK 미사일', desc: '미사일 범위 공격 / 궁극기: 지정 범위 미사일 + 회피 감소(받는 피해 +20%), 표식·속박된 적 추가 피해' }),
     U('eternity', '이터니티', 4, '3P_Eternity_N', { type: 'single', dmg: 0, rate: 0.4, range: 4.4, fx: 'bullet', color: 0xffd98a, sfx: 'mg', mana: 12, ult: 'guardian', ultName: '편히 잠드소서', desc: '기관총 연사 / 궁극기: 대상 주변 2x3 범위 보호 무시 사격' }),
     U('lemonadealpha', '레모네이드 알파', 4, 'PECS_LemonadeAlpha_N', { type: 'chain', dmg: 0, rate: 1.0, range: 4.8, chain: 5, fx: 'lightning', color: 0xffe14d, sfx: 'elec', mana: 12, ult: 'domain', ultName: '케스토스 히마스: 출력전개', desc: '연쇄 공격 / 궁극기: 넓은 범위 밀쳐내기 + 보호 효과 해제(보스 방어막) + 회피 감소(받는 피해 +30%)' }),
     U('sleipnir', '슬레이프니르', 4, 'BR_Sleipnir_N', { type: 'stun', dmg: 0, rate: 1.0, range: 4.6, splash: 1.4, stun: 0.25, stunDur: 0.8, fx: 'missile', color: 0xffb070, sfx: 'missile', mana: 12, ult: 'rowlaser', ultName: '한계돌파', desc: '범위 공격 + 기절 / 궁극기: 돌진해 범위 보호 무시 공격 + 표식 + 2초 속박' }),
-    U('blacklilith', '블랙 릴리스', 4, '3P_BlackLilith_N', { type: 'melee', dmg: 0, rate: 0.4, range: 2.8, splash: 1.0, crit: 0.25, fx: 'slash', color: 0xd0405a, sfx: 'slash', mana: 12, ult: 'taunt', ultName: '듀얼 버스트', desc: '근접 참격 / 궁극기: 주변 적 도발(속박) + 받는 피해 +43.5%' }),
+    U('blacklilith', '블랙 릴리스', 4, '3P_BlackLilith_N', { type: 'melee', dmg: 0, rate: 0.4, range: 2.8, splash: 1.0, crit: 0.25, fx: 'slash', color: 0xd0405a, sfx: 'slash', mana: 12, ult: 'taunt', ultName: '듀얼 버스트', desc: '근접 참격 / 궁극기: 대상과 옆의 적 1기에 사격 + 도발(속박), 도발된 적 추가 피해' }),
     // ── LR (SSS 3기 합성) ──
-    U('brunhild', '브륀힐드', 5, 'BR_Brunhild_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.0, splash: 1.8, fx: 'fireball', color: 0xff5530, sfx: 'expM', mana: 10, ult: 'wolfpack', ultName: '핏빛 효후', desc: '화염 폭격 / 궁극기: 늑대가 계단형 범위를 휩쓰는 화염 피해 + 화염 저항 감소(받는 피해 +38%, 화상), 표식 대상 추가 피해' }),
-    U('tiamat', '티아멧', 5, 'ST_Tiamat_N', { type: 'laser', dmg: 0, rate: 1.25, range: 5.4, width: 0.7, fx: 'laser', color: 0x6ef0ff, sfx: 'laserBig', mana: 10, ult: 'execute', ultName: '풀 웨폰 어썰트', desc: '대구경 관통 레이저 / 궁극기: 가장 강한 적 하나에 방어막·피해 감소 무시 초고화력, 체력이 낮을수록 강함' }),
-    U('khan', '칸', 5, 'BR_Khan_N', { type: 'single', dmg: 0, rate: 0.5, range: 5.0, crit: 0.3, fx: 'snipe', color: 0xffcf7a, sfx: 'rifle', mana: 10, ult: 'sandstorm', ultName: '데저트 스톰', desc: '고속 사격 / 궁극기: 대상 주변 보호 무시 모래폭풍 + 표식, 처치하면 공격 속도 증가' }),
-    U('labiata', '라비아타', 5, '3P_Labiata_N', { type: 'melee', dmg: 0, rate: 0.38, range: 3.0, splash: 1.1, crit: 0.3, fx: 'slash', color: 0xffd36e, sfx: 'swing', mana: 10, ult: 'sweep', ultName: '백화요란', desc: '연속 타격 / 궁극기: 대상의 가로줄 전체 보호 무시 연격 + 자신 공격력 +43.5%(플라즈마 제너레이터)' }),
+    U('brunhild', '브륀힐드', 5, 'BR_Brunhild_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.0, splash: 1.8, fx: 'fireball', color: 0xff5530, sfx: 'expM', mana: 10, ult: 'wolfpack', ultName: '핏빛 효후', desc: '화염 폭격 / 궁극기: 늑대가 계단형 범위를 휩쓰는 화염 피해 + 화염 저항 감소(받는 피해 +38%), 표식 대상 추가 피해 +47.5%' }),
+    U('tiamat', '티아멧', 5, 'ST_Tiamat_N', { type: 'laser', dmg: 0, rate: 1.25, range: 5.4, width: 0.7, fx: 'laser', color: 0x6ef0ff, sfx: 'laserBig', mana: 10, ult: 'execute', ultName: '풀 웨폰 어썰트', desc: '대구경 관통 레이저 / 궁극기: 가장 강한 적 하나에 방어막·피해 감소 무시 초고화력, 중장갑·치명타·낮은 체력일수록 추가 피해' }),
+    U('khan', '칸', 5, 'BR_Khan_N', { type: 'single', dmg: 0, rate: 0.5, range: 5.0, crit: 0.3, fx: 'snipe', color: 0xffcf7a, sfx: 'rifle', mana: 10, ult: 'sandstorm', ultName: '데저트 스톰', desc: '고속 사격 / 궁극기: 대상 하나에 방어 무시 고속 연계 공격, 치명타 시 +58%, 표식(받는 피해 증가)' }),
+    U('labiata', '라비아타', 5, '3P_Labiata_N', { type: 'melee', dmg: 0, rate: 0.38, range: 3.0, splash: 1.1, crit: 0.3, fx: 'slash', color: 0xffd36e, sfx: 'swing', mana: 10, ult: 'sweep', ultName: '백화요란', desc: '연속 타격 / 궁극기: 대상의 가로줄 보호 무시 연격, 플라즈마 제너레이터 중첩(최대 3)마다 위력·공격력 증가, 3중첩이면 강화 효과 해제' }),
     // ── UR (조합, 필드에 1기만) ──
     U('constantia', '콘스탄챠 S2', 6, '3P_ConstantiaS2_N', { type: 'laser', dmg: 0, rate: 1.0, range: 5.6, width: 0.7, fx: 'laser', color: 0xff6af0, sfx: 'laserBig', mana: 12, ult: 'snipe', ultName: '발목 잡기', desc: '관통 레이저 / 궁극기: 가장 강한 적 속박 + 이동력 감소 + 표식(받는 피해 +14.5%)' }),
-    U('titania', '티타니아', 6, '3P_Titania_N', { type: 'chain', dmg: 0, rate: 0.9, range: 5.2, chain: 6, slow: 0.3, slowDur: 1.2, fx: 'iceChain', color: 0xaef4ff, sfx: 'ice', mana: 10, ult: 'freeze', ultName: '서리폭풍', desc: '빙결 연쇄 / 궁극기: 3x3 범위 보호 무시 냉기 폭풍 + 빙결, 사용 후 자신 행동 지연' }),
+    U('titania', '티타니아', 6, '3P_Titania_N', { type: 'chain', dmg: 0, rate: 0.9, range: 5.2, chain: 6, slow: 0.3, slowDur: 1.2, fx: 'iceChain', color: 0xaef4ff, sfx: 'ice', mana: 10, ult: 'freeze', ultName: '서리폭풍', desc: '빙결 연쇄 / 궁극기: 3x3 범위 보호 무시 냉기 폭풍, 냉기 저항이 낮아진(둔화) 적 추가 피해, 사용 후 자신 행동 지연' }),
     U('mercury', '머큐리', 6, 'ST_Mercury_N', { type: 'melee', dmg: 0, rate: 0.3, range: 3.2, splash: 1.1, crit: 0.4, fx: 'slash', color: 0x7dffb0, sfx: 'slash', mana: 6, ult: 'blades', ultName: '최상의 시간', desc: '초고속 참격 / 궁극기: 아군 전원 가속 + 해로운 효과 해제(봉인 해제) + 방어 관통(피해 +19%)' }),
-    U('empress', '엠프레스', 6, 'PECS_Empress_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.2, splash: 1.9, fx: 'missile', color: 0x9fe6ff, sfx: 'expM', mana: 12, ult: 'iceage', ultName: '펭귄 서프라이즈!', desc: '대형 포격 / 궁극기: 가장 강한 적에 펭귄 폭탄 냉기 피해, 둔화(침수)된 적은 빙결' }),
+    U('empress', '엠프레스', 6, 'PECS_Empress_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.2, splash: 1.9, fx: 'missile', color: 0x9fe6ff, sfx: 'expM', mana: 12, ult: 'iceage', ultName: '펭귄 서프라이즈!', desc: '대형 포격 / 궁극기: 가장 강한 적에 펭귄 폭탄 냉기 피해(치명타 시 증가), 둔화(침수)된 적은 행동 불가 + 빙결' }),
     U('fafnir', '파프니르', 6, 'BR_Fafnir_N', { type: 'chain', dmg: 0, rate: 0.8, range: 5.2, chain: 6, fx: 'lightning', color: 0x5aa8ff, sfx: 'elec', mana: 12, ult: 'thunder', ultName: '충격과 공포', desc: '연쇄 번개 / 궁극기: 대상과 주변(25%)에 전격, 인접한 적이 많을수록 강함, 2기 이상이면 보호 효과 해제' }),
+    // ── GOD (소환 0.0001%, 확률 강화 무관) ──
+    U('lrl', 'LRL', 7, 'PECS_LRL_N', { type: 'splash', dmg: 0, rate: 0.7, range: 7.0, splash: 2.2, fx: 'holy', color: 0xb46bff, sfx: 'energy', mana: 8, ult: 'apocalypse', ultName: '칠흑의 종언', desc: '흑염 대폭발 / 궁극기: 전장을 암흑으로 덮고 흑염 운석과 빛의 기둥으로 모든 적을 섬멸(보호 무시, 전원 속박)' }),
     U('ramiel', '라미엘', 6, 'DS_Ramiel_N', { type: 'stun', dmg: 0, rate: 0.9, range: 5.0, splash: 1.5, stun: 0.12, stunDur: 0.6, fx: 'holy', color: 0xfff1b8, sfx: 'energy', mana: 12, ult: 'pillar', ultName: '억겁의 성화', desc: '성광 폭발 / 궁극기: 3x3 범위 보호 무시 성화 + 화상, 사용 후 잠시 공격 불가' }),
   ];
 
@@ -72,7 +75,7 @@
   // (area / chain / utility units trade it for coverage; spread <= 1.6x). Expected crit damage is included.
   // LR (three SSS) ~3.5x an SSS. UR is the same top rank as LR (crafted from two SSS and an SS) but only one may be
   // on the field, so it hits 1.5x as hard as an LR
-  const TIER_DPS = [12, 48, 190, 750, 2700, 9500, 14250];
+  const TIER_DPS = [12, 48, 190, 750, 2700, 9500, 14250, 60000]; // GOD: a miracle, far above everything
   const TYPE_K = { single: 1.2, melee: 1.25, splash: 0.85, chain: 0.8, laser: 0.9, slow: 0.8, stun: 0.9 };
   UNITS.forEach((u) => {
     u.dmg = Math.round(TIER_DPS[u.tier] * TYPE_K[u.type] * u.rate / (1 + 1.2 * (u.crit || 0)));
@@ -145,6 +148,7 @@
     startGems: 3,
     summonBase: 20,
     partBias: 0.35,          // chance a summon / merge / gamble of a rank gives the last missing part of a 2/3 recipe
+    godChance: 0.000001,     // 0.0001% per summon for the GOD rank, flat (summon luck upgrades don't touch it)
     stackBias: 0.7,          // chance an S..SSS from a merge / summon / gamble is one already stacking on the board
     pity: 15,                // summons below S in a row before an S is guaranteed
     // enemy HP from the measured player power (tools/lab/balance.js probe, expert play): a normal wave holds about
@@ -152,9 +156,9 @@
     // Anchors [wave, HP]; geometric in between. Re-scaled for the SSS / LR / UR ranks (2026-10): an SSS now takes
     // three of one SS, so the board's power per wave (tools/lab/power.js) fell to ~25-75% of the old crafted-SSS
     // curve; tools/lab/winrate.js keeps the expert bot's normal win rate where it was (~90%).
-    hpTable: [[1, 70], [3, 137], [5, 266], [8, 662], [11, 1649], [14, 3419], [17, 7091], [21, 17217], [25, 48384], [29, 97109], [33, 129872], [37, 146738], [41, 169789], [45, 231986], [49, 328576], [55, 500019], [59, 623073], [65, 767982], [69, 891382], [75, 1193369], [79, 1430271]],
+    hpTable: [[1, 70], [3, 137], [5, 266], [8, 662], [11, 1649], [14, 3419], [17, 6524], [21, 14634], [25, 41126], [29, 82543], [33, 110391], [37, 124727], [41, 144321], [45, 197188], [49, 279290], [55, 460017], [59, 623073], [65, 767982], [69, 891382], [75, 1193369], [79, 1430271]],
     // smooth from wave 30 (x1.62 per boss); each boss's own trick is priced by BOSSES[].hpK instead of this curve
-    bossTable: [[10, 18731], [20, 347013], [30, 1218124], [40, 2289186], [50, 4595399], [60, 11791674], [70, 24723808], [80, 43868392]],
+    bossTable: [[10, 18731], [20, 347013], [30, 1035405], [40, 1945808], [50, 4595399], [60, 11791674], [70, 24723808], [80, 43868392]],
     lerpTable(t, w) {
       if (w <= t[0][0]) return t[0][1];
       for (let i = 1; i < t.length; i++) {
@@ -218,7 +222,7 @@
   const bossFor = (w) => (w >= BAL.lastWave ? BOSSES[4] : BOSSES[(w / 10 - 1) % 4]);
 
   window.DATA = {
-    TIERS, LR, UNIQUE, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL, bossFor,
+    TIERS, LR, UNIQUE, GOD, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL, bossFor,
     unit: Object.fromEntries(UNITS.map((u) => [u.id, u])),
     byTier: (t) => UNITS.filter((u) => u.tier === t),
   };

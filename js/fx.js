@@ -397,7 +397,7 @@
   }
 
   function summonBurst(x, y, tier, color) {
-    const k = [0.6, 0.9, 1.3, 1.9, 2.6, 2.6, 2.6][tier] || 1;
+    const k = [0.6, 0.9, 1.3, 1.9, 2.6, 2.6, 2.6, 3][tier] || 1;
     ring(x, y, 0.1, 1.0 * k, color, 0.5);
     particle({ x, y, life: 0.6, size: 0.5, size1: 1.6 * k, color, tex: tex.glow, alpha: 0.9 });
     particle({ x, y: y + 2, life: 0.55, size: 0.8 * k, size1: 0.2, color, tex: tex.beam, aspect: 8, alpha: 0.9 });
@@ -422,7 +422,7 @@
   // finds where it landed): flash, a double shock ring, a pillar of light, a star, sparks and a rising sparkle column
   function mergeReveal(x, y, tier, color) {
     mergeFx(x, y, color);
-    const k = [1, 1.15, 1.35, 1.65, 2, 2.2, 2.2][tier] || 1;
+    const k = [1, 1.15, 1.35, 1.65, 2, 2.2, 2.2, 2.6][tier] || 1;
     setTimeout0(0.3, () => {
       particle({ x, y, life: 0.5, size: 0.6, size1: 3.6 * k, color: 0xffffff, tex: tex.glow, alpha: 1 });
       particle({ x, y, life: 0.7, size: 1, size1: 2.8 * k, color, tex: tex.glow, alpha: 0.85 });
