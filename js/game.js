@@ -76,8 +76,7 @@
     gold: 0, gems: 0, wave: 0, waveT: 0, spawnLeft: 0, spawnT: 0, bossT: 0, boss: null,
     cells: [], enemies: [], corpses: [], projs: [], bfx: [], sfx: [], summons: 0, upg: { low: 0, mid: 0, high: 0, luck: 0 },
     kills: 0, time: 0, selected: -1, owned: new Set(), dmgBy: {},
-    // settings screen (+ the AUTO toggle); ultimates are the player's (cooldown buttons): autoUlt is for the bots / tests
-    opt: { shake: true, dmg: true, haptic: true, fps30: false, auto: false, autoUlt: false },
+    opt: { shake: true, dmg: true, haptic: true, fps30: false, auto: false }, // settings screen (+ the AUTO toggle)
   };
 
   // ── textures ───────────────────────────────────────────
@@ -1388,15 +1387,10 @@
   function charge(u, e, k) {
     const d = u.def;
     if (!d.ult) return;
-    // players fire ultimates from the SSS cooldown buttons (or Q); a unit set to AUTO (long press on its button)
-    // fires its own, and the balance bots / tests auto-cast everything
-    const auto = G.opt.autoUlt || G.labUlt || u.autoUlt;
-    if (u.mana >= 100) { if (auto) castUlt(u, e); return; }
-    u.mana = Math.min(100, u.mana + d.mana * k * G.buff.mana);
-    if (u.mana >= 100) {
-      if (auto) castUlt(u, e);
-      else { UI.ultReady(); SFX.play('charge', 0.5); }
-    }
+    // an SSS fires its ultimate by itself as soon as the gauge is full (no buttons); a full gauge that found no
+    // target retries on the next attack
+    if (u.mana < 100) u.mana = Math.min(100, u.mana + d.mana * k * G.buff.mana);
+    if (u.mana >= 100) castUlt(u, e);
   }
 
   // one shot / hit of an attack (repeat: a later event of the same clip: no extra static effect)
@@ -1498,14 +1492,12 @@
 
   const HUGE_SKILL = new Set(['fafnir']);
   // fire a full gauge at the unit's target (or the enemy furthest along when nothing is in range)
-  // manual mode only changes when it fires (same power as automatic)
   function castUlt(u, e) {
     if (!u || u.dead || !u.def.ult || u.mana < 100 || G.phase !== 'play' || G.paused) return false;
     if (!e || !e.alive) e = target(u) || G.boss || G.enemies.reduce((b, o) => (o.alive && (!b || o.d > b.d) ? o : b), null);
     if (!e) return false;
     u.mana = 0;
     ultimate(u, e);
-    UI.ultReady();
     return true;
   }
   function readyUlts() { const out = []; G.cells.forEach((c) => c.units.forEach((u) => { if (u.def.ult && u.mana >= 100) out.push(u); })); return out; }
@@ -2137,7 +2129,7 @@
       upg: G.upg, buff: G.buff, dmgBy: G.dmgBy,
       reward: G.reward ? G.reward.map((r) => BAL.rewards.indexOf(r)) : null,
       // SSS keep their ult charge and their own AUTO
-      cells: G.cells.map((c) => c.units.map((u) => (u.mana || u.autoUlt ? [u.def.id, Math.round(u.mana), u.autoUlt ? 1 : 0] : u.def.id))),
+      cells: G.cells.map((c) => c.units.map((u) => (u.mana ? [u.def.id, Math.round(u.mana)] : u.def.id))),
       enemies: G.enemies.filter((e) => e.alive).map((e) => {
         const o = Object.fromEntries(ENEMY_KEYS.map((k) => [k, e[k]]));
         lists.some((l, li) => { const i = l.indexOf(e.info); if (i >= 0) { o.list = li; o.idx = i; } return i >= 0; });
@@ -2171,9 +2163,9 @@
     s.cells.forEach((ids, i) => {
       if (!G.cells[i]) { dropped += ids.length; return; } // a smaller board in a later build
       ids.forEach((v) => {
-        const [id, mana, auto] = Array.isArray(v) ? v : [v, 0, 0], d = DATA.unit[id];
+        const [id, mana] = Array.isArray(v) ? v : [v, 0], d = DATA.unit[id]; // older saves add an AUTO flag: ignored
         if (!d) { dropped++; return; } // a unit removed in a later build: refunded below
-        const u = makeUnit(d); u.mana = mana || 0; u.autoUlt = !!auto;
+        const u = makeUnit(d); u.mana = mana || 0;
         G.cells[i].units.push(u);
       });
       if (ids.length) layoutCell(i, true);

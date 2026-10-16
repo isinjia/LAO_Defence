@@ -11,7 +11,7 @@
     catch (e) { results.push({ name, ok: false, note: String(e && e.stack || e) }); }
   }
   function eq(a, b, what) { if (a !== b) throw new Error(`${what}: ${JSON.stringify(a)} !== ${JSON.stringify(b)}`); }
-  function fresh(diff = 1) { G().daily = 0; G().opt.diff = diff; G().opt.autoUlt = true; GAME.newGame(); document.getElementById('title').hidden = true; }
+  function fresh(diff = 1) { G().daily = 0; G().opt.diff = diff; GAME.newGame(); document.getElementById('title').hidden = true; }
 
   function run() {
     const backup = {};
@@ -74,34 +74,14 @@
       UI.togglePause(false); eq(document.body.classList.contains('paused'), false, 'footer unlock');
     });
 
-    test('SSS cooldown button: charges, fires when full, gone after a sale', () => {
-      fresh(); G().opt.autoUlt = false;
+    test('SSS fire their ultimate by themselves when the gauge fills; no skill buttons', () => {
+      fresh();
       GAME.debugAdd('constantia'); const i = GAME.findCellOf('constantia'), u = G().cells[i].units[0];
-      UI.update(true); const btn = () => document.querySelector('#ultBar .sk');
-      eq(!!btn() && !document.querySelector('#ultBar').hidden, true, 'button in the footer');
-      u.mana = 40; UI.update(true); eq(btn().classList.contains('ready'), false, 'charging');
-      btn().click(); eq(Math.round(u.mana), 40, 'a tap while charging does nothing');
-      u.mana = 100; UI.update(true); eq(btn().classList.contains('ready'), true, 'lit when full');
-      GAME.tutSpawn(5); btn().click(); eq(u.mana < 100, true, 'a tap when full fires it');
-      GAME.sell(i); UI.update(true); eq(document.querySelectorAll('#ultBar .sk').length, 0, 'button after sell'); eq(GAME.castUlt(u), false, 'cast from a sold unit');
-      G().opt.autoUlt = true;
-    });
-
-    test('one SSS on AUTO (long press) fires by itself; others wait; kept in the save', () => {
-      fresh(); G().opt.autoUlt = false;
-      GAME.debugAdd('constantia'); GAME.debugAdd('titania');
-      const a = G().cells[GAME.findCellOf('constantia')].units[0], b = G().cells[GAME.findCellOf('titania')].units[0];
-      UI.update(true); UI.toggleUltAuto(a); UI.update(true);
-      eq(a.autoUlt, true, 'toggled on'); eq(document.querySelectorAll('#ultBar .sk.auto').length, 1, 'one AUTO badge');
-      a.mana = 99; b.mana = 99;
-      for (let k = 0; k < 6; k++) GAME.tutSpawn(30);
+      UI.update(true); eq(document.getElementById('ultBar'), null, 'no skill button bar');
+      u.mana = 99; for (let k = 0; k < 6; k++) GAME.tutSpawn(30);
       GAME.simulate(4, false);
-      eq(a.mana < 99, true, 'the AUTO unit fired on its own'); eq(b.mana >= 99, true, 'the manual unit never fired by itself');
-      GAME.saveRun(); fresh(); GAME.resumeRun();
-      const a2 = G().cells[GAME.findCellOf('constantia')].units[0], b2 = G().cells[GAME.findCellOf('titania')].units[0];
-      eq(a2.autoUlt, true, 'AUTO kept by the save'); eq(!!b2.autoUlt, false, 'manual kept by the save');
-      UI.toggleUltAuto(a2); eq(a2.autoUlt, false, 'toggled off');
-      G().opt.autoUlt = true; GAME.clearRun();
+      eq(u.mana < 99, true, 'fired on its own');
+      GAME.sell(i); eq(GAME.castUlt(u), false, 'cast from a sold unit');
     });
 
     test('save -> resume restores the run exactly', () => {

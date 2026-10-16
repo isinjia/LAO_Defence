@@ -34,7 +34,7 @@
     ['waveNum', 'waveName', 'waveTime', 'waveBar', 'enemyBar', 'enemyNum', 'gold', 'gems', 'btnSpeed', 'speedTx', 'btnAuto', 'btnPause',
       'btnSummon', 'summonCost', 'btnGamble', 'btnUpgrade', 'btnMythic', 'odds', 'drawer', 'modal', 'popup', 'toasts',
       'banner', 'numLayer', 'announce', 'bossBar', 'bossName', 'bossHp', 'bossTime', 'bossImg', 'title', 'result', 'enemyBox',
-      'pauseOv', 'btnSettings', 'btnNext', 'diffSel', 'bestRec', 'ultBar', 'reward', 'aidMini'].forEach((k) => { el[k] = document.getElementById(k); });
+      'pauseOv', 'btnSettings', 'btnNext', 'diffSel', 'bestRec', 'reward', 'aidMini'].forEach((k) => { el[k] = document.getElementById(k); });
     loadOpts();
     // a language switch redraws whatever text is on screen (static page text is handled by I18N itself)
     window.addEventListener('langchange', () => {
@@ -101,7 +101,6 @@
       else if (e.code === 'Digit3') GAME.G.speed = 3;
       else if (e.code === 'KeyA') toggleAuto();
       else if (e.code === 'KeyN') GAME.callNext();
-      else if (e.code === 'KeyQ') GAME.readyUlts().forEach((u) => GAME.castUlt(u));
       else if (e.code === 'KeyG') toggleDrawer('gamble');
       else if (e.code === 'KeyU') toggleDrawer('upgrade');
       else if (e.code === 'KeyC') toggleDrawer('mythic');
@@ -194,7 +193,6 @@
       return;
     }
     reward(null);
-    if (el.ultBar) { el.ultBar.innerHTML = ''; el.ultBar._k = ''; el.ultBar._list = []; }
     el.title.hidden = true;
     el.result.hidden = true;
     el.pauseOv.hidden = true;
@@ -204,7 +202,7 @@
     if (!GAME.G.daily) GAME.clearRun(); // a fresh start replaces the cut-short run (daily runs are never saved: leave it)
     renderTitle();
     // every new operation opens with the guided tutorial (skippable), then the real battle starts on a clean field
-    const begin = () => { reward(null); if (el.ultBar) { el.ultBar.innerHTML = ''; el.ultBar._k = ''; el.ultBar._list = []; } closeDrawer(); closePopup(); GAME.newGame(); };
+    const begin = () => { reward(null); closeDrawer(); closePopup(); GAME.newGame(); };
     if (window.TUT && !/[?&](lab|smoke)=/.test(location.search)) TUT.run(begin); else begin();
   }
 
@@ -406,7 +404,7 @@
         ${stat('i_atk', T('공격력'), fmt(d.dmg * mult))}${stat('i_ap', T('공격 속도'), (1 / d.rate).toFixed(1) + '/s')}
         ${stat('i_acc', T('사거리'), +(d.range + G.buff.range).toFixed(1))}${stat('i_crit', T('보유'), cell.units.length + '/' + max)}
       </div>
-      ${d.ult ? `<div class="mana"><span>${T('궁극기 · {0}', d.ultName)}</span><div class="gauge c"><i style="transform:scaleX(${u.mana / 100})"></i></div>${u.mana >= 100 ? `<button class="btn g ult">${T('발동')}</button>` : ''}</div>` : ''}
+      ${d.ult ? `<div class="mana"><span>${T('궁극기 · {0}', d.ultName)}</span><div class="gauge c"><i style="transform:scaleX(${u.mana / 100})"></i></div></div>` : ''}
       ${uses.length ? `<div class="uses">${T('SSS 재료')} ${uses.map((m) => hex(m)).join('')}</div>` : ''}
       ${d.range + G.buff.range < gap + 0.2 ? `<div class="warn">${T('이 칸에서는 적에게 닿지 않습니다. 바깥쪽 칸으로 옮기세요')}</div>` : ''}
       <div class="btns">
@@ -418,8 +416,6 @@
     el.popup.querySelector('.sell').onclick = () => { GAME.sell(i); renderPopup(); };
     const mb = el.popup.querySelector('.merge');
     if (mb) mb.onclick = () => { GAME.merge(i); renderPopup(); };
-    const ub = el.popup.querySelector('.ult');
-    if (ub) ub.onclick = () => { GAME.castUlt(u); renderPopup(); };
     const rb = el.popup.querySelector('.reroll');
     if (rb) rb.onclick = () => GAME.reroll(i);
     popSize = [el.popup.offsetWidth, el.popup.offsetHeight]; // one layout read per render, not per frame
@@ -451,7 +447,6 @@
 
   function onCellsChanged() {
     cache.mythicReady = null;
-    ultReady(); // a sold / merged / moved SSS must not leave its ULT button behind
     if (!el.popup.hidden) renderPopup();
     if (drawer === 'mythic') renderDrawer();
   }
@@ -492,7 +487,6 @@
     set('afford', el.btnSummon, G.gold >= cost ? 'summon' : 'summon poor', 'className');
     set('speed', el.speedTx, 'x' + G.speed);
     set('speedc', el.btnSpeed, G.speed > 1 ? 'act on' : 'act', 'className');
-    skills();
     // boss reward: with AUTO on, how long until it picks for the player
     if (G.reward && !el.reward.hidden) {
       const rt = el.reward.querySelector('.rt');
@@ -697,66 +691,6 @@
     return T('모든 목표 달성! 최고 기록을 갱신해 보세요');
   }
 
-  // SSS ultimates as cooldown buttons in the footer (not floating over the field): one per SSS on the board. The
-  // dark veil over the portrait shrinks clockwise as the gauge charges; full, the button lights up (ULT) and a tap fires it
-  function skills(force) {
-    const G = GAME.G, bar = el.ultBar;
-    if (!bar) return;
-    const list = [];
-    if (G.phase === 'play') G.cells.forEach((c) => c.units.forEach((u) => { if (u.def.ult && !u.dead) list.push(u); }));
-    const key = list.map((u) => u.def.id + '@' + u.cell).join();
-    if (force || key !== bar._k) {
-      bar._k = key; bar._list = list;
-      bar.hidden = !list.length;
-      bar.innerHTML = list.map((u, i) => `<button class="sk" data-i="${i}" title="${T('궁극기 · {0}', u.def.ultName)} · ${T('길게 누르기: 이 유닛만 AUTO')}">${hex(u.def)}<span class="cd"></span><b>ULT</b><i class="sa">AUTO</i></button>`).join('');
-      bar.oncontextmenu = (e) => e.preventDefault(); // a long press must not open the browser's menu
-      bar.querySelectorAll('.sk').forEach((b) => {
-        const unit = () => bar._list[+b.dataset.i];
-        // long press (0.5 s) or right click: this SSS alone fires its ultimate by itself; again to stop
-        let hold = 0;
-        const cancel = () => { clearTimeout(hold); hold = 0; };
-        b.onpointerdown = (e) => {
-          if (e.button > 0) return;
-          const u = unit();
-          cancel();
-          hold = setTimeout(() => { hold = 0; bar._noClick = performance.now() + 700; toggleUltAuto(u); }, 500);
-        };
-        b.onpointerup = b.onpointerleave = b.onpointercancel = cancel;
-        b.oncontextmenu = (e) => { e.preventDefault(); cancel(); if (performance.now() > (bar._noClick || 0)) { bar._noClick = performance.now() + 300; toggleUltAuto(unit()); } };
-        b.onclick = () => {
-          if (performance.now() < (bar._noClick || 0)) return; // the release of a long press is not a tap
-          const u = unit();
-          if (!u) return;
-          if (u.mana >= 100) GAME.castUlt(u);
-          else { SFX.play('fail', 0.5); b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope'); } // still charging
-        };
-      });
-      if (list.length) tip('ultauto', T('<b>궁극기 버튼</b>: 게이지가 차면 눌러서 발동합니다. <b>길게 누르면</b> 그 유닛만 AUTO로 자동 발동하고, 다시 길게 누르면 해제됩니다.'));
-    }
-    bar._list.forEach((u, i) => {
-      const b = bar.children[i];
-      if (!b) return;
-      // state changes in place (a rebuild under a finger would turn a tap into a long press)
-      if (b._a !== !!u.autoUlt) { b._a = !!u.autoUlt; b.classList.toggle('auto', b._a); }
-      const p = Math.min(100, Math.floor(u.mana / 2) * 2); // 2% steps: the style is only written when it moves
-      if (b._p === p) return;
-      b._p = p;
-      b.style.setProperty('--p', p / 100);
-      b.classList.toggle('ready', p >= 100);
-      b.setAttribute('aria-label', `${u.def.name} · ${T('궁극기 · {0}', u.def.ultName)} ${p}%`);
-    });
-  }
-  // a charge completed, a cast, or the board changed (a new set of SSS rebuilds; anything else updates in place)
-  function ultReady() { skills(); }
-  // one SSS on AUTO: it fires whenever its gauge fills (kept when moved, and in the run save)
-  function toggleUltAuto(u) {
-    if (!u || u.dead || GAME.G.phase !== 'play') return;
-    u.autoUlt = !u.autoUlt;
-    SFX.play(u.autoUlt ? 'charge' : 'click', 0.6);
-    try { if (navigator.vibrate && GAME.G.opt.haptic) navigator.vibrate(u.autoUlt ? [12, 40, 12] : 10); } catch (e) { /* ignore */ }
-    toast(u.autoUlt ? T('{0} 궁극기 AUTO: 게이지가 차면 자동 발동', u.def.name) : T('{0} 궁극기 AUTO 해제', u.def.name), u.autoUlt ? 'gem' : '');
-    skills();
-  }
   // a boss fell in time: pick one boon (the game keeps running)
   function reward(list) {
     if (!el.reward) return;
@@ -851,5 +785,5 @@
     return (L && !L.hidden) || (el.title && !el.title.hidden);
   }
 
-  window.UI = { tip, ask, closeDrawer, toggleUltAuto, covered, loading, loaded, init, update, toast, banner, announce, dmgNumber, ultCallout, result, ultReady, reward, onSelect, onCellsChanged, closePopup, togglePause };
+  window.UI = { tip, ask, closeDrawer, covered, loading, loaded, init, update, toast, banner, announce, dmgNumber, ultCallout, result, reward, onSelect, onCellsChanged, closePopup, togglePause };
 })();
