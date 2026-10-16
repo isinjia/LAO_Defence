@@ -112,6 +112,14 @@
       const n = nUnits(); GAME.summon();
       eq(nUnits(), n + 1, 'summoned into the open stack'); eq(G().cells[GAME.findCellOf(ids[0])].units.length, 3, 'it joined the two');
       GAME.summon(); eq(nUnits(), n + 1, 'no room left: refused');
+      // only an S pair open: a B / A roll is summoned and sold at once (it costs), never a free retry
+      fresh(); G().gold = 1e6;
+      const s = DATA.UNITS.filter((d) => d.tier === 2)[0].id;
+      ids.filter((id) => id !== s).slice(0, 17).forEach((id) => { for (let k = 0; k < 3; k++) GAME.debugAdd(id); });
+      GAME.debugAdd(s); GAME.debugAdd(s);
+      const g0 = G().gold, c0 = GAME.summonCost(); G().pity = 0; G().upg.luck = 0;
+      for (let k = 0; k < 20 && G().cells[GAME.findCellOf(s)].units.length < 3; k++) GAME.summon();
+      eq(G().gold < g0, true, 'every try cost parts'); eq(GAME.summonCost() > c0, true, 'the summon count went up');
     });
 
     test('pause blocks summon / upgrade / ult', () => {

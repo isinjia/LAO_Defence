@@ -530,7 +530,8 @@
     return out;
   }
   // a full board's summon: a stackable unit of the rolled rank, else of the nearest rank below it (never above: an
-  // open SS stack must not turn every summon into an SS); null when the roll fits nowhere
+  // open SS stack must not turn every summon into an SS); null when the roll fits nowhere (the summon still happens
+  // and the unit is sold on the spot: a free retry would let a player wait out low rolls for an open S / SS stack)
   function pickStackable(t) {
     const st = stackable();
     for (let k = t; k >= 0; k--) { const a = st.filter((d) => d.tier === k); if (a.length) return pickL(a, 'summon'); }
@@ -546,13 +547,19 @@
     // one of those (so it always has a place); only a board with no such stack refuses
     const full = !anyEmpty();
     if (full && !stackable().length) { UI.toast(T('칸이 모두 찼습니다. 합성하거나 판매해 자리를 만드세요'), 'warn'); SFX.play('fail'); return; }
-    const pity = G.pity;
     const rolled = rollTier();
     const def = full ? pickStackable(rolled) : pickRank(rolled, 'summon');
-    if (!def) { G.pity = pity; UI.toast(T('나온 랭크가 들어갈 칸이 없어 소환을 취소했습니다 (부품은 그대로)'), 'warn'); SFX.play('fail'); return; }
-    const tier = def.tier;
     G.gold -= cost;
     G.summons++;
+    if (!def) {
+      const lost = pickRank(rolled, 'summon');
+      G.gold += TIERS[lost.tier].sell;
+      UI.toast(T('{0}({1}급)이 들어갈 칸이 없어 바로 판매했습니다 +{2}', lost.name, TIERS[lost.tier].name, TIERS[lost.tier].sell), 'warn');
+      SFX.play('coin');
+      UI.update(true);
+      return;
+    }
+    const tier = def.tier;
     addUnit(def);
     SFX.play(['genB', 'genA', 'genS', 'genSS'][tier]);
     if (!G.opt.auto) buzz(tier >= 2 ? [10, 40, 18] : 6); // AUTO summons on its own: no buzz storm
@@ -2450,8 +2457,8 @@
         else if (!empty || bv > summonValue() * 2) return; // save up for it
       }
     }
-    // (a paused run, or a full board's roll that fits nowhere, spends nothing: stop there)
-    while (G.gold >= summonCost() && canSummon() && !G.paused && G.phase === 'play') { const g = G.gold; summon(); if (G.gold === g) break; }
+    // free cells only: a full board's summon may be sold at a loss, which is the player's call (a paused run summons nothing)
+    while (G.gold >= summonCost() && anyEmpty() && !G.paused && G.phase === 'play') summon();
     if (!anyEmpty() && G.gold >= summonCost()) {
       // sell the weakest single to make room
       const i = G.cells.findIndex((c) => c.units.length && c.units[0].def.tier === 0 && c.units.length < 3);
