@@ -548,4 +548,6 @@ T = [
     ("PECS · 침수 연계", "PECS・浸水連携", "PECS · Waterlog combo", "PECS·浸水连携", "PECS·浸水連攜", "PECS · Combo de empapado", "PECS · Combo de encharcar", "PECS · Связка с промоканием"),
     ("북유럽 신화 · 안드바리의 황금", "北欧神話・アンドヴァリの黄金", "Norse myth · Andvari's gold", "北欧神话·安德瓦利的黄金", "北歐神話·安德瓦利的黃金", "Mitología nórdica · El oro de Andvari", "Mitologia nórdica · O ouro de Andvari", "Скандинавские мифы · Золото Андвари"),
     ("DS 계열 · 코헤이 교단", "DS系列・コヘイ教団", "DS line · Kohei Order", "DS系列·科海教团", "DS系列·科海教團", "Línea DS · Orden Kohei", "Linha DS · Ordem Kohei", "Линия DS · Орден Кохэй"),
+    ("삼안 산업(3P)", "サンアン産業(3P)", "Samsan Tech (3P)", "三眼产业(3P)", "三眼產業(3P)", "Samsan (3P)", "Samsan (3P)", "Самсан (3P)"),
+    ("스트라이커즈 · 저격 지원", "ストライカーズ・狙撃支援", "Strikers · Sniper support", "突击者·狙击支援", "突擊者·狙擊支援", "Strikers · Apoyo de francotirador", "Strikers · Apoio de atirador", "Страйкеры · Снайперская поддержка"),
 ]

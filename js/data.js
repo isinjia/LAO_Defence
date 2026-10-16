@@ -82,14 +82,15 @@
     u.dps = TIER_DPS[u.tier] * TYPE_K[u.type]; // single-target damage per second at upgrade level 0
   });
 
-  // UR recipes: the members a UR belongs with (squad, maker, lore), whatever their rank; tag = why they belong together.
+  // UR recipes: the members a UR belongs with (squad, maker, lore), any rank below the top (no LR: it is the highest
+  // rank, nothing should cost one); tag = why they belong together.
   // Only one UR may be on the board at a time.
   const RECIPES = [
-    { result: 'constantia', parts: ['labiata', 'daphne', 'eternity'], tag: '삼안 산업(3P) · 배틀 메이드' },
+    { result: 'constantia', parts: ['daphne', 'eternity', 'blacklilith'], tag: '삼안 산업(3P)' },
     { result: 'titania', parts: ['blacklilith', 'undine', 'nymph'], tag: '삼안 산업(3P) · 냉기' },
-    { result: 'mercury', parts: ['tiamat', 'ullr'], tag: '스트라이커즈' },
+    { result: 'mercury', parts: ['ullr', 'raven'], tag: '스트라이커즈 · 저격 지원' },
     { result: 'empress', parts: ['lemonadealpha', 'undine'], tag: 'PECS · 침수 연계' },
-    { result: 'fafnir', parts: ['andvari', 'brunhild', 'hela'], tag: '북유럽 신화 · 안드바리의 황금' },
+    { result: 'fafnir', parts: ['andvari', 'hela', 'sleipnir'], tag: '북유럽 신화 · 안드바리의 황금' },
     { result: 'ramiel', parts: ['azazel', 'saraqael', 'zero'], tag: 'DS 계열 · 코헤이 교단' },
   ];
 

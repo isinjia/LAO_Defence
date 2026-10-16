@@ -81,6 +81,7 @@
 
     test('UR: crafted from its parts, only one on the board at a time', () => {
       fresh();
+      eq(DATA.RECIPES.every((x) => x.parts.every((id) => DATA.unit[id].tier < DATA.LR)), true, 'no recipe costs an LR (the top rank) or above');
       const r = DATA.RECIPES[0];
       r.parts.forEach((id) => GAME.debugAdd(id));
       eq(GAME.canCraft(r), true, 'craftable'); GAME.craft(0);
