@@ -120,7 +120,7 @@
     li.style.setProperty('--ar', lg.w / lg.h);
     // the top ranks: LR (three SSS) and UR (crafted, one on the field)
     const tiers = [DATA.LR, DATA.UNIQUE], cls = ['lr', 'ur']; // (GOD is kept a surprise: not shown here)
-    const groups = tiers.map((t) => DATA.byTier(t).map((d) => d.id));
+    const groups = tiers.map((t) => DATA.UNITS.filter((d) => d.tier === t).map((d) => d.id)); // crafted LRL included
     const featured = groups.flat();
     const tc = $('#titleChars');
     let n = 0;
