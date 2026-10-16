@@ -2,7 +2,7 @@
 // new deploy gets a new cache. Everything is immutable within a build (cache-first, no background refresh), so a
 // cache never mixes files of two builds. A new worker waits until the page activates it from the title screen;
 // the old worker and its cache keep serving the running session, and the old cache is dropped on activation.
-const BUILD = '4fc556bd87';
+const BUILD = 'bd0adc8e90';
 const CACHE = 'orca-rd-' + BUILD;
 // the code and UI of this build (stamped with the file list): fetched past the HTTP cache at install
 // third-party libraries the page loads from a CDN (pinned versions), so the first visit is enough to boot offline
