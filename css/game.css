@@ -353,8 +353,15 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 .summon kbd { position: absolute; left: 34px; top: 6px; font-family: var(--en); font-size: 10px; color: rgba(255, 255, 255, 0.45); letter-spacing: 1px; }
 .summon:hover { filter: brightness(1.1); }
 .summon:active { transform: scale(0.97); }
-.summon.poor { filter: grayscale(0.85) brightness(0.75); }
+/* can't summon (parts short, no room): the whole button goes grey and flat; ready: a light sweeps across it.
+   .poor beats :hover too (phones keep :hover after a tap, which used to clear the grey and leave only the red cost) */
+.summon.poor, .summon.poor:hover { filter: grayscale(1) brightness(0.55); }
 .summon.poor .st small { color: #ff8a7a; }
+.summon.poor .hexb { opacity: 0.5; }
+.summon.ready::after { content: ''; position: absolute; inset: 0; pointer-events: none; clip-path: inherit;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 240, 200, 0.4) 50%, transparent 65%) 0 0 / 300% 100% no-repeat; animation: sumshine 2.4s ease-in-out infinite; }
+@keyframes sumshine { 0% { background-position: 120% 0; } 55%, 100% { background-position: -20% 0; } }
+@media (prefers-reduced-motion: reduce) { .summon.ready::after { animation: none; } }
 
 /* summon odds: rank badges */
 #odds { position: absolute; left: 14px; bottom: 12px; display: grid; grid-template-columns: auto auto; gap: 3px 10px; padding: 8px 14px 9px 10px; background: rgba(0, 0, 0, 0.55);

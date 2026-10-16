@@ -491,7 +491,9 @@
     set('gems', el.gems, fmt(G.gems));
     const cost = GAME.summonCost();
     set('cost', el.summonCost, fmt(cost));
-    set('afford', el.btnSummon, G.gold >= cost ? 'summon' : 'summon poor', 'className');
+    // lit only when a summon would go through now (parts, room, not paused / between runs)
+    const can = G.gold >= cost && GAME.canSummon() && G.phase === 'play' && !G.paused;
+    set('afford', el.btnSummon, can ? 'summon ready' : 'summon poor', 'className');
     set('speed', el.speedTx, 'x' + G.speed);
     set('speedc', el.btnSpeed, G.speed > 1 ? 'act on' : 'act', 'className');
     // boss reward: with AUTO on, how long until it picks for the player
