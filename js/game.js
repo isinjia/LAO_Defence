@@ -2613,7 +2613,7 @@
   }
 
   window.GAME = {
-    G, lay, boot, newGame, summon, gamble, merge, sell, craft, canCraft, upgrade, summonCost,
+    G, lay, boot, newGame, summon, gamble, merge, sell, craft, canCraft, hasUnique, upgrade, summonCost,
     worldToScreen, simulate, autoplay, endGame, findCellOf, enemyLoad, craftRoom, enemyWeight, target, rewardScore, bossMult,
     ULT_K, toggleKeep, canSummon, bestUpgrade, upgradeValue, summonValue, wantedParts, setFocus, takeReward, autoReward, castUlt, readyUlts, ecoMult, critBonus,
     callNext, canCallNext, reroll, swapCells, isOuter, dmgMult, saveRun, savedRun, resumeRun, clearRun, REWARD_WAIT,

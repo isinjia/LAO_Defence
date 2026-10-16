@@ -17,7 +17,7 @@ own 고행 burn) = 30 s on the field.
 
 | Unit · skill | ✓ | ✗ | — | — items (nothing to act on) |
 |---|---|---|---|---|
-| 울르 · 전방위 사격 | 3 | 0 | 1 | evasion buffs removed |
+| 우르 · 전방위 사격 | 3 | 0 | 1 | evasion buffs removed |
 | 하르페이아 · NARAAK 미사일 | 3 | 0 | 0 | |
 | 이터니티 · 편히 잠드소서 | 3 | 0 | 0 | |
 | 레모네이드 알파 · 케스토스 히마스: 출력전개 | 5 | 0 | 1 | range -1 |

@@ -44,7 +44,7 @@
     U('saraqael', '사라쿠엘', 3, 'DS_Saraqael_N', { type: 'stun', dmg: 170, rate: 1.0, range: 4.2, splash: 1.3, stun: 0.25, stunDur: 0.8, fx: 'wave', color: 0xb28cff, sfx: 'energy', desc: '파동 범위 공격 + 25% 기절' }),
     U('leona', '레오나', 3, 'BR_Leona_N', { type: 'laser', dmg: 60, rate: 1.3, range: 4.4, width: 0.5, fx: 'laser', color: 0xff9ad5, sfx: 'laserBig', desc: '관통 레이저' }),
     // ── SSS (SS 3기 합성) ──
-    U('ullr', '울르', 4, 'ST_Ullr_N', { type: 'laser', dmg: 0, rate: 1.4, range: 5.4, width: 0.55, fx: 'laser', color: 0x7fe8ff, sfx: 'laserBig', mana: 12, ult: 'rail', ultName: '전방위 사격', desc: '관통 저격 / 궁극기: 지정 범위 보호 무시 사격(목표 주변 75%), 치명타 시 +38%' }),
+    U('ullr', '우르', 4, 'ST_Ullr_N', { type: 'laser', dmg: 0, rate: 1.4, range: 5.4, width: 0.55, fx: 'laser', color: 0x7fe8ff, sfx: 'laserBig', mana: 12, ult: 'rail', ultName: '전방위 사격', desc: '관통 저격 / 궁극기: 지정 범위 보호 무시 사격(목표 주변 75%), 치명타 시 +38%' }),
     U('harpy', '하르페이아', 4, 'BR_Harpy_N', { type: 'splash', dmg: 0, rate: 1.1, range: 4.6, splash: 1.5, fx: 'missile', color: 0xff8a3d, sfx: 'missile', mana: 12, ult: 'salvo', ultName: 'NARAAK 미사일', desc: '미사일 범위 공격 / 궁극기: 지정 범위 미사일, 표식·이동 불가 대상 +47.5%, 회피 -34%(받는 피해 증가)' }),
     U('eternity', '이터니티', 4, '3P_Eternity_N', { type: 'single', dmg: 0, rate: 0.4, range: 4.4, fx: 'bullet', color: 0xffd98a, sfx: 'mg', mana: 12, ult: 'guardian', ultName: '편히 잠드소서', desc: '기관총 연사 / 궁극기: 지정 범위 보호 무시 사격, 분노(필드 75% 이상 위기) 시 +80%' }),
     U('lemonadealpha', '레모네이드 알파', 4, 'PECS_LemonadeAlpha_N', { type: 'chain', dmg: 0, rate: 1.0, range: 4.8, chain: 5, fx: 'lightning', color: 0xffe14d, sfx: 'elec', mana: 12, ult: 'domain', ultName: '케스토스 히마스: 출력전개', desc: '연쇄 공격 / 궁극기: 지정 범위 보호 무시 피해 + 고정 피해, 1칸 밀쳐내기, 모든 보호 효과 해제, 회피 -61%' }),
@@ -58,7 +58,7 @@
     // ── UR (조합, 필드에 1기만) ──
     U('constantia', '콘스탄챠 S2', 6, '3P_ConstantiaS2_N', { type: 'laser', dmg: 0, rate: 1.0, range: 5.6, width: 0.7, fx: 'laser', color: 0xff6af0, sfx: 'laserBig', mana: 12, ult: 'snipe', ultName: '발목 잡기', desc: '관통 레이저 / 궁극기: 가장 강한 적 하나에 표식 + 이동 불가 + 행동력 -34%' }),
     U('titania', '티타니아', 6, '3P_Titania_N', { type: 'chain', dmg: 0, rate: 0.9, range: 5.2, chain: 6, slow: 0.3, slowDur: 1.2, fx: 'iceChain', color: 0xaef4ff, sfx: 'ice', mana: 10, ult: 'freeze', ultName: '서리 폭풍', desc: '빙결 연쇄 / 궁극기: 지정 범위 보호 무시 냉기 피해, 행동력 감소(천년서리), 치명타 시 +38%, 사용 후 자신 행동력 -50%' }),
-    U('mercury', '머큐리', 6, 'ST_Mercury_N', { type: 'melee', dmg: 0, rate: 0.3, range: 3.2, splash: 1.1, crit: 0.4, fx: 'slash', color: 0x7dffb0, sfx: 'slash', mana: 6, ult: 'blades', ultName: '최상의 시간', desc: '초고속 참격 / 궁극기: 아군 전원 AP 증가(가속) + 해로운 효과 해제 + 방어 관통 +19%, 스트라이커즈(티아멧·울르)가 있으면 1.5배' }),
+    U('mercury', '머큐리', 6, 'ST_Mercury_N', { type: 'melee', dmg: 0, rate: 0.3, range: 3.2, splash: 1.1, crit: 0.4, fx: 'slash', color: 0x7dffb0, sfx: 'slash', mana: 6, ult: 'blades', ultName: '최상의 시간', desc: '초고속 참격 / 궁극기: 아군 전원 AP 증가(가속) + 해로운 효과 해제 + 방어 관통 +19%, 스트라이커즈(티아멧·우르)가 있으면 1.5배' }),
     U('empress', '엠프레스', 6, 'PECS_Empress_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.2, splash: 1.9, fx: 'missile', color: 0x9fe6ff, sfx: 'expM', mana: 12, ult: 'iceage', ultName: '펭귄 서프라이즈!', desc: '대형 포격 / 궁극기: 가장 강한 적에 냉기 피해(치명타 시 +43.5%), 침수(둔화)면 행동 불가 + 빙결(받는 피해 +38.5%)' }),
     U('fafnir', '파프니르', 6, 'BR_Fafnir_N', { type: 'chain', dmg: 0, rate: 0.8, range: 5.2, chain: 6, fx: 'lightning', color: 0x5aa8ff, sfx: 'elec', mana: 12, ult: 'thunder', ultName: '뇌정벽력', desc: '연쇄 번개 / 궁극기: 우레와 함께 강하해 대상과 주변(25%)에 전격, 인접한 적마다 +14.5%, 2기 이상이면 강화 효과 해제' }),
     // ── GOD (소환 0.0001%, 확률 강화 무관) ──
