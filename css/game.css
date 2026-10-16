@@ -271,6 +271,19 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 #popup { position: absolute; left: 0; top: 0; width: 300px; padding: 12px 14px 14px; z-index: 6; background: rgba(8, 9, 11, 0.92);
   border: 2px solid transparent; border-image: var(--s-sqframe) 6 14 fill / 6px 14px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6); }
 #popup[hidden] { display: none; }
+#popup .synergy { margin-top: 9px; padding: 9px; border: 1px solid #687080; background: rgba(104,112,128,.12); font-size: 12px; }
+#popup .synergy.active { border-color: #7dffb0; background: rgba(65,180,110,.12); }
+#popup .synergy > b { display: flex; justify-content: space-between; gap: 8px; color: #fff; }
+#popup .synergy > b span { color: #bdc4ce; }
+#popup .synergy.active > b span { color: #7dffb0; }
+#popup .synergy-members, #popup .synergy-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+#popup .synergy-members { margin-top: 8px; }
+#popup .synergy-member { display: flex; align-items: center; gap: 5px; color: #c3c9d3; }
+#popup .synergy-member .hx { width: 30px; height: 34px; flex: none; }
+#popup .synergy-member small { display: block; color: #b2b9c4; font-size: 10px; }
+#popup .synergy-member.present small { color: #7dffb0; }
+#popup .synergy em { font-style: normal; color: #cbd0d8; }
+#popup .synergy p { margin: 7px 0 0; color: #e0e5ec; line-height: 1.5; }
 #popup { max-height: calc(100% - 16px); overflow-y: auto; }
 #popup .combat-info { margin-top: 9px; padding: 8px 10px; background: rgba(255, 255, 255, 0.045); border-left: 2px solid var(--c); }
 #popup .combat-info > b { display: block; font-size: 13px; color: #fff; }

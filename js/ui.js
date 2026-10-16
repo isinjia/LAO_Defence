@@ -412,6 +412,21 @@
     return notes.join(' · ');
   }
 
+  function synergyInfo(d) {
+    const has = (id) => GAME.G.cells.some((c) => c.units.some((u) => u.def.id === id));
+    const rules = [
+      { owner: 'mercury', groups: [['tiamat', 'ullr']], effect: '전군 가속 7.5초 · 공격력·방어 관통 +28.5%(5초)' },
+      { owner: 'blindprincess', groups: [['cyclopsprincess'], ['lrl', 'lrlrose']], effect: '블라인드 프린세스 궁극기 피해 +47.5%' },
+      { owner: 'lrl', groups: [['cyclopsprincess']], effect: 'LRL 궁극기에 영원한 진조의 섬광 협동 공격' },
+      { owner: 'lrlrose', groups: [['cyclopsprincess']], effect: '철의 파멸 LRL 궁극기에 영원한 진조의 섬광 협동 공격' },
+    ];
+    return rules.filter((r) => r.owner === d.id || r.groups.some((g) => g.includes(d.id))).map((r) => {
+      const groups = [[r.owner], ...r.groups];
+      const active = groups.every((g) => g.some(has));
+      return `<div class="synergy ${active ? 'active' : ''}"><b>편성 시너지 <span>${active ? '활성' : '미활성'}</span></b><div class="synergy-members">${groups.map((g) => `<div class="synergy-group">${g.map((id) => `<span class="synergy-member ${has(id) ? 'present' : ''}">${hex(DATA.unit[id])}<span>${DATA.unit[id].name}<small>${has(id) ? '배치됨' : '미배치'}</small></span></span>`).join('<em>또는</em>')}</div>`).join('<em>+</em>')}</div><p>${r.effect}</p></div>`;
+    }).join('');
+  }
+
   function renderPopup() {
     const G = GAME.G;
     const i = G.selected;
@@ -439,6 +454,7 @@
         ${stat('i_atk', T('공격력'), fmt(d.dmg * mult))}${stat('i_ap', T('공격 속도'), (1 / d.rate).toFixed(1) + '/s')}
         ${stat('i_acc', T('사거리'), +(d.range + G.buff.range).toFixed(1))}${stat('i_crit', T('보유'), cell.units.length + '/' + max)}
       </div>
+      ${synergyInfo(d)}
       <div class="combat-info"><b>${T('기본 공격')}</b><p>${attackDetails(d)}</p></div>
       ${d.ult ? `<div class="combat-info"><b>${T('궁극기 · {0}', d.ultName)} <small>자동 발동</small></b><p>${d.desc.split(' / ').slice(1).join(' / ').replace(/^궁극기:\s*/, '')}</p></div><div class="mana"><span>게이지가 가득 차면 자동으로 사용합니다</span><div class="gauge c"><i style="transform:scaleX(${u.mana / 100})"></i></div></div>` : ''}
       ${uses.length ? `<div class="uses">${T('UR 재료')} ${uses.map((m) => hex(m)).join('')}</div>` : ''}
