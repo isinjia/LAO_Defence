@@ -188,6 +188,8 @@ if (/[?&]lab=/.test(location.search)) {
     go();
   });
 }
+// no "install this app?" banner (Chrome / Edge / Android): the page stays a page; the browser menu can still add it
+addEventListener('beforeinstallprompt', (e) => e.preventDefault());
 // offline cache for installs / repeat visits (skipped on local / LAN dev hosts unless ?sw=1)
 const devHost = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1)/.test(location.hostname);
 if ('serviceWorker' in navigator && location.protocol !== 'file:' && (!devHost || /[?&]sw=1/.test(location.search))) {
