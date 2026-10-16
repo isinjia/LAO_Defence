@@ -340,18 +340,18 @@
           <div class="row2"><span>${T('배속')}</span><div class="seg" data-opt="speed">${[1, 2, 3].map((v) => `<button class="${GAME.G.speed === v ? 'on' : ''}" data-v="${v}">x${v}</button>`).join('')}</div></div>`}
         </div></div></div>`;
     } else if (drawer === 'mythic') {
-      h += winHead(T('UR 조합'), T('재료 3종(SSS 2 + SS 1)을 모아 UR 유닛을 만듭니다. UR 유닛은 필드에 1기만 둘 수 있습니다')) + '<div class="wb"><div class="recipes">';
+      h += winHead(T('UR 조합'), T('같은 부대·연관 대원들을 모아 UR 유닛을 만듭니다. UR 유닛은 필드에 1기만 둘 수 있습니다')) + '<div class="wb"><div class="recipes">';
       RECIPES.forEach((r, i) => {
         const d = DATA.unit[r.result];
         const ok = GAME.canCraft(r);
         const has = r.parts.every((id) => G.owned.has(id));
         h += `<div class="recipe ${ok ? 'ready' : ''}">
-          <div class="res2">${hex(d)}<div><b>${d.name}</b><small>${d.ultName}</small></div></div>
+          <div class="res2">${hex(d)}<div><b>${d.name}</b><small>${d.ultName}</small>${r.tag ? `<i class="rtag">${T(r.tag)}</i>` : ''}</div></div>
           <div class="parts">${r.parts.map((id) => {
             const p = DATA.unit[id]; const have = G.owned.has(id);
             return `<span class="part ${have ? 'have' : ''}" title="${T('{0} ({1}급)', p.name, TIERS[p.tier].name)}">${hex(p)}<i>${p.name}</i></span>`;
           }).join('<em>+</em>')}</div>
-          <button class="btn" data-r="${i}" ${ok ? '' : 'disabled'} ${has && !ok ? `title="${T('UR 유닛은 필드에 1기만 둘 수 있습니다 (판매하면 다시 조합 가능)')}"` : ''}>${has && !ok ? T('1기 제한') : T('조합')}<small>${r.parts.filter((id) => G.owned.has(id)).length}/3</small></button></div>`;
+          <button class="btn" data-r="${i}" ${ok ? '' : 'disabled'} ${has && !ok ? `title="${T('UR 유닛은 필드에 1기만 둘 수 있습니다 (판매하면 다시 조합 가능)')}"` : ''}>${has && !ok ? T('1기 제한') : T('조합')}<small>${r.parts.filter((id) => G.owned.has(id)).length}/${r.parts.length}</small></button></div>`;
       });
       h += `</div></div>`;
     }

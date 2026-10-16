@@ -591,6 +591,7 @@ body.paused #bottom { pointer-events: none; filter: brightness(0.55) saturate(0.
 .hx.god .hrk, #popup.god::before { background: linear-gradient(90deg, #b46bff, #fff6e0 35%, #ffe08a 65%, #b46bff); color: #1a0030; }
 .ann.god small { color: #fff6e0; text-shadow: 0 0 10px rgba(180, 107, 255, 0.95), 0 0 4px #fff; }
 #banner.god .wv em, .banner.god .wv em { color: #fff6e0; text-shadow: 0 0 14px rgba(180, 107, 255, 0.95), 0 0 4px #fff; }
+.recipe .rtag { display: block; font-style: normal; font-size: 11px; color: #9fb4c8; margin-top: 2px; }
 #odds .god { color: #fff6e0; text-shadow: 0 0 6px rgba(180, 107, 255, 0.9); font-family: var(--en); font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .hx .shn, .hx .spk, .hx .glo, .hx .ray { animation: none; } }
 @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(0.8); } }
