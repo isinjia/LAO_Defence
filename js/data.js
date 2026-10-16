@@ -24,7 +24,7 @@
     U('impet', '임펫', 0, 'BR_Impet_N', { type: 'melee', dmg: 5, rate: 0.45, range: 2.4, splash: 0.9, fx: 'flame', color: 0xff6a2a, sfx: 'spray', desc: '화염방사 근거리 범위' }),
     U('leprechaun', '레프리콘', 0, 'BR_Leprechaun_N', { type: 'single', dmg: 6, rate: 0.42, range: 3.0, fx: 'bullet', color: 0x9dff7a, sfx: 'mg', desc: '기관총 연사' }),
     U('brownie', '브라우니', 0, 'BR_Brownie_N', { type: 'single', dmg: 11, rate: 0.8, range: 3.2, fx: 'bullet', color: 0xffe08a, sfx: 'rifle', desc: '돌격소총 단일 공격' }),
-    U('gnome', '놈', 0, 'BR_Gnome_N', { type: 'splash', dmg: 9, rate: 1.2, range: 3.0, splash: 0.9, fx: 'grenade', color: 0xffa040, sfx: 'cannon', desc: '유탄 범위 공격' }),
+    U('gnome', '노움', 0, 'BR_Gnome_N', { type: 'splash', dmg: 9, rate: 1.2, range: 3.0, splash: 0.9, fx: 'grenade', color: 0xffa040, sfx: 'cannon', desc: '유탄 범위 공격' }),
     // ── A ──
     U('banshee', '밴시', 1, 'BR_Banshee_N', { type: 'slow', dmg: 6, rate: 1.0, range: 3.4, slow: 0.4, slowDur: 1.8, splash: 0.8, fx: 'wave', color: 0x7affd4, sfx: 'laser', desc: '음파 범위 둔화 40%' }),
     U('sylphid', '실피드', 1, 'BR_Sylphid_N', { type: 'stun', dmg: 20, rate: 0.9, range: 3.4, stun: 0.15, stunDur: 0.7, fx: 'bullet', color: 0xd78bff, sfx: 'gun', desc: '15% 확률 기절' }),

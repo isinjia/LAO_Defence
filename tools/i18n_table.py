@@ -150,7 +150,7 @@ T = [
     ("소환 확률", "召喚確率", "Summon odds", "召唤概率", "召喚機率", "Probabilidades", "Probabilidades", "Шансы призыва"),
     # ── units ──
     ("브라우니", "ブラウニー", "Brownie", "布朗尼", "布朗尼", "Brownie", "Brownie", "Брауни"),
-    ("놈", "ノーム", "Gnome", "诺姆", "諾姆", "Gnome", "Gnome", "Гном"),
+    ("노움", "ノーム", "Gnome", "诺姆", "諾姆", "Gnome", "Gnome", "Гном"),
     ("레프리콘", "レプリコン", "Leprechaun", "莱普利康", "萊普利康", "Leprechaun", "Leprechaun", "Лепрекон"),
     ("임펫", "インペット", "Impet", "因佩特", "因佩特", "Impet", "Impet", "Импет"),
     ("밴시", "バンシー", "Banshee", "班西", "班西", "Banshee", "Banshee", "Банши"),
