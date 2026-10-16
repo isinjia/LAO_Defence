@@ -534,7 +534,7 @@ body.paused #bottom { pointer-events: none; filter: brightness(0.55) saturate(0.
 #titleChars .tg { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 #titleChars .tg > div { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 #titleChars .tg > b { font: 900 italic 13px/1 var(--en); letter-spacing: 2px; padding: 2px 10px; border-radius: 3px; color: #111; }
-#titleChars .tg.lr > b { background: linear-gradient(90deg, #8a3fd6, #f0dcff 50%, #8a3fd6); box-shadow: 0 0 10px rgba(196, 123, 255, 0.6); }
+#titleChars .tg.lr > b { background: var(--prism); box-shadow: 0 0 10px rgba(200, 220, 255, 0.6); }
 #titleChars .tg.ur > b { background: linear-gradient(90deg, #c9963a, #fff2c8 50%, #c9963a); box-shadow: 0 0 10px rgba(255, 220, 140, 0.6); }
 #titleChars { column-gap: 22px; }
 
@@ -553,13 +553,16 @@ body.paused #bottom { pointer-events: none; filter: brightness(0.55) saturate(0.
 @keyframes urspark { 0%, 60%, 100% { opacity: 0; transform: scale(0) rotate(0deg); } 75% { opacity: 1; transform: scale(1) rotate(45deg); } }
 .hx.ur .hrk, #popup.ur::before { background: linear-gradient(90deg, #c9963a, #fff2c8 50%, #c9963a); }
 .ann.ur small { color: #ffe6a0; text-shadow: 0 0 8px rgba(255, 220, 140, 0.8); }
-/* LR (three SSS): a violet metal rim, a slower light sweep and violet sparkles */
-.hx.lr::before { background: linear-gradient(160deg, #f6e8ff, #c47bff 40%, #6a2bb0 72%, #e9c9ff); }
-.hx.lr .shn { animation-duration: 4.4s; }
-.hx.lr .spk { background: radial-gradient(circle, #fff 0 18%, rgba(214, 160, 255, 0.95) 32%, transparent 62%); animation-duration: 3s; }
-.hx.lr .spk.s2 { animation-delay: 1.5s; }
-.hx.lr .hrk, #popup.lr::before { background: linear-gradient(90deg, #8a3fd6, #f0dcff 50%, #8a3fd6); }
-.ann.lr small { color: #e2bcff; text-shadow: 0 0 8px rgba(196, 123, 255, 0.8); }
+/* LR (three SSS): a holographic rim (soft prism colours over pearl), a light sweep and sparkles each in its own hue */
+:root { --prism: linear-gradient(100deg, #ffb3c7, #ffd9a3, #fff4a8, #b9ffcf, #a8e4ff, #d2b8ff, #ffb3e6); }
+.hx.lr::before { background: conic-gradient(from 210deg, #ffc2d4, #ffe2b0, #fff6c0, #c8ffd9, #b8ecff, #dcc8ff, #ffc2ec, #ffc2d4); }
+.hx.lr .shn { animation-duration: 4s; background-image: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.7) 50%, transparent 60%); }
+.hx.lr .spk { animation-duration: 2.6s; }
+.hx.lr .spk.s1 { background: radial-gradient(circle, #fff 0 18%, rgba(255, 170, 210, 0.95) 32%, transparent 62%); }
+.hx.lr .spk.s2 { background: radial-gradient(circle, #fff 0 18%, rgba(150, 220, 255, 0.95) 32%, transparent 62%); animation-delay: 0.9s; }
+.hx.lr .spk.s3 { background: radial-gradient(circle, #fff 0 18%, rgba(190, 255, 170, 0.95) 32%, transparent 62%); animation-delay: 1.8s; }
+.hx.lr .hrk, #popup.lr::before { background: var(--prism); }
+.ann.lr small { background: var(--prism); -webkit-background-clip: text; background-clip: text; color: transparent; }
 @media (prefers-reduced-motion: reduce) { .hx .shn, .hx .spk { animation: none; } }
 @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(0.8); } }
 #titleChars.wait .hx { animation: none; opacity: 0; }

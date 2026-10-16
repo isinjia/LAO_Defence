@@ -65,15 +65,18 @@
       eq(G().selected, -1, 'nothing selected after the merge'); eq(document.getElementById('popup').hidden, true, 'the unit window closed');
     });
 
-    test('SSS stack to three and merge into a LR; a LR stands alone', () => {
+    test('SSS stack to three and merge into an LR; LR stack to three but merge no further', () => {
       fresh();
       for (let k = 0; k < 3; k++) GAME.debugAdd('ullr');
       const i = GAME.findCellOf('ullr'); eq(G().cells[i].units.length, 3, 'three SSS in one cell');
       GAME.merge(i);
       eq(nUnits(), 1, 'units after merge');
-      eq(G().cells.some((c) => c.units.length && c.units[0].def.tier === DATA.LR), true, 'a LR came out');
-      const ur = G().cells.find((c) => c.units.length).units[0].def.id;
-      GAME.debugAdd(ur); eq(G().cells.filter((c) => c.units.length).length, 2, 'a second LR takes its own cell');
+      eq(G().cells.some((c) => c.units.length && c.units[0].def.tier === DATA.LR), true, 'an LR came out');
+      const lr = G().cells.find((c) => c.units.length).units[0].def.id;
+      GAME.debugAdd(lr); GAME.debugAdd(lr); GAME.debugAdd(lr); // 1 + 3: one full stack and a fourth on its own
+      const j = G().cells.findIndex((c) => c.units.length === 3); eq(j >= 0 && G().cells[j].units[0].def.id === lr, true, 'three LR in one cell');
+      eq(G().cells.filter((c) => c.units.length).length, 2, 'a fourth LR takes its own cell');
+      GAME.merge(j); eq(G().cells[j].units.length, 3, 'no merge above LR');
     });
 
     test('UR: crafted from its parts, only one on the board at a time', () => {

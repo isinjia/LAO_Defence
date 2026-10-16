@@ -20,7 +20,7 @@
   const rank = (t) => S('rank' + Math.min(t, 4));
   // hexagon portrait in the tier colour (frame_Cha_formation_icon)
   // the rank letter rides on the frame too: the tier is never told by colour alone (colour-blind players, screen readers)
-  const hex = (def, cls = '') => `<span class="hx ${cls}${def.tier === DATA.UNIQUE ? ' ur' : def.tier === DATA.LR ? ' lr' : ''}" style="--img:url(${img(def)});--c:${TIERS[def.tier].color}" role="img" aria-label="${def.name} (${TIERS[def.tier].name})"><i class="hrk">${TIERS[def.tier].name}</i>${def.tier === DATA.UNIQUE ? '<i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i><i class="spk s3"></i>' : def.tier === DATA.LR ? '<i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i>' : ''}</span>`;
+  const hex = (def, cls = '') => `<span class="hx ${cls}${def.tier === DATA.UNIQUE ? ' ur' : def.tier === DATA.LR ? ' lr' : ''}" style="--img:url(${img(def)});--c:${TIERS[def.tier].color}" role="img" aria-label="${def.name} (${TIERS[def.tier].name})"><i class="hrk">${TIERS[def.tier].name}</i>${def.tier === DATA.UNIQUE ? '<i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i><i class="spk s3"></i>' : def.tier === DATA.LR ? '<i class="shn"></i><i class="spk s1"></i><i class="spk s2"></i><i class="spk s3"></i>' : ''}</span>`;
   const gearI = '<i class="ri"></i>';
   const tunaI = '<i class="rt"></i>';
 
@@ -396,7 +396,7 @@
     const reroll = BAL.reroll[d.tier];
     const canMerge = cell.units.length === 3 && d.tier < DATA.LR;
     const uses = RECIPES.filter((r) => r.parts.includes(d.id)).map((r) => DATA.unit[r.result]);
-    const max = d.tier >= DATA.LR ? 1 : 3;
+    const max = d.tier === DATA.UNIQUE ? 1 : 3;
     const stat = (icon, label, v) => `<span><i class="si" style="background-image:${S(icon)}"></i>${label}<b>${v}</b></span>`;
     el.popup.style.setProperty('--c', t.color);
     el.popup.classList.toggle('ur', d.tier === DATA.UNIQUE);

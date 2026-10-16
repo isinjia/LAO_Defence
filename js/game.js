@@ -16,9 +16,9 @@
     if (G.tut && G.tut.unit && k === 'summon') return DATA.unit[G.tut.unit];
     const want = wantedParts(t);
     if (want.length && luck(k) < BAL.partBias) return pickL(want, k);
-    // an S..SSS from a merge / summon / gamble often is one already stacking on the board: three of one SS (for an
-    // SSS) and of one SSS (for an LR) stay reachable with five or six kinds per rank
-    if (t >= 2 && t <= 4 && k !== 'reroll' && k !== 'reward') {
+    // an S..LR from a merge / summon / gamble often is one already stacking on the board: three of one SS (for an
+    // SSS) and of one SSS (for an LR) stay reachable with five or six kinds per rank (LR stacks save cells)
+    if (t >= 2 && t <= LR && k !== 'reroll' && k !== 'reward') {
       const stacking = UNITS.filter((d) => d.tier === t && G.cells.some((c) => c.units.length && c.units.length < 3 && c.units[0].def.id === d.id));
       if (stacking.length && luck(k) < BAL.stackBias) return pickL(stacking, k);
     }
@@ -449,19 +449,22 @@
 
   // a cell next to the path (the middle row's inner cells are ~3.7 away from it)
   function isOuter(i) { const r = Math.floor(i / BAL.cols), c = i % BAL.cols; return r !== 1 || c === 0 || c === BAL.cols - 1; }
-  // B..SSS stack to three and merge one rank up (three SSS make an LR); LR and UR stand alone
-  // the two top ranks shine on the field: gold glints rise around a UR, violet motes drift up around an LR
+  // B..SSS stack to three and merge one rank up (three SSS make an LR). LR and UR are the top rank (no rank above
+  // yet): an LR still stacks to three (no merge), a UR stands alone (one on the field)
+  // the two top ranks shine on the field: gold glints rise around a UR, prism sparkles (every hue) around an LR
+  const _gc = new THREE.Color();
+  const prism = () => _gc.setHSL(Math.random(), 0.9, 0.72).getHex();
   const GLINT = {
     [UNIQUE]: { rate: 10, cols: [0xffffff, 0xfff0b8, 0xffd98a, 0xcfeaff], tex: 'cross', size: [0.14, 0.28], vy: [0.3, 0.9] },
-    [LR]: { rate: 7, cols: [0xffffff, 0xe2bcff, 0xc47bff, 0x9a5cff], tex: 'dot', size: [0.08, 0.16], vy: [0.5, 1.2] },
+    [LR]: { rate: 12, cols: prism, tex: 'cross', size: [0.12, 0.24], vy: [0.4, 1.0] },
   };
   function rankGlints(u, x, y, dt) {
     const g = GLINT[u.def.tier];
     if (!g || Math.random() > dt * g.rate) return;
     FX.particle({ x: x + rnd(-0.55, 0.55), y: y + rnd(0.1, u.h * 0.9), vy: rnd(g.vy[0], g.vy[1]), life: rnd(0.6, 1.1), size: rnd(g.size[0], g.size[1]), size1: 0,
-      color: g.cols[Math.floor(Math.random() * g.cols.length)], tex: FX.tex[g.tex], spin: rnd(-2, 2), alpha: 0.95, fadeIn: 0.15 });
+      color: typeof g.cols === 'function' ? g.cols() : g.cols[Math.floor(Math.random() * g.cols.length)], tex: FX.tex[g.tex], spin: rnd(-2, 2), alpha: 0.95, fadeIn: 0.15 });
   }
-  function stackMax(def) { return def.tier >= LR ? 1 : 3; }
+  function stackMax(def) { return def.tier === UNIQUE ? 1 : 3; }
   function canMerge(def) { return def.tier < LR; }
   function hasUnique() { return G.cells.some((c) => c.units.some((u) => u.def.tier === UNIQUE)); }
   // cell indices bottom row first, right to left within a row (world y up, x right; follows the current orientation)
@@ -2014,6 +2017,7 @@
         u.holder.scale.set(u.face * sk, sk, 1);
         u.shadow.x = ux; u.shadow.y = uy + 0.02; u.shadow.sz = u.h * 0.75;
         if (u.def.tier >= LR && !G.paused) rankGlints(u, ux, uy, rdt);
+        if (u.def.tier === LR) { const c = _gc.setHSL((time * 0.12 + u.x * 0.03) % 1, 0.75, 0.75).getHex(); if (u.ring) u.ring.color = c; if (u.aura) u.aura.color = c; }
         if (u.ring) {
           u.ring.x = u.x; u.ring.y = fy + 0.02; u.ring.sz = u.h * 0.8;
           u.ring.alpha = 0.55 + Math.sin(time * 3 + u.x) * 0.15;

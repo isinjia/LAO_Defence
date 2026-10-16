@@ -7,8 +7,8 @@
     { key: 'E', name: 'S', color: '#ffc81e', hex: 0xffc81e, sell: 50 },
     { key: 'L', name: 'SS', color: '#ff9420', hex: 0xff9420, sell: 120 },
     { key: 'M', name: 'SSS', color: '#ff3d5a', hex: 0xff3d5a, sell: 300 },
-    { key: 'U', name: 'LR', color: '#d06bff', hex: 0xd06bff, sell: 900 },
-    { key: 'X', name: 'UR', color: '#f4d78a', hex: 0xf4d78a, sell: 700 }, // gold, with sparkles (css .ur, game.js urGlints)
+    { key: 'U', name: 'LR', color: '#c8d4ff', hex: 0xc8d4ff, sell: 900 }, // prism, with sparkles of every hue (css .lr, game.js GLINT)
+    { key: 'X', name: 'UR', color: '#f4d78a', hex: 0xf4d78a, sell: 900 }, // gold, with sparkles (css .ur, game.js GLINT)
   ];
   const LR = 5, UNIQUE = 6;
 
@@ -70,8 +70,9 @@
   // Damage from one rule instead of per-unit guesses: every rank is ~4x the one below (so each merge is a clear
   // power spike over the three units it eats), and within a rank the attack type only shifts single-target damage
   // (area / chain / utility units trade it for coverage; spread <= 1.6x). Expected crit damage is included.
-  // LR (three SSS) ~3.5x an SSS; a UR costs two SSS and an SS, so it sits between them but brings the strongest skill
-  const TIER_DPS = [12, 48, 190, 750, 2700, 9500, 6500];
+  // LR (three SSS) ~3.5x an SSS. UR is the same top rank as LR (crafted from two SSS and an SS, one on the field),
+  // a little under an LR in damage but with the strongest skills
+  const TIER_DPS = [12, 48, 190, 750, 2700, 9500, 9000];
   const TYPE_K = { single: 1.2, melee: 1.25, splash: 0.85, chain: 0.8, laser: 0.9, slow: 0.8, stun: 0.9 };
   UNITS.forEach((u) => {
     u.dmg = Math.round(TIER_DPS[u.tier] * TYPE_K[u.type] * u.rate / (1 + 1.2 * (u.crit || 0)));
