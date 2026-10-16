@@ -120,12 +120,13 @@
     li.style.setProperty('--ar', lg.w / lg.h);
     // the top ranks: LR (three SSS) and UR (crafted, one on the field)
     const tiers = [DATA.LR, DATA.UNIQUE], cls = ['lr', 'ur']; // (GOD is kept a surprise: not shown here)
-    const groups = tiers.map((t) => DATA.byTier(t).map((d) => d.id));
+    // (the skin 철의 파멸 LRL is left out: a surprise like GOD)
+    const groups = tiers.map((t) => DATA.byTier(t).filter((d) => d.id !== 'lrlrose').map((d) => d.id));
     const featured = groups.flat();
     const tc = $('#titleChars');
     let n = 0;
     tc.innerHTML = groups.map((ids, g) => `<div class="tg ${cls[g]}"><b>${TIERS[tiers[g]].name}</b><div>${
-      ids.map((id) => hex(DATA.unit[id]).replace('style="', `style="animation-delay:${(n++) * 0.08}s;`)).join('')}</div></div>`).join('');
+      ids.map((id) => { const h = hex(DATA.unit[id]).replace('style="', `style="animation-delay:${(n++) * 0.08}s;`); return id === 'lrl' ? h.replace('<i class="hrk">LR</i>', '<i class="hrk">LRL</i>') : h; }).join('') /* for fun: LRL's badge reads LRL */}</div></div>`).join('');
     // the six portraits pop in as one row once all are decoded (not one by one as each image arrives)
     tc.classList.add('wait');
     const decode = (src) => { const im = new Image(); im.src = src; return im.decode ? im.decode().catch(() => {}) : Promise.resolve(); };
