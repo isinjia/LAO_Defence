@@ -49,7 +49,7 @@
     U('eternity', '이터니티', 4, '3P_Eternity_N', { type: 'single', dmg: 0, rate: 0.4, range: 4.4, fx: 'bullet', color: 0xffd98a, sfx: 'mg', mana: 12, ult: 'guardian', ultName: '편히 잠드소서', desc: '기관총 연사 / 궁극기: 지정 범위 보호 무시 사격, 분노(필드 75% 이상 위기) 시 +80%' }),
     U('lemonadealpha', '레모네이드 알파', 4, 'PECS_LemonadeAlpha_N', { type: 'chain', dmg: 0, rate: 1.0, range: 4.8, chain: 5, fx: 'lightning', color: 0xffe14d, sfx: 'elec', mana: 12, ult: 'domain', ultName: '케스토스 히마스: 출력전개', desc: '연쇄 공격 / 궁극기: 지정 범위 보호 무시 피해 + 고정 피해, 1칸 밀쳐내기, 모든 보호 효과 해제, 회피 -61%' }),
     U('sleipnir', '슬레이프니르', 4, 'BR_Sleipnir_N', { type: 'stun', dmg: 0, rate: 1.0, range: 4.6, splash: 1.4, stun: 0.25, stunDur: 0.8, fx: 'missile', color: 0xffb070, sfx: 'missile', mana: 12, ult: 'rowlaser', ultName: '한계돌파', desc: '범위 공격 + 기절 / 궁극기: 목표 지점 돌진, 보호 무시·방어 관통, 표식 + 이동 불가' }),
-    U('blacklilith', '블랙 릴리스', 4, '3P_BlackLilith_N', { type: 'melee', dmg: 0, rate: 0.4, range: 2.8, splash: 1.0, crit: 0.25, fx: 'slash', color: 0xd0405a, sfx: 'slash', mana: 12, ult: 'taunt', ultName: '듀얼 버스트', desc: '근접 참격 / 궁극기: 단일 대상 아킴보 사격 + 도발(공격·치명 -14.5%), 이미 도발된 대상 +48%' }),
+    U('blacklilith', '블랙 릴리스', 4, '3P_BlackLilith_N', { type: 'melee', dmg: 0, rate: 0.4, range: 2.8, splash: 1.0, crit: 0.25, fx: 'slash', color: 0xd0405a, sfx: 'slash', mana: 12, ult: 'taunt', ultName: '듀얼 버스트', desc: '근접 참격 / 궁극기: 단일 대상 아킴보 사격 + 도발, 이미 도발된 대상 +48%, 정조준(단일 대상) +47.5%' }),
     // ── LR (SSS 3기 합성) ──
     U('brunhild', '브륀힐드', 5, 'BR_Brunhild_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.0, splash: 1.8, fx: 'fireball', color: 0xff5530, sfx: 'expM', mana: 10, ult: 'wolfpack', ultName: '핏빛 효후', desc: '화염 폭격 / 궁극기: 늑대가 지정 범위에 보호 무시 화염 피해, 효과·화염 저항 -28.5%, 치명타 시 +47.5% + 지속 화염 해제' }),
     U('tiamat', '티아멧', 5, 'ST_Tiamat_N', { type: 'laser', dmg: 0, rate: 1.25, range: 5.4, width: 0.7, fx: 'laser', color: 0x6ef0ff, sfx: 'laserBig', mana: 10, ult: 'execute', ultName: '풀 웨폰 어썰트', desc: '대구경 관통 레이저 / 궁극기: 가장 강한 적 하나에 방어막·피해 감소 무시 초고화력, 치명타 시 +29%' }),
@@ -63,7 +63,7 @@
     U('fafnir', '파프니르', 6, 'BR_Fafnir_N', { type: 'chain', dmg: 0, rate: 0.8, range: 5.2, chain: 6, fx: 'lightning', color: 0x5aa8ff, sfx: 'elec', mana: 12, ult: 'thunder', ultName: '뇌정벽력', desc: '연쇄 번개 / 궁극기: 우레와 함께 강하해 대상과 주변(25%)에 전격, 인접한 적마다 +14.5%, 2기 이상이면 강화 효과 해제' }),
     // ── GOD (소환 0.0001%, 확률 강화 무관) ──
     U('lrl', 'LRL', 7, 'PECS_LRL_N', { type: 'splash', dmg: 0, rate: 0.7, range: 7.0, splash: 2.2, fx: 'holy', color: 0xb46bff, sfx: 'energy', mana: 8, ult: 'apocalypse', ultName: '칠흑의 종언', desc: '흑염 대폭발 / 궁극기: 전장을 암흑으로 덮고 흑염 운석과 빛의 기둥으로 모든 적을 섬멸(보호 무시, 전원 속박)' }),
-    U('ramiel', '라미엘', 6, 'DS_Ramiel_N', { type: 'stun', dmg: 0, rate: 0.9, range: 5.0, splash: 1.5, stun: 0.12, stunDur: 0.6, fx: 'holy', color: 0xfff1b8, sfx: 'energy', mana: 12, ult: 'pillar', ultName: '억겁의 성화', desc: '성광 폭발 / 궁극기: 3x3 범위 보호 무시 화염 피해 + 고정 화염, 사용 후 잠시 스킬 사용 불가' }),
+    U('ramiel', '라미엘', 6, 'DS_Ramiel_N', { type: 'stun', dmg: 0, rate: 0.9, range: 5.0, splash: 1.5, stun: 0.12, stunDur: 0.6, fx: 'holy', color: 0xfff1b8, sfx: 'energy', mana: 12, ult: 'pillar', ultName: '억겁의 성화', desc: '성광 폭발 / 궁극기: 3x3 범위 보호 무시 화염 피해 + 고정 화염, 원죄의 굴레(배치 30초 후) 시 방어막 무시 + 강한 지속 화염, 사용 후 잠시 스킬 사용 불가' }),
   ];
 
   // the middle row's inner cells sit 3.75 units from the path: every ranged unit gets enough reach to cover a stretch

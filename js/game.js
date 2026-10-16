@@ -924,12 +924,13 @@
     e.grp.children.forEach((o) => { if (o.isSprite) o.material.dispose(); });
   }
 
-  // pierce: ignores shields and armour (Khan's sandstorm)
+  // pierce: true ignores shields and armour; a number ignores shields and that share of armour (defense penetration)
   function damage(e, amount, color, crit, src, pierce) {
     if (!e.alive) return;
     if (e.slowT > 0 || e.stunT > 0) amount *= BAL.vuln;
     if (e.markT > 0) amount *= e.markK;
-    if (!pierce) {
+    if (typeof pierce === 'number') amount *= e.armor + (1 - e.armor) * pierce; // shields ignored, armour partly
+    else if (!pierce) {
       if (e.shieldT > 0) amount *= 0.2;
       amount *= e.armor;
     }
@@ -1591,7 +1592,7 @@
   function ultimate(u, e) {
     const d = u.def;
     // ULT_K: the faithful skills (narrower areas, fewer freezes than the old generic ones) hit harder to keep their weight
-    const base = d.dmg * dmgMult() * ULT_K;
+    const base = d.dmg * dmgMult() * ULT_K * (u.powT > 0 ? u.powK : 1); // powK: a unit's own attack buff (Labiata's plasma)
     UI.ultCallout(u.x, u.y, d.ultName, TIERS[d.tier].color);
     // the original skill clip, except where it is a full-screen cut-in (Fafnir's grows ~5x the board cell)
     const clip = HUGE_SKILL.has(d.id) ? 'atk' : 'skill';
@@ -1677,20 +1678,20 @@
         FX.later(0.15, () => {
           FX.explosion(e.x, e.y, 1.5, d.color, true);
           SFX.play('expB');
-          for (const o of enemiesNear(e.x, e.y, 1.7)) { damage(o, base * 6, d.color, true, d, true); mark(o, 1.2, 5); stun(o, 2); }
+          for (const o of enemiesNear(e.x, e.y, 1.7)) { damage(o, base * 6, d.color, true, d, 0.75); mark(o, 1.2, 5); stun(o, 5); }
         });
         break;
       }
-      case 'taunt': { // Black Lilith · 듀얼 버스트: akimbo shots on one target, taunted 2 rounds with attack -14.5% and crit
-        // -14.5% (its advance slowed 14.5%), +48% if it was already taunted
+      case 'taunt': { // Black Lilith · 듀얼 버스트: akimbo shots on one target, taunted 2 rounds (attack / crit -14.5%: enemies
+        // here have neither), +48% if it was already taunted; 가학성향:정조준 +47.5% the fewer the targets (always one: full)
         const o = e;
         SFX.play('mg');
         [0, 0.1].forEach((dl) => FX.later(dl, () => { if (o.alive) { FX.beam(u.x, u.y, o.x, o.y, 0.1, d.color, 0.12); FX.slash(o.x, o.y, d.color, 1.4); } }));
         FX.later(0.12, () => {
           if (!o.alive) return;
           const taunted = o.tauntT > 0;
-          o.tauntT = 5; stun(o, 1.5); slow(o, 0.145, 5);
-          damage(o, base * 9 * (taunted ? 1.48 : 1), d.color, true, d);
+          o.tauntT = 5; stun(o, 1.5);
+          damage(o, base * 9 * (taunted ? 1.48 : 1) * 1.475, d.color, true, d);
         });
         break;
       }
@@ -1829,8 +1830,10 @@
         near.forEach((o) => damage(o, base * 16 * k2 * 0.25, d.color, false, d));
         break;
       }
-      case 'pillar': { // Ramiel · 억겁의 성화: everything in range ignoring protection, fire; 100 fixed fire damage for 1 round
-        // (outside 원죄의 굴레); afterwards she can't use a skill for 2 rounds
+      case 'pillar': { // Ramiel · 억겁의 성화: everything in range ignoring protection, fire; outside 원죄의 굴레 100 fixed fire
+        // for 1 round, in it shields / damage reduction ignored and 3000 fixed fire for 3 rounds (고행 burns her each round
+        // until she is badly damaged, which starts 원죄의 굴레: here after 30 s on the field); then no skill for 2 rounds
+        const bound = (u.age || 0) >= 30;
         FX.flash(0xfff1b8, 0.3);
         SFX.play('energy');
         const c = densest(2.8, 1)[0] || e;
@@ -1839,7 +1842,8 @@
           FX.later(k * 0.2, () => {
             for (const z of G.enemies) {
               if (!z.alive || Math.abs(z.x - c.x) > BAL.cell * 1.5 || Math.abs(z.y - c.y) > BAL.cell * 1.5) continue; // all 9 tiles
-              damage(z, base * 2, d.color, false, d, true); if (k === 0) burn(z, base * 0.5, 2.5, d);
+              damage(z, base * 2, d.color, false, d, true);
+              if (k === 0) { if (bound) { z.shieldT = 0; burn(z, base * 1.5, 7, d); } else burn(z, base * 0.5, 2.5, d); }
             }
           });
         }
@@ -1986,6 +1990,7 @@
         if (u.powT > 0) u.powT -= dt;
         if (u.lateT > 0) { u.lateT -= dt; u.cd += dt * 0.5; } // AP -50% (Titania after 서리 폭풍)
         if (u.sealT > 0) u.sealT -= dt;
+        u.age = (u.age || 0) + dt; // time on the field (Ramiel's 원죄의 굴레)
         if (u.cd <= 0) {
           const e = target(u);
           u.cd = e ? attack(u, e) : 0.1;
