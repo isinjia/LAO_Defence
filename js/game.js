@@ -553,7 +553,7 @@
     SFX.play('pickSS'); SFX.play('rankUpSS');
     buzz([30, 60, 30, 60, 30, 60, 120]);
     UI.announce(def, T('GOD 강림!'));
-    UI.banner('GOD', T('{0} 강림', def.name), true);
+    UI.banner('GOD', T('{0} 강림', def.name));
   }
   function canSummon() { return anyEmpty() || stackable().length > 0; }
 
@@ -1670,7 +1670,8 @@
         break;
       }
       case 'taunt': { // Black Lilith · 듀얼 버스트: two shots, the target and the enemy beside it; both taunted (held 1.5 s),
-        // and a taunted enemy takes the shot harder (skill power x1.435). Attack / crit down have no board equivalent.
+        // attack and crit down 14.5% (an enemy's threat here is its advance: 14.5% slower for 6 s), and a taunted enemy
+        // takes the shot harder (skill power x1.435)
         const two = [e, ...enemiesNear(e.x, e.y, 1.6).filter((o) => o !== e).sort((a, b) => Math.hypot(a.x - e.x, a.y - e.y) - Math.hypot(b.x - e.x, b.y - e.y)).slice(0, 1)];
         SFX.play('mg');
         two.forEach((o, k) => FX.later(k * 0.12, () => {
@@ -1678,7 +1679,7 @@
           FX.beam(u.x, u.y, o.x, o.y, 0.1, d.color, 0.12);
           FX.slash(o.x, o.y, d.color, 1.6);
           const taunted = o.stunT > 0;
-          stun(o, 1.5);
+          stun(o, 1.5); slow(o, 0.145, 6);
           damage(o, base * 6 * 1.435 * (taunted ? 1.3 : 1), d.color, true, d);
         }));
         break;
@@ -1744,7 +1745,7 @@
       case 'apocalypse': { // LRL · 칠흑의 종언 (this game's own): the field drowns in darkness, black-flame meteors fall on
         // every crowd, light pillars sweep the path, then one blinding blast: everything held, protection ignored
         FX.flash(0x000000, 0.7);
-        UI.banner('GOD', d.ultName, true);
+        UI.banner('GOD', d.ultName);
         SFX.play('warning');
         // 1) darkness gathers: rings closing in on LRL
         for (let k = 0; k < 6; k++) FX.later(k * 0.06, () => FX.ring(u.x, u.y, 8 - k, 0.3, k % 2 ? 0xb46bff : 0x1a0030, 0.35, 0.9));
@@ -1832,7 +1833,7 @@
         }, d.color);
         break;
       }
-      case 'thunder': { // Fafnir · 충격과 공포: an electric blast on one enemy and its neighbours (they take 25%); every
+      case 'thunder': { // Fafnir · Shock and Awe (the official global name; no Korean name is published): an electric blast on one enemy and its neighbours (they take 25%); every
         // adjacent enemy adds +14.5% (up to 4), and with two or more around, protection is torn off (boss shields)
         const t = densest(1.4, 1)[0] || e;
         const near = enemiesNear(t.x, t.y, 1.4).filter((o) => o !== t);

@@ -608,6 +608,8 @@
     let h;
     if (title === 'MISSION START') {
       h = `<div class="band"><span class="ms"></span><span class="sub">${sub || ''}</span></div>`;
+    } else if (title === 'GOD') { // the GOD rank's arrival and ultimate
+      h = `<div class="band"><span class="wv"><em>GOD</em></span><span class="sub">${sub || ''}</span></div>`;
     } else if (boss) {
       h = `<div class="band"><div class="ct"><span class="mk"></span><span class="tx"></span><span class="mk"></span></div>
         <span class="sub">${T('{0} · 보스 <b>{1}</b> 출현 · 제한 시간 {2}초', title, sub, Math.ceil(GAME.G.bossT || GAME.G.bossMax || BAL.bossTime))}</span></div>`;
@@ -616,7 +618,7 @@
       h = `<div class="band"><span class="bs"></span><span class="wv">WAVE <em>${w}</em></span><span class="sub">${sub || ''}</span></div>`;
     }
     bannerUntil = performance.now() + 2300;
-    el.banner.className = 'banner' + (boss ? ' boss' : '');
+    el.banner.className = 'banner' + (boss ? ' boss' : '') + (title === 'GOD' ? ' god' : '');
     el.banner.innerHTML = `<div>${h}</div>`;
     void el.banner.offsetWidth;
     el.banner.classList.add('on');
