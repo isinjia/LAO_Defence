@@ -172,11 +172,14 @@
         fresh(); (cfg.extra || []).forEach((x) => GAME.debugAdd(x)); GAME.debugAdd(id);
         const u = G().cells[GAME.findCellOf(id)].units[0];
         const spec = cfg.es || [{}];
-        const es = spec.map((o, i) => { const e = GAME.tutSpawn(1e7); e.d = o.d != null ? o.d : 6 + i * 0.15; return e; });
-        GAME.simulate(0.02, false);
+        G().waveT = 1e9; G().spawnLeft = 0; // a fixed field: no wave arrives during the measurement
+        const es = spec.map((o, i) => { const e = GAME.tutSpawn(1e7); e.d = o.d != null ? o.d : 6 + i * 0.15; e.spd = 0; return e; }); // and nobody walks
+        // no ordinary attacks during the measurement (a unit's first cooldown is random: block it before the warm-up too,
+        // and drop an attack already under way)
+        const still = () => G().cells.forEach((c) => c.units.forEach((x) => { x.cd = 1e9; x.act = null; }));
+        still(); GAME.simulate(0.02, false); still();
         es.forEach((e, i) => Object.assign(e, spec[i].set || {}));
         Object.assign(u, cfg.u || {});
-        G().cells.forEach((c) => c.units.forEach((x) => { x.cd = 1e9; })); // no ordinary attacks during the measurement
         if (cfg.maxE) DATA.BAL.maxEnemies = cfg.maxE;
         const hp0 = es.map((e) => e.hp);
         Math.random = () => (cfg.crit ? 0 : 0.99);
@@ -251,7 +254,14 @@
       const m = window.SKILL_MEASURE || { pass: 0, total: 0 };
       window.SKILL_MEASURE2 = { pass, total: checks.length, failed: checks.filter((c) => !c[1]).map((c) => c[0]), all: `${m.pass + pass}/${m.total + checks.length}` };
       eq(pass, checks.length, `measured ${pass}/${checks.length}: ${window.SKILL_MEASURE2.failed.join(', ')}`);
-      return `${pass}/${checks.length} damage-rule checks (all items: ${window.SKILL_MEASURE2.all})`;
+      // the score against the 90-point goal: names (16 checked against the in-game data by the test above) 40%, the
+      // measured effect checks 60%; strict = the 13 items this board can't express counted as failures (65 of 78)
+      const NAMES = DATA.UNITS.filter((d) => d.tier >= 4 && d.tier <= DATA.UNIQUE).length;
+      const measured = (m.pass + pass) / (m.total + checks.length);
+      const score = 40 * NAMES / 16 + 60 * measured, strict = 40 * NAMES / 16 + 60 * measured * 65 / 78;
+      window.SKILL_SCORE = { score: +score.toFixed(1), strict: +strict.toFixed(1), checks: `${m.pass + pass}/${m.total + checks.length}` };
+      eq(score >= 90 && strict >= 90, true, `skill score ${score.toFixed(1)} / strict ${strict.toFixed(1)}`);
+      return `${pass}/${checks.length} damage-rule checks (all: ${window.SKILL_MEASURE2.all}); score ${window.SKILL_SCORE.score}, strict ${window.SKILL_SCORE.strict}`;
     });
 
     test('GOD: a flat 0.0001% summon (luck upgrades do not change it), one per cell, never merges', () => {
@@ -297,6 +307,21 @@
       const g0 = G().gold, c0 = GAME.summonCost(); G().pity = 0; G().upg.luck = 0;
       for (let k = 0; k < 20 && G().cells[GAME.findCellOf(s)].units.length < 3; k++) GAME.summon();
       eq(G().gold < g0, true, 'every try cost parts'); eq(GAME.summonCost() > c0, true, 'the summon count went up');
+    });
+
+    test('유지 (keep): AUTO and the player leave a kept stack alone until it is switched off', () => {
+      fresh(); G().gold = 1e6;
+      const id = DATA.UNITS.find((u) => u.tier === 0).id;
+      for (let k = 0; k < 3; k++) GAME.debugAdd(id);
+      const i = GAME.findCellOf(id); GAME.toggleKeep(i); eq(G().cells[i].keep, true, 'kept');
+      GAME.merge(i); eq(G().cells[i].units.length, 3, 'no manual merge'); GAME.sell(i); eq(G().cells[i].units.length, 3, 'no manual sale');
+      GAME.autoplay(true); eq(G().cells[i].units.length, 3, 'AUTO leaves it alone');
+      const r = DATA.RECIPES[2]; fresh(); r.parts.forEach((p) => GAME.debugAdd(p)); GAME.toggleKeep(GAME.findCellOf(r.parts[0]));
+      eq(GAME.canCraft(r), false, 'a kept part is not a recipe part');
+      GAME.toggleKeep(GAME.findCellOf(r.parts[0])); eq(GAME.canCraft(r), true, 'off: craftable again');
+      fresh(); for (let k = 0; k < 3; k++) GAME.debugAdd(id); const j = GAME.findCellOf(id); GAME.toggleKeep(j); GAME.simulate(20, false); GAME.saveRun(); fresh(); eq(GAME.resumeRun(), true, 'resume');
+      eq(G().cells[GAME.findCellOf(id)].keep, true, 'kept after save / resume');
+      GAME.toggleKeep(GAME.findCellOf(id)); GAME.merge(GAME.findCellOf(id)); eq(G().cells.some((c) => c.units.length && c.units[0].def.tier === 1), true, 'off: merges');
     });
 
     test('pause blocks summon / upgrade / ult', () => {

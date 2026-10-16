@@ -106,7 +106,7 @@
       else if (e.code === 'KeyC') toggleDrawer('mythic');
       else if (e.code === 'KeyM') {
         // the selected cell, else the first full stack on the board (M is advertised as plain "merge")
-        const cells = GAME.G.cells, ok = (i) => i >= 0 && cells[i].units.length === 3 && cells[i].units[0].def.tier < DATA.LR;
+        const cells = GAME.G.cells, ok = (i) => i >= 0 && cells[i].units.length === 3 && !cells[i].keep && cells[i].units[0].def.tier < DATA.LR;
         const i = ok(GAME.G.selected) ? GAME.G.selected : cells.findIndex((c, k) => ok(k));
         if (i >= 0) GAME.merge(i); else { toast(T('합성할 수 있는 유닛이 없습니다 (같은 유닛 3기)'), 'warn'); SFX.play('fail'); }
       }
@@ -417,12 +417,14 @@
       ${uses.length ? `<div class="uses">${T('UR 재료')} ${uses.map((m) => hex(m)).join('')}</div>` : ''}
       ${d.range + G.buff.range < gap + 0.2 ? `<div class="warn">${T('이 칸에서는 적에게 닿지 않습니다. 바깥쪽 칸으로 옮기세요')}</div>` : ''}
       <div class="btns">
-        ${d.tier < DATA.LR ? `<button class="btn merge" ${canMerge ? '' : 'disabled'}>${T('합성')}<small>${cell.units.length}/3</small></button>` : ''}
-        ${reroll ? `<button class="btn d reroll" title="${T('같은 랭크의 다른 유닛으로 교체')}" ${G.gems < reroll ? 'disabled' : ''}>${T('교체')}<small>${tunaI}${reroll}</small></button>` : ''}
-        <button class="btn o sell">${T('판매')}<small>+${t.sell}</small></button>
+        <button class="btn d keep ${cell.keep ? 'on' : ''}" title="${T('유지: AUTO가 합성·판매·조합에 쓰지 않고, 끄기 전까지 합성·판매할 수 없습니다')}">${T('유지')}<small>${cell.keep ? 'ON' : 'OFF'}</small></button>
+        ${d.tier < DATA.LR ? `<button class="btn merge" ${canMerge && !cell.keep ? '' : 'disabled'}>${T('합성')}<small>${cell.units.length}/3</small></button>` : ''}
+        ${reroll ? `<button class="btn d reroll" title="${T('같은 랭크의 다른 유닛으로 교체')}" ${G.gems < reroll || cell.keep ? 'disabled' : ''}>${T('교체')}<small>${tunaI}${reroll}</small></button>` : ''}
+        <button class="btn o sell" ${cell.keep ? 'disabled' : ''}>${T('판매')}<small>+${t.sell}</small></button>
       </div>`;
     el.popup.hidden = false;
     el.popup.querySelector('.sell').onclick = () => { GAME.sell(i); renderPopup(); };
+    el.popup.querySelector('.keep').onclick = () => { GAME.toggleKeep(i); renderPopup(); };
     const mb = el.popup.querySelector('.merge');
     if (mb) mb.onclick = () => { GAME.merge(i); renderPopup(); };
     const rb = el.popup.querySelector('.reroll');

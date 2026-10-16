@@ -433,8 +433,10 @@
         const t = TIERS[cell.units[0].def.tier];
         m.material.color.setHex(t.hex);
         m.material.opacity = cell.units.length === 3 && canMerge(cell.units[0].def) ? 0.95 : 0.7;
+        if (cell.keep) { m.material.color.setHex(0xffffff); m.material.opacity = 1; } // 유지
         if (cell.silT > 0) { m.material.color.setHex(0xff2040); m.material.opacity = 1; }
       } else {
+        cell.keep = false;
         m.material.color.setHex(0xb8c0c8);
         m.material.opacity = 0.4;
       }
@@ -614,6 +616,7 @@
   function merge(i, quiet) {
     const cell = G.cells[i];
     if (cell.units.length !== 3 || !canMerge(cell.units[0].def)) return;
+    if (keptBlock(cell, quiet)) return;
     const tier = cell.units[0].def.tier + 1;
     const c = lay.cells[i];
     cell.units.forEach(removeUnit);
@@ -636,11 +639,29 @@
   }
 
   function findCellOf(id) { return G.cells.findIndex((c) => c.units.length && c.units[0].def.id === id); }
+  // a cell of that unit that is not kept (유지): what a merge / sale / recipe may use
+  function freeCellOf(id) { return G.cells.findIndex((c) => c.units.length && !c.keep && c.units[0].def.id === id); }
+  // 유지 (keep): AUTO never merges, sells or crafts with these units, and the player can't either until it is off
+  function toggleKeep(i) {
+    const c = G.cells[i];
+    if (!c || !c.units.length) return;
+    c.keep = !c.keep;
+    SFX.play('click');
+    UI.toast(c.keep ? T('유지 ON · 이 유닛은 합성·판매·조합에 쓰이지 않습니다') : T('유지 OFF'), '');
+    refreshCells();
+    UI.update(true);
+  }
+  function keptBlock(c, quiet) {
+    if (!c.keep) return false;
+    if (!quiet) { UI.toast(T('유지 중인 유닛입니다. 유지를 끄면 합성·판매할 수 있습니다'), 'warn'); SFX.play('fail'); }
+    return true;
+  }
 
   const sellAt = (i) => sell(i);
   function sell(i) {
     const cell = G.cells[i];
     if (!cell.units.length) return;
+    if (keptBlock(cell)) return;
     const u = cell.units.pop();
     G.gold += TIERS[u.def.tier].sell;
     FX.sparks(u.x, u.y, 0xffd34d, 12, 2.5, 0.15, 0.5);
@@ -730,6 +751,7 @@
     if (!cell || !cell.units.length) return;
     const d = cell.units[0].def, cost = BAL.reroll[d.tier];
     if (!cost) return;
+    if (keptBlock(cell)) return;
     if (G.gems < cost) { UI.toast(T('참치가 부족합니다'), 'warn'); SFX.play('fail'); return; }
     // room first (the unit's own cell frees up when it is alone): the roll is never refused afterwards
     if (cell.units.length > 1 && !anyEmpty()) { UI.toast(T('배치할 칸이 없습니다'), 'warn'); SFX.play('fail'); return; }
@@ -746,9 +768,9 @@
     UI.update(true);
   }
 
-  function canCraft(r) { return r.parts.every((id) => G.owned.has(id)) && !hasUnique(); }
+  function canCraft(r) { return r.parts.every((id) => freeCellOf(id) >= 0) && !hasUnique(); }
 
-  function craftRoom(r) { return anyEmpty() || r.parts.some((id) => { const i = findCellOf(id); return i >= 0 && G.cells[i].units.length === 1; }); }
+  function craftRoom(r) { return anyEmpty() || r.parts.some((id) => { const i = freeCellOf(id); return i >= 0 && G.cells[i].units.length === 1; }); }
   function craft(ri, quiet) {
     const r = RECIPES[ri];
     if (G.paused) return;
@@ -758,7 +780,7 @@
     let at = -1;
     let sx = 0, sy = 0;
     r.parts.forEach((id) => {
-      const i = findCellOf(id);
+      const i = freeCellOf(id);
       const u = G.cells[i].units.pop();
       sx += u.x / 3; sy += u.y / 3;
       FX.mergeFx(u.x, u.y, 0xff4d6d);
@@ -797,6 +819,7 @@
     G.cells[a].units = G.cells[b].units;
     G.cells[b].units = t;
     const s = G.cells[a].silT; G.cells[a].silT = G.cells[b].silT; G.cells[b].silT = s; // a seal stays on its units
+    const k = G.cells[a].keep; G.cells[a].keep = G.cells[b].keep; G.cells[b].keep = k; // so does 유지
     refreshCells();
     SFX.play('click');
     if (G.tut) G.tut.swapped = true;
@@ -2435,7 +2458,7 @@
 
   function newGame() {
     // clean up previous run
-    G.cells.forEach((c) => { c.units.forEach(removeUnit); c.units = []; });
+    G.cells.forEach((c) => { c.units.forEach(removeUnit); c.units = []; c.keep = false; });
     G.enemies.forEach(disposeEnemy);
     G.corpses.forEach((c) => disposeEnemy(c.e));
     G.bfx.forEach((b) => b.inst.dispose());
@@ -2474,6 +2497,7 @@
       reward: G.reward ? G.reward.map((r) => BAL.rewards.indexOf(r)) : null,
       // SSS keep their ult charge and their own AUTO
       cells: G.cells.map((c) => c.units.map((u) => (u.mana ? [u.def.id, Math.round(u.mana)] : u.def.id))),
+      keep: G.cells.map((c) => (c.keep && c.units.length ? 1 : 0)),
       enemies: G.enemies.filter((e) => e.alive).map((e) => {
         const o = Object.fromEntries(ENEMY_KEYS.map((k) => [k, e[k]]));
         lists.some((l, li) => { const i = l.indexOf(e.info); if (i >= 0) { o.list = li; o.idx = i; } return i >= 0; });
@@ -2512,6 +2536,7 @@
         const u = makeUnit(d); u.mana = mana || 0;
         G.cells[i].units.push(u);
       });
+      G.cells[i].keep = !!(s.keep && s.keep[i]) && G.cells[i].units.length > 0;
       if (ids.length) layoutCell(i, true);
     });
     refreshCells();
@@ -2566,7 +2591,7 @@
   // summons and merges: UR recipes, upgrades, sales and tuna are the player's calls
   function autoplay(sell = true) {
     if (sell) RECIPES.forEach((r, i) => { if (canCraft(r)) craft(i, true); });
-    G.cells.forEach((c, i) => { if (c.units.length === 3 && canMerge(c.units[0].def)) merge(i, true); });
+    G.cells.forEach((c, i) => { if (c.units.length === 3 && !c.keep && canMerge(c.units[0].def)) merge(i, true); });
     if (G.reward && (G.rewardWait || 0) > REWARD_WAIT) autoReward(true);
     if (sell) {
       const [best, bv] = bestUpgrade();
@@ -2581,7 +2606,7 @@
     while (G.gold >= summonCost() && anyEmpty() && !G.paused && G.phase === 'play') summon();
     if (!anyEmpty() && G.gold >= summonCost()) {
       // sell the weakest single to make room
-      const i = G.cells.findIndex((c) => c.units.length && c.units[0].def.tier === 0 && c.units.length < 3);
+      const i = G.cells.findIndex((c) => c.units.length && !c.keep && c.units[0].def.tier === 0 && c.units.length < 3);
       if (sell) { if (i >= 0) sellAt(i); else summon(); }
     }
     if (sell && G.gems >= 2) gamble(G.gems >= 4 ? 2 : 1); // the balance bot only: the player's AUTO leaves tuna to them
@@ -2590,7 +2615,7 @@
   window.GAME = {
     G, lay, boot, newGame, summon, gamble, merge, sell, craft, canCraft, upgrade, summonCost,
     worldToScreen, simulate, autoplay, endGame, findCellOf, enemyLoad, craftRoom, enemyWeight, target, rewardScore, bossMult,
-    ULT_K, canSummon, bestUpgrade, upgradeValue, summonValue, wantedParts, setFocus, takeReward, autoReward, castUlt, readyUlts, ecoMult, critBonus,
+    ULT_K, toggleKeep, canSummon, bestUpgrade, upgradeValue, summonValue, wantedParts, setFocus, takeReward, autoReward, castUlt, readyUlts, ecoMult, critBonus,
     callNext, canCallNext, reroll, swapCells, isOuter, dmgMult, saveRun, savedRun, resumeRun, clearRun, REWARD_WAIT,
     // tutorial: screen rects of a cell / the whole field, and its practice enemies
     cellRect: (i) => screenRect(lay.cells[i].x - BAL.cell / 2, lay.cells[i].y + BAL.cell / 2, lay.cells[i].x + BAL.cell / 2, lay.cells[i].y - BAL.cell / 2),
