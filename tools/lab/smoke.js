@@ -65,30 +65,30 @@
       eq(G().selected, -1, 'nothing selected after the merge'); eq(document.getElementById('popup').hidden, true, 'the unit window closed');
     });
 
-    test('SSS stack to three and merge into a UR; a UR stands alone', () => {
+    test('SSS stack to three and merge into a LR; a LR stands alone', () => {
       fresh();
       for (let k = 0; k < 3; k++) GAME.debugAdd('ullr');
       const i = GAME.findCellOf('ullr'); eq(G().cells[i].units.length, 3, 'three SSS in one cell');
       GAME.merge(i);
       eq(nUnits(), 1, 'units after merge');
-      eq(G().cells.some((c) => c.units.length && c.units[0].def.tier === DATA.UR), true, 'a UR came out');
+      eq(G().cells.some((c) => c.units.length && c.units[0].def.tier === DATA.LR), true, 'a LR came out');
       const ur = G().cells.find((c) => c.units.length).units[0].def.id;
-      GAME.debugAdd(ur); eq(G().cells.filter((c) => c.units.length).length, 2, 'a second UR takes its own cell');
+      GAME.debugAdd(ur); eq(G().cells.filter((c) => c.units.length).length, 2, 'a second LR takes its own cell');
     });
 
-    test('유일: crafted from its parts, only one on the board at a time', () => {
+    test('UR: crafted from its parts, only one on the board at a time', () => {
       fresh();
       const r = DATA.RECIPES[0];
       r.parts.forEach((id) => GAME.debugAdd(id));
       eq(GAME.canCraft(r), true, 'craftable'); GAME.craft(0);
-      eq(G().cells.filter((c) => c.units.some((u) => u.def.tier === DATA.UNIQUE)).length, 1, 'one 유일');
+      eq(G().cells.filter((c) => c.units.some((u) => u.def.tier === DATA.UNIQUE)).length, 1, 'one UR');
       DATA.RECIPES[1].parts.forEach((id) => GAME.debugAdd(id));
-      eq(GAME.canCraft(DATA.RECIPES[1]), false, 'a second 유일 is refused'); GAME.craft(1);
+      eq(GAME.canCraft(DATA.RECIPES[1]), false, 'a second UR is refused'); GAME.craft(1);
       eq(G().cells.filter((c) => c.units.some((u) => u.def.tier === DATA.UNIQUE)).length, 1, 'still one');
       GAME.sell(GAME.findCellOf(r.result)); eq(GAME.canCraft(DATA.RECIPES[1]), true, 'sold: craftable again');
     });
 
-    test('every SSS / UR / 유일 ultimate runs without errors', () => {
+    test('every SSS / LR / UR ultimate runs without errors', () => {
       fresh();
       DATA.UNITS.filter((d) => d.ult).forEach((d) => {
         G().cells.forEach((c, i) => { while (c.units.length) GAME.sell(i); });

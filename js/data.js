@@ -1,21 +1,21 @@
 // Game data: tiers, units, mythic recipes, enemies and balance constants.
 (function () {
   const TIERS = [
-    // the original game's ranks (B / A / S / SS), SSS and UR from merges, and the crafted 유일 (one on the board at a time)
+    // the original game's ranks (B / A / S / SS), SSS and LR from merges, and the crafted UR (one on the board at a time)
     { key: 'C', name: 'B', color: '#63d34a', hex: 0x63d34a, sell: 10 },
     { key: 'R', name: 'A', color: '#38b6ff', hex: 0x38b6ff, sell: 20 },
     { key: 'E', name: 'S', color: '#ffc81e', hex: 0xffc81e, sell: 50 },
     { key: 'L', name: 'SS', color: '#ff9420', hex: 0xff9420, sell: 120 },
     { key: 'M', name: 'SSS', color: '#ff3d5a', hex: 0xff3d5a, sell: 300 },
-    { key: 'U', name: 'UR', color: '#d06bff', hex: 0xd06bff, sell: 900 },
-    { key: 'X', name: '유일', color: '#38f2e8', hex: 0x38f2e8, sell: 700 },
+    { key: 'U', name: 'LR', color: '#d06bff', hex: 0xd06bff, sell: 900 },
+    { key: 'X', name: 'UR', color: '#38f2e8', hex: 0x38f2e8, sell: 700 },
   ];
-  const UR = 5, UNIQUE = 6;
+  const LR = 5, UNIQUE = 6;
 
   // type: single | splash | chain | laser | melee | slow | stun
   // fx: projectile/visual style key used by the effect system
   // ranks follow the original rarity first, then 무력 (attack x crit x evasion, as in the 3Kingdom roster)
-  // ult (SSS / UR / 유일): the original's signature skill, fired by itself when the gauge is full (see game.js ultimate)
+  // ult (SSS / LR / UR): the original's signature skill, fired by itself when the gauge is full (see game.js ultimate)
   const U = (id, name, tier, img, o) => Object.assign({ id, name, tier, img }, o);
   const UNITS = [
     // ── B ──
@@ -49,12 +49,12 @@
     U('lemonadealpha', '레모네이드 알파', 4, 'PECS_LemonadeAlpha_N', { type: 'chain', dmg: 0, rate: 1.0, range: 4.8, chain: 5, fx: 'lightning', color: 0xffe14d, sfx: 'elec', mana: 12, ult: 'domain', ultName: '알파의 지배', desc: '연쇄 공격 / 궁극기: 전장 약화(받는 피해 +30%) + 넉백 + 보스 방어막 봉인' }),
     U('sleipnir', '슬레이프니르', 4, 'BR_Sleipnir_N', { type: 'stun', dmg: 0, rate: 1.0, range: 4.6, splash: 1.4, stun: 0.25, stunDur: 0.8, fx: 'missile', color: 0xffb070, sfx: 'missile', mana: 12, ult: 'rowlaser', ultName: '고정 레이저', desc: '범위 공격 + 기절 / 궁극기: 일직선 레이저로 2초 속박' }),
     U('blacklilith', '블랙 릴리스', 4, '3P_BlackLilith_N', { type: 'melee', dmg: 0, rate: 0.4, range: 2.8, splash: 1.0, crit: 0.25, fx: 'slash', color: 0xd0405a, sfx: 'slash', mana: 12, ult: 'taunt', ultName: '도발의 칼날', desc: '근접 참격 / 궁극기: 주변 적 도발·속박 + 약화(받는 피해 +25%)' }),
-    // ── UR (SSS 3기 합성) ──
+    // ── LR (SSS 3기 합성) ──
     U('brunhild', '브륀힐드', 5, 'BR_Brunhild_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.0, splash: 1.8, fx: 'fireball', color: 0xff5530, sfx: 'expM', mana: 10, ult: 'wolfpack', ultName: '화염 늑대 무리', desc: '화염 폭격 / 궁극기: 늑대 무리 광역 화염 + 화상 중첩' }),
     U('tiamat', '티아멧', 5, 'ST_Tiamat_N', { type: 'laser', dmg: 0, rate: 1.25, range: 5.4, width: 0.7, fx: 'laser', color: 0x6ef0ff, sfx: 'laserBig', mana: 10, ult: 'execute', ultName: '격멸 포격', desc: '대구경 관통 레이저 / 궁극기: 장갑 파괴 후 단일 대상 초고화력(빈사 적 처형)' }),
     U('khan', '칸', 5, 'BR_Khan_N', { type: 'single', dmg: 0, rate: 0.5, range: 5.0, crit: 0.3, fx: 'snipe', color: 0xffcf7a, sfx: 'rifle', mana: 10, ult: 'sandstorm', ultName: '신속의 모래폭풍', desc: '고속 사격 / 궁극기: 방어 무시 모래폭풍(전체) + 처치하면 공격 속도 증가' }),
     U('labiata', '라비아타', 5, '3P_Labiata_N', { type: 'melee', dmg: 0, rate: 0.38, range: 3.0, splash: 1.1, crit: 0.3, fx: 'slash', color: 0xffd36e, sfx: 'swing', mana: 10, ult: 'sweep', ultName: '분쇄 연격', desc: '연속 타격 / 궁극기: 가로·세로 연격 + 아군 공격력 +25%' }),
-    // ── 유일 (조합, 필드에 1기만) ──
+    // ── UR (조합, 필드에 1기만) ──
     U('constantia', '콘스탄챠 S2', 6, '3P_ConstantiaS2_N', { type: 'laser', dmg: 0, rate: 1.0, range: 5.6, width: 0.7, fx: 'laser', color: 0xff6af0, sfx: 'laserBig', mana: 12, ult: 'snipe', ultName: '정밀 저격', desc: '관통 레이저 / 궁극기: 가장 강한 적 저격 + 속박 + 표식(받는 피해 +35%)' }),
     U('titania', '티타니아', 6, '3P_Titania_N', { type: 'chain', dmg: 0, rate: 0.9, range: 5.2, chain: 6, slow: 0.3, slowDur: 1.2, fx: 'iceChain', color: 0xaef4ff, sfx: 'ice', mana: 10, ult: 'freeze', ultName: '서리 폭풍', desc: '빙결 연쇄 / 궁극기: 전장 빙결 후 55% 둔화' }),
     U('mercury', '머큐리', 6, 'ST_Mercury_N', { type: 'melee', dmg: 0, rate: 0.3, range: 3.2, splash: 1.1, crit: 0.4, fx: 'slash', color: 0x7dffb0, sfx: 'slash', mana: 6, ult: 'blades', ultName: '신속의 바람', desc: '초고속 참격 / 궁극기: 아군 전원 가속 + 가장 강한 적 둔화 + 난무' }),
@@ -70,7 +70,7 @@
   // Damage from one rule instead of per-unit guesses: every rank is ~4x the one below (so each merge is a clear
   // power spike over the three units it eats), and within a rank the attack type only shifts single-target damage
   // (area / chain / utility units trade it for coverage; spread <= 1.6x). Expected crit damage is included.
-  // UR (three SSS) ~3.5x an SSS; a 유일 costs two SSS and an SS, so it sits between them but brings the strongest skill
+  // LR (three SSS) ~3.5x an SSS; a UR costs two SSS and an SS, so it sits between them but brings the strongest skill
   const TIER_DPS = [12, 48, 190, 750, 2700, 9500, 6500];
   const TYPE_K = { single: 1.2, melee: 1.25, splash: 0.85, chain: 0.8, laser: 0.9, slow: 0.8, stun: 0.9 };
   UNITS.forEach((u) => {
@@ -78,7 +78,7 @@
     u.dps = TIER_DPS[u.tier] * TYPE_K[u.type]; // single-target damage per second at upgrade level 0
   });
 
-  // 유일 recipes: two SSS and one SS each (every SSS feeds two recipes); only one 유일 may be on the board at a time
+  // UR recipes: two SSS and one SS each (every SSS feeds two recipes); only one UR may be on the board at a time
   const RECIPES = [
     { result: 'constantia', parts: ['ullr', 'blacklilith', 'leona'] },
     { result: 'titania', parts: ['lemonadealpha', 'eternity', 'saraqael'] },
@@ -134,7 +134,7 @@
     eliteWeight: 10,         // ... and then counts as this many enemies
     vuln: 1.15,              // slowed or stunned enemies take this much more damage
     callGold: (w) => 4 + Math.floor(w / 2),   // parts per second skipped when calling the next wave early
-    reroll: [0, 1, 1, 2, 3], // tuna to swap one unit of a rank for another of the same rank (B, UR and 유일 can't)
+    reroll: [0, 1, 1, 2, 3], // tuna to swap one unit of a rank for another of the same rank (B, LR and UR can't)
     // difficulty: enemy HP multiplier
     // difficulty: enemy HP multiplier from wave 1 (hp0) to wave 80 (hp1): hard bites late, not at the first boss
     diffs: [{ key: 'easy', name: '쉬움', hp0: 0.4, hp1: 0.55, bossTime: 15 }, { key: 'normal', name: '보통', hp0: 1, hp1: 1 }, { key: 'hard', name: '어려움', hp0: 1.1, hp1: 1.38 }],
@@ -148,7 +148,7 @@
     pity: 15,                // summons below S in a row before an S is guaranteed
     // enemy HP from the measured player power (tools/lab/balance.js probe, expert play): a normal wave holds about
     // 5 s (wave 1) .. 13 s (wave 79) of that damage, a boss 30 .. 48 s of its single-target damage (70 s limit).
-    // Anchors [wave, HP]; geometric in between. Re-scaled for the SSS / UR / 유일 ranks (2026-10): an SSS now takes
+    // Anchors [wave, HP]; geometric in between. Re-scaled for the SSS / LR / UR ranks (2026-10): an SSS now takes
     // three of one SS, so the board's power per wave (tools/lab/power.js) fell to ~25-75% of the old crafted-SSS
     // curve; tools/lab/winrate.js keeps the expert bot's normal win rate where it was (~90%).
     hpTable: [[1, 70], [3, 137], [5, 266], [8, 662], [11, 1649], [14, 3419], [17, 7091], [21, 17217], [25, 48384], [29, 97109], [33, 129872], [37, 146738], [41, 169789], [45, 231986], [49, 328576], [55, 500019], [59, 623073], [65, 767982], [69, 891382], [75, 1193369], [79, 1430271]],
@@ -217,7 +217,7 @@
   const bossFor = (w) => (w >= BAL.lastWave ? BOSSES[4] : BOSSES[(w / 10 - 1) % 4]);
 
   window.DATA = {
-    TIERS, UR, UNIQUE, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL, bossFor,
+    TIERS, LR, UNIQUE, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL, bossFor,
     unit: Object.fromEntries(UNITS.map((u) => [u.id, u])),
     byTier: (t) => UNITS.filter((u) => u.tier === t),
   };

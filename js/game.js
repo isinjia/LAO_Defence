@@ -1,6 +1,6 @@
 // Core game: scene setup, entities, waves, combat and input.
 (function () {
-  const { TIERS, UR, UNIQUE, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL } = DATA;
+  const { TIERS, LR, UNIQUE, UNITS, RECIPES, NORMALS, ELITES, BOSSES, BAL } = DATA;
   const L = FX.L;
   const rnd = FX.rnd;
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -9,7 +9,7 @@
   const pickL = (a, k) => a[Math.floor(luck(k) * a.length)];
   const STREAMS = ['summon', 'merge', 'gamble', 'reward', 'reroll', 'auto'];
   const makeStreams = (seed) => Object.fromEntries(STREAMS.map((k, i) => [k, mulberry32(seed * 31 + i * 7919)]));
-  // a unit of a rank: 35% of the time it is the last missing part of a 유일 recipe the player is two thirds into
+  // a unit of a rank: 35% of the time it is the last missing part of a UR recipe the player is two thirds into
   function wantedParts(t) { return RECIPES.map((r) => r.parts.filter((p) => !G.owned.has(p))).filter((m) => m.length === 1).map((m) => DATA.unit[m[0]]).filter((d) => t == null || d.tier === t); }
   function pickRank(t, k) {
     // the tutorial's summons are all one B unit, so the first three stack up for the merge lesson
@@ -17,7 +17,7 @@
     const want = wantedParts(t);
     if (want.length && luck(k) < BAL.partBias) return pickL(want, k);
     // an S..SSS from a merge / summon / gamble often is one already stacking on the board: three of one SS (for an
-    // SSS) and of one SSS (for a UR) stay reachable with five or six kinds per rank
+    // SSS) and of one SSS (for an LR) stay reachable with five or six kinds per rank
     if (t >= 2 && t <= 4 && k !== 'reroll' && k !== 'reward') {
       const stacking = UNITS.filter((d) => d.tier === t && G.cells.some((c) => c.units.length && c.units.length < 3 && c.units[0].def.id === d.id));
       if (stacking.length && luck(k) < BAL.stackBias) return pickL(stacking, k);
@@ -442,16 +442,16 @@
     G.cells.forEach((c) => c.units.forEach((u) => G.owned.add(u.def.id)));
     if (G.phase === 'play' && UI.tip && !G.headless && !G.tut) { // the tutorial teaches these itself
       if (G.cells.some((c) => c.units.length === 3 && canMerge(c.units[0].def))) UI.tip('merge', MOBILE ? T('같은 유닛 3기가 모였습니다! 그 칸을 탭해 <b>합성</b>하면 한 랭크 위 유닛이 됩니다.') : T('같은 유닛 3기가 모였습니다! 그 칸을 눌러 <b>합성</b>하거나 <b>M</b> 키를 누르면 한 랭크 위 유닛이 됩니다.'));
-      if (RECIPES.some((r) => r.parts.some((p) => G.owned.has(p)))) UI.tip('sss', T('<b>유일 조합</b> 재료(SSS)를 얻었습니다. 재료 3종을 모으면 [조합]에서 유일 유닛을 만듭니다(필드에 1기만).'));
+      if (RECIPES.some((r) => r.parts.some((p) => G.owned.has(p)))) UI.tip('sss', T('<b>UR 조합</b> 재료(SSS)를 얻었습니다. 재료 3종을 모으면 [조합]에서 UR 유닛을 만듭니다(필드에 1기만).'));
     }
     UI.onCellsChanged();
   }
 
   // a cell next to the path (the middle row's inner cells are ~3.7 away from it)
   function isOuter(i) { const r = Math.floor(i / BAL.cols), c = i % BAL.cols; return r !== 1 || c === 0 || c === BAL.cols - 1; }
-  // B..SSS stack to three and merge one rank up (three SSS make a UR); UR and 유일 stand alone
-  function stackMax(def) { return def.tier >= UR ? 1 : 3; }
-  function canMerge(def) { return def.tier < UR; }
+  // B..SSS stack to three and merge one rank up (three SSS make an LR); LR and UR stand alone
+  function stackMax(def) { return def.tier >= LR ? 1 : 3; }
+  function canMerge(def) { return def.tier < LR; }
   function hasUnique() { return G.cells.some((c) => c.units.some((u) => u.def.tier === UNIQUE)); }
   // cell indices bottom row first, right to left within a row (world y up, x right; follows the current orientation)
   function fillOrder() {
@@ -564,7 +564,7 @@
     if (!quiet) buzz(tier >= 3 ? [14, 50, 14, 50, 30] : [12, 40, 12]);
     if (G.tut) G.tut.merged = true;
     if (tier >= 2) UI.announce(def, T('{0}급 합성!', TIERS[tier].name));
-    if (tier >= UR) FX.flash(TIERS[tier].hex, 0.5), FX.shake(0.3);
+    if (tier >= LR) FX.flash(TIERS[tier].hex, 0.5), FX.shake(0.3);
     // the selection window closes after a merge (the new unit is shown by its reveal, not by a popup)
     if (quiet) keepSelection();
     else { G.selected = -1; UI.closePopup(); }
@@ -688,7 +688,7 @@
   function craft(ri, quiet) {
     const r = RECIPES[ri];
     if (G.paused) return;
-    if (hasUnique()) { if (!quiet) { UI.toast(T('유일 유닛은 필드에 1기만 둘 수 있습니다 (판매하면 다시 조합 가능)'), 'warn'); SFX.play('fail'); } return; }
+    if (hasUnique()) { if (!quiet) { UI.toast(T('UR 유닛은 필드에 1기만 둘 수 있습니다 (판매하면 다시 조합 가능)'), 'warn'); SFX.play('fail'); } return; }
     if (!canCraft(r)) return;
     if (!craftRoom(r)) { if (!quiet) { UI.toast(T('배치할 칸이 없습니다'), 'warn'); SFX.play('fail'); } return; }
     let at = -1;
@@ -705,7 +705,7 @@
     const def = DATA.unit[r.result];
     const i = addUnit(def, at, sx, sy);
     SFX.play('pickSS');
-    UI.announce(def, T('유일 조합!'));
+    UI.announce(def, T('UR 조합!'));
     if (quiet) keepSelection();
     else { G.selected = i; UI.onSelect(); }
     UI.update(true);
@@ -1403,7 +1403,7 @@
   function charge(u, e, k) {
     const d = u.def;
     if (!d.ult) return;
-    // an SSS / UR / 유일 fires its ultimate by itself as soon as the gauge is full (no buttons); a full gauge that found no
+    // an SSS / LR / UR fires its ultimate by itself as soon as the gauge is full (no buttons); a full gauge that found no
     // target retries on the next attack
     if (u.mana < 100) u.mana = Math.min(100, u.mana + d.mana * k * G.buff.mana);
     if (u.mana >= 100) castUlt(u, e);
@@ -1600,7 +1600,7 @@
         for (const o of enemiesNear(e.x, e.y, 2.6)) { stun(o, 1.6); mark(o, 1.25, 6); FX.slash(o.x, o.y, d.color, 1.6); damage(o, base * 5, d.color, true, d); }
         break;
       }
-      // ── UR ──
+      // ── LR ──
       case 'wolfpack': { // Brunhild: three waves of the fire wolves over the crowds; the burns stack (up to 3)
         for (let w = 0; w < 3; w++) {
           FX.later(w * 0.45, () => {
@@ -1655,7 +1655,7 @@
         rally(1.25, 8);
         break;
       }
-      // ── 유일 ──
+      // ── UR ──
       case 'snipe': { // Constantia S2: the strongest enemy shot, rooted 3 s and marked (+35% for 8 s); the shot pierces on
         const t = strongest() || e;
         const ang = Math.atan2(t.y - u.y, t.x - u.x);
@@ -1773,7 +1773,7 @@
     // the boss reward pick runs on the player's clock (x3 speed does not shorten it)
     if (G.reward) G.rewardWait = (G.rewardWait || 0) + dt / Math.max(1, G.speed);
     if (G.won) { G.winT -= dt; if (G.winT <= 0) endGame(true); return; }
-    // AUTO: the player's own toggle (summon / merge; never upgrades, crafts 유일, sells units or bets tuna)
+    // AUTO: the player's own toggle (summon / merge; never upgrades, crafts UR, sells units or bets tuna)
     // every AUTO_EVERY real seconds (x3 speed does not hurry it); the first round as soon as it is switched on
     if (G.opt.auto && G.phase === 'play') {
       G.autoT = (G.autoT || 0) - dt / Math.max(1, G.speed);
@@ -2397,8 +2397,8 @@
   const REWARD_WAIT = 18;
   // the player's AUTO summons / merges once every this many real seconds
   const AUTO_EVERY = 5;
-  // sell: the balance bot (crafts 유일, upgrades, sells weak singles for room, bets tuna). The player's AUTO only
-  // summons and merges: 유일 recipes, upgrades, sales and tuna are the player's calls
+  // sell: the balance bot (crafts UR, upgrades, sells weak singles for room, bets tuna). The player's AUTO only
+  // summons and merges: UR recipes, upgrades, sales and tuna are the player's calls
   function autoplay(sell = true) {
     if (sell) RECIPES.forEach((r, i) => { if (canCraft(r)) craft(i, true); });
     G.cells.forEach((c, i) => { if (c.units.length === 3 && canMerge(c.units[0].def)) merge(i, true); });
