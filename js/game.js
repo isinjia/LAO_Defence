@@ -1795,7 +1795,7 @@
         });
         break;
       }
-      case 'freeze': { // Titania Frost · 서리폭풍: a 3x3 frost storm on the crowd, ignores protection, more on enemies with
+      case 'freeze': { // Titania Frost · 서리 폭풍: a 3x3 frost storm on the crowd, ignores protection, more on enemies with
         // their cold resistance down (chilled by her chain: slowed); Titania herself is spent afterwards (AP down: late attacks)
         const c = densest(BAL.cell * 1.5, 1)[0] || e;
         FX.freezeAll(c.x, c.y, d.color);
@@ -1833,7 +1833,7 @@
         }, d.color);
         break;
       }
-      case 'thunder': { // Fafnir · Shock and Awe (the official global name; no Korean name is published): an electric blast on one enemy and its neighbours (they take 25%); every
+      case 'thunder': { // Fafnir · 뇌정벽력 (lo.swaytwig.com): an electric blast on one enemy and its neighbours (they take 25%); every
         // adjacent enemy adds +14.5% (up to 4), and with two or more around, protection is torn off (boss shields)
         const t = densest(1.4, 1)[0] || e;
         const near = enemiesNear(t.x, t.y, 1.4).filter((o) => o !== t);
