@@ -281,7 +281,10 @@ def build_prefab(path, atlas):
                 n["skin"] = {
                     "mesh": [d["m_Mesh"].get("guid"), int(d["m_Mesh"].get("fileID", 0))],
                     "bones": [str(b["fileID"]) for b in d.get("m_Bones") or []],
-                    "o": int(d.get("m_SortingOrder", 0)), "L": int(d.get("m_SortingLayer", 0)),
+                    # the layer by its id, as for sprites (m_SortingLayer is only a cached value: 0 on some prefabs, e.g.
+                    # Daphne's hair and hat, which then sorted under the whole body)
+                    "o": int(d.get("m_SortingOrder", 0)),
+                    "L": LAYER_IDS.get(int(d["m_SortingLayerID"]), 2) if "m_SortingLayerID" in d else int(d.get("m_SortingLayer", 0)),
                     "e": int(d.get("m_Enabled", 1)),
                     "mat": mats[0].get("guid") if mats else None,
                 }
