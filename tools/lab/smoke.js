@@ -91,6 +91,20 @@
       GAME.sell(GAME.findCellOf(r.result)); eq(GAME.canCraft(DATA.RECIPES[1]), true, 'sold: craftable again');
     });
 
+    // the original skill names, checked word for word in the rendered namu.wiki pages (2026-10); Fafnir has no published
+    // Korean name (the namu skill table is placeholders), so the official global name from lastorigin.wiki.gg
+    test('SSS / LR / UR ultimates carry their original skill names', () => {
+      const ORIGINAL = {
+        ullr: '포커스 샷', harpy: 'NARAAK 미사일', eternity: '편히 잠드소서', lemonadealpha: '케스토스 히마스: 출력전개',
+        sleipnir: '한계돌파', blacklilith: '듀얼 버스트', brunhild: '핏빛 효후', tiamat: '풀 웨폰 어썰트', khan: '데저트 스톰',
+        labiata: '백화요란', constantia: '발목 잡기', titania: '서리폭풍', mercury: '최상의 시간', empress: '펭귄 서프라이즈!',
+        fafnir: 'Shock and Awe', ramiel: '억겁의 성화',
+      };
+      const ko = (d) => d._ko_ultName || d.ultName; // the source name (i18n may have swapped in a translation)
+      DATA.UNITS.filter((d) => d.tier >= 4 && d.tier <= DATA.UNIQUE).forEach((d) => eq(ko(d), ORIGINAL[d.id], d.id));
+      eq(Object.keys(ORIGINAL).length, DATA.UNITS.filter((d) => d.tier >= 4 && d.tier <= DATA.UNIQUE).length, 'every one listed');
+    });
+
     test('GOD: a flat 0.0001% summon (luck upgrades do not change it), one per cell, never merges', () => {
       eq(DATA.BAL.godChance, 0.000001, '0.0001%');
       fresh(); G().gold = 1e6; G().upg.luck = 5;
