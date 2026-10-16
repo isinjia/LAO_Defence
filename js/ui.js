@@ -400,6 +400,18 @@
   function onSelect() { renderPopup(); }
   function closePopup() { el.popup.hidden = true; }
 
+  function attackDetails(d) {
+    const notes = [d.desc.split(' / ')[0]];
+    if (d.chain) notes.push(`최대 ${d.chain}명에게 연쇄 공격 · 다음 대상마다 피해 15% 감소`);
+    else if (d.type === 'laser') notes.push('직선 경로의 모든 적을 관통');
+    else if (d.splash) notes.push(`대상 주변 반경 ${d.splash} 범위 공격`);
+    else notes.push('적 하나를 공격');
+    if (d.slow) notes.push(`${d.slowDur}초 동안 이동 속도 ${Math.round(d.slow * 100)}% 감소`);
+    if (d.stun) notes.push(`${Math.round(d.stun * 100)}% 확률로 ${d.stunDur}초 기절`);
+    if (d.crit) notes.push(`기본 치명타 확률 ${Math.round(d.crit * 100)}% · 치명타 피해 2.2배`);
+    return notes.join(' · ');
+  }
+
   function renderPopup() {
     const G = GAME.G;
     const i = G.selected;
@@ -427,7 +439,8 @@
         ${stat('i_atk', T('공격력'), fmt(d.dmg * mult))}${stat('i_ap', T('공격 속도'), (1 / d.rate).toFixed(1) + '/s')}
         ${stat('i_acc', T('사거리'), +(d.range + G.buff.range).toFixed(1))}${stat('i_crit', T('보유'), cell.units.length + '/' + max)}
       </div>
-      ${d.ult ? `<div class="mana"><span>${T('궁극기 · {0}', d.ultName)}</span><div class="gauge c"><i style="transform:scaleX(${u.mana / 100})"></i></div></div>` : ''}
+      <div class="combat-info"><b>${T('기본 공격')}</b><p>${attackDetails(d)}</p></div>
+      ${d.ult ? `<div class="combat-info"><b>${T('궁극기 · {0}', d.ultName)} <small>자동 발동</small></b><p>${d.desc.split(' / ').slice(1).join(' / ').replace(/^궁극기:\s*/, '')}</p></div><div class="mana"><span>게이지가 가득 차면 자동으로 사용합니다</span><div class="gauge c"><i style="transform:scaleX(${u.mana / 100})"></i></div></div>` : ''}
       ${uses.length ? `<div class="uses">${T('UR 재료')} ${uses.map((m) => hex(m)).join('')}</div>` : ''}
       ${d.range + G.buff.range < gap + 0.2 ? `<div class="warn">${T('이 칸에서는 적에게 닿지 않습니다. 바깥쪽 칸으로 옮기세요')}</div>` : ''}
       <div class="btns">

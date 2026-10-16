@@ -140,8 +140,8 @@
         ck('Constantia: mark', near(ct.markK, 1.145)); ck('Constantia: immobile 2 rounds', ct.stunT > 4); ck('Constantia: AP -34%', near(ct.slowAmt, 0.34));
         s = setup('titania'); cast(s.u, s.es[0], 0.3); ck('Titania: AP -3.8% (천년서리)', s.es.some((e) => near(e.slowAmt, 0.038))); ck('Titania: her own AP -50% afterwards', s.u.lateT > 0);
         s = setup('mercury', 3, 3000, ['brownie']); cast(s.u, s.es[0], 0.2);
-        ck('Mercury: every ally AP up (haste)', G().cells.every((c) => c.units.every((x) => x.hasteT > 0))); ck('Mercury: defense penetration +19%', near(G().rallyK, 1.19));
-        s = setup('mercury', 3, 3000, ['tiamat']); cast(s.u, s.es[0], 0.2); ck('Mercury: x1.5 with a Strikers member', near(G().rallyK, 1 + 0.19 * 1.5));
+        ck('Mercury: every ally AP up (haste)', G().cells.every((c) => c.units.every((x) => x.hasteT > 0))); ck('Mercury: attack +19%', near(G().rallyK, 1.19)); ck('Mercury: defense penetration +19%', near(G().supportPierceK, 0.19) && G().supportPierceT > 0);
+        s = setup('mercury', 3, 3000, ['tiamat']); cast(s.u, s.es[0], 0.2); ck('Mercury: x1.5 with a Strikers member', near(G().rallyK, 1 + 0.19 * 1.5) && near(G().supportPierceK, 0.19 * 1.5));
         s = setup('empress', 1, 1e6); s.es[0].slowT = 9; s.es[0].slowAmt = 0.2; cast(s.u, s.es[0], 2.5);
         ck('Empress: waterlogged target can not act', s.es[0].stunT > 0); ck('Empress: frozen +38.5% damage taken', near(s.es[0].markK, 1.385));
         s = setup('empress', 1, 1e6); cast(s.u, s.es[0], 2.5); ck('Empress: a dry target is not frozen', !(s.es[0].stunT > 0));

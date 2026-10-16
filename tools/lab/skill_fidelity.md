@@ -63,3 +63,7 @@ Princess on the field).
 The measurement found one real bug, now fixed: Harpeia's missiles were spread over three crowds instead of the
 chosen area, and her own evasion-down counted as a prior 표식 for her +47.5% bonus.
 
+
+## Mercury balance adjustment (2026-10-17)
+
+Mercury now reaches 6.2 (was 4.4). Her existing game-specific squad attack bonus is retained for balance and explicitly described; armour penetration is now independently applied at 19% (28.5% with Tiamat or Ullr), for 5 seconds. Haste is 50% for 5 seconds, or 7.5 seconds with a Strikers member. Support penetration preserves shields, does not amplify fixed damage or full penetration, and does not stack with stronger partial penetration. `node tools/lab/mercury_test.cjs` checks the actual damage function and ultimate branch; this is not a full-match win-rate measurement.

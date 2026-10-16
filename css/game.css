@@ -271,6 +271,11 @@ button:focus-visible { outline: 2px solid var(--y); outline-offset: 2px; }
 #popup { position: absolute; left: 0; top: 0; width: 300px; padding: 12px 14px 14px; z-index: 6; background: rgba(8, 9, 11, 0.92);
   border: 2px solid transparent; border-image: var(--s-sqframe) 6 14 fill / 6px 14px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6); }
 #popup[hidden] { display: none; }
+#popup { max-height: calc(100% - 16px); overflow-y: auto; }
+#popup .combat-info { margin-top: 9px; padding: 8px 10px; background: rgba(255, 255, 255, 0.045); border-left: 2px solid var(--c); }
+#popup .combat-info > b { display: block; font-size: 13px; color: #fff; }
+#popup .combat-info small { color: var(--c); font-size: 11px; margin-left: 4px; }
+#popup .combat-info p { margin: 5px 0 0; color: #cbd0d8; font-size: 12px; line-height: 1.65; word-break: keep-all; overflow-wrap: anywhere; }
 #popup::before { content: ''; position: absolute; left: 14px; right: 14px; top: 0; height: 3px; background: var(--c); }
 #popup .ph { display: flex; gap: 12px; align-items: center; }
 #popup .ph .hx { width: 70px; height: 70px; }

@@ -967,10 +967,11 @@
     const fixed = pierce === 'fixed'; // fixed damage: no armour, shield, mark, vulnerability or boss multiplier
     if (!fixed && (e.slowT > 0 || e.stunT > 0)) amount *= BAL.vuln;
     if (!fixed && e.markT > 0) amount *= e.markK;
-    if (fixed) { /* as it is */ } else if (typeof pierce === 'number') amount *= e.armor + (1 - e.armor) * pierce; // shields ignored, armour partly
+    const supportPierce = src && G.supportPierceT > 0 ? G.supportPierceK : 0;
+    if (fixed) { /* as it is */ } else if (typeof pierce === 'number') amount *= e.armor + (1 - e.armor) * Math.max(pierce, supportPierce); // shields ignored, armour partly
     else if (!pierce) {
       if (e.shieldT > 0) amount *= e.shieldK || 0.2; // a nightmare boss's shield: 0.1
-      amount *= e.armor;
+      amount *= e.armor + (1 - e.armor) * supportPierce;
     }
     if (!fixed && e.resist && src) amount *= src.type === 'melee' ? 1.3 : 0.75;
     if (!fixed && e.kind !== 'normal') amount *= bossMult();
@@ -2059,6 +2060,9 @@
           c.units.forEach((x) => { x.hasteT = 5 * k; FX.ring(x.x, x.y, 0.2, 0.9, d.color, 0.4); });
         });
         refreshCells();
+        // Support penetration affects armour only; it never removes a shield or amplifies fixed damage.
+        G.supportPierceK = Math.max(G.supportPierceT > 0 ? G.supportPierceK : 0, 0.19 * k);
+        G.supportPierceT = 5;
         rally(1 + 0.19 * k, 5);
         SFX.play('reinforce');
         break;
@@ -2202,6 +2206,7 @@
   function step(dt) {
     G.time += dt;
     if (G.rallyT > 0) G.rallyT -= dt;
+    if (G.supportPierceT > 0) G.supportPierceT -= dt;
     // the boss reward pick runs on the player's clock (x3 speed does not shorten it)
     if (G.reward) G.rewardWait = (G.rewardWait || 0) + dt / Math.max(1, G.speed);
     if (G.won) { G.winT -= dt; if (G.winT <= 0) endGame(true); return; }
@@ -2731,7 +2736,7 @@
     Object.assign(G, {
       phase: 'play', paused: false, speed: 1, gold: BAL.startGold, gems: BAL.startGems, wave: 0, waveT: 0,
       spawnLeft: 0, spawnT: 0, bossT: 0, boss: null, enemies: [], corpses: [], projs: [], bfx: [], sfx: [], summons: 0, pity: 0, won: false,
-      upg: { atk: 0, boss: 0, eco: 0, luck: 0 }, buff: { atk: 1, crit: 0, eco: 1, time: 0, mana: 1, range: 0, mutx: 1, nullify: false }, rallyT: 0, rallyK: 1, reward: null, mut: null, bossMax: BAL.bossTime, waveMax: 3, labUlt: false, kills: 0, time: 0, selected: -1, dmgBy: {}, peak: 0,
+      upg: { atk: 0, boss: 0, eco: 0, luck: 0 }, buff: { atk: 1, crit: 0, eco: 1, time: 0, mana: 1, range: 0, mutx: 1, nullify: false }, rallyT: 0, rallyK: 1, supportPierceT: 0, supportPierceK: 0, reward: null, mut: null, bossMax: BAL.bossTime, waveMax: 3, labUlt: false, kills: 0, time: 0, selected: -1, dmgBy: {}, peak: 0,
       diff: G.daily ? 1 : G.opt.diff == null ? 1 : G.opt.diff,
       rng: G.daily ? makeStreams(G.daily) : null, focus: null, hintUpg: false, tut: null,
     });
