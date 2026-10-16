@@ -55,6 +55,7 @@
     el.btnPause.onclick = () => togglePause();
     el.btnSettings.onclick = () => toggleDrawer('settings');
     $('#btnPauseSet').onclick = () => toggleDrawer('settings');
+    if ($('#btnNotes')) $('#btnNotes').onclick = openNotes;
     el.modal.addEventListener('pointerdown', (e) => { if (e.target === el.modal) closeDrawer(); });
     // a new operation over a saved one asks first (the save would be replaced)
     const startFresh = () => {
@@ -228,6 +229,16 @@
       $('#askNo').onclick = () => askDone(false);
       ov.onpointerdown = (e) => { if (e.target === ov) askDone(false); };
     });
+  }
+
+  // the title's patch notes (js/notes.js)
+  function openNotes() {
+    const ov = $('#notesOv');
+    $('#notesList').innerHTML = (window.NOTES || []).map((n) => `<section><b>ver ${n.v}</b><ul>${n.items.map((t) => `<li>${t}</li>`).join('')}</ul></section>`).join('');
+    ov.hidden = false; SFX.play('click');
+    const close = () => { ov.hidden = true; SFX.play('click'); };
+    $('#notesClose').onclick = close;
+    ov.onpointerdown = (e) => { if (e.target === ov) close(); };
   }
 
   function togglePause(v) {

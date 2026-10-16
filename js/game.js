@@ -2014,7 +2014,8 @@
             FX.slash(o.x, o.y, d.color, 1.8);
             const crit = ultCrit(u);
             if (crit && u.plasma >= 3) o.shieldT = 0;
-            damage(o, base * (k ? 4 : 5) * (1 + 0.19 * (u.plasma || 0)), d.color, crit, d, true);
+            // (2.1 / 1.7: tuned down 2026-10, her whole-row sweep comes round twice as often as other LRs' ultimates)
+            damage(o, base * (k ? 1.7 : 2.1) * (1 + 0.19 * (u.plasma || 0)), d.color, crit, d, true);
             if (!o.alive) u.plasma = (u.plasma || 0) + 1;
           }
         }));
@@ -2105,9 +2106,10 @@
           FX.later(k * 0.2, () => {
             for (const z of G.enemies) {
               if (!z.alive || Math.abs(z.x - c.x) > BAL.cell * 1.5 || Math.abs(z.y - c.y) > BAL.cell * 1.5) continue; // all 9 tiles
-              damage(z, base * 2, d.color, false, d, true);
-              // fixed fire: 1.25x base over 2.5 s, or 30x that (37.5x base over 7 s) in 원죄의 굴레
-              if (k === 0) { if (bound) { z.shieldT = 0; burn(z, base * 37.5 / 7, 7, d, true); } else burn(z, base * 0.5, 2.5, d, true); }
+              // (x0.4 of the first tuning, 2026-10: she out-damaged every other unit 2-5x; the 30x branch ratio is kept)
+              damage(z, base * 0.8, d.color, false, d, true);
+              // fixed fire: 0.5x base over 2.5 s, or 30x that (15x base over 7 s) in 원죄의 굴레
+              if (k === 0) { if (bound) { z.shieldT = 0; burn(z, base * 15 / 7, 7, d, true); } else burn(z, base * 0.2, 2.5, d, true); }
             }
           });
         }

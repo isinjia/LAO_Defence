@@ -526,7 +526,7 @@ html:lang(zh-Hant) { --kr: 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans TC', 
 #titleBg { position: absolute; inset: 0; background-size: cover; background-position: center 28%; filter: brightness(0.5) saturate(1.05); animation: kenburns 30s ease-in-out infinite alternate; }
 @keyframes kenburns { to { transform: scale(1.1); } }
 #title::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(0deg, rgba(0, 0, 0, 0.95) 8%, rgba(0, 0, 0, 0.1) 55%, rgba(0, 0, 0, 0.55)); }
-#title > *:not(#titleBg):not(.ver) { position: relative; z-index: 2; }
+#title > *:not(#titleBg):not(.ver):not(.notesBtn) { position: relative; z-index: 2; }
 .ver { z-index: 2; }
 body.paused #bottom { pointer-events: none; filter: brightness(0.55) saturate(0.6); }
 .logo { display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -853,3 +853,15 @@ html:not(:lang(ko)) .act b, html:not(:lang(ko)) .act small { white-space: nowrap
 #roulette .rsel { position: absolute; left: 6px; right: 6px; top: 44px; height: 44px; border-top: 2px solid #ffd040; border-bottom: 2px solid #ffd040; background: rgba(255, 200, 60, 0.08); }
 #roulette.done .rwin { animation: rouFlash 0.5s 2; }
 @keyframes rouFlash { 50% { box-shadow: 0 0 50px #ff3030; border-color: #ffd040; } }
+
+/* title: patch notes */
+#title .notesBtn { position: absolute; right: 14px; bottom: 28px; z-index: 2; padding: 4px 12px; font-size: 12px; color: #ffd84a; background: rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 204, 0, 0.45); border-radius: 4px; cursor: pointer; }
+#title .notesBtn:hover { background: rgba(255, 204, 0, 0.15); }
+#notesOv { position: fixed; inset: 0; display: grid; place-items: center; z-index: 60; background: rgba(0, 0, 0, 0.6); }
+#notesOv[hidden] { display: none; }
+.dlg.notes { min-height: 0; max-height: 86vh; }
+.dlg.notes .nlist { width: min(720px, 100%); max-height: 60vh; overflow-y: auto; text-align: left; padding: 0 6px; }
+.dlg.notes section { margin: 0 0 14px; }
+.dlg.notes section b { color: var(--y2); font-size: 16px; }
+.dlg.notes ul { margin: 6px 0 0; padding-left: 20px; color: #cfcfcf; font-size: 14px; line-height: 1.55; }
+.dlg.notes .btn { min-width: 160px; height: 44px; font-size: 18px; }

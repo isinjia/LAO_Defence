@@ -47,7 +47,7 @@ own 고행 burn) = 30 s on the field.
   enemies here don't have).
 
 The two caveats the audit noted are fixed as well: Ramiel's burns are fixed damage at the source's 30x ratio
-(1.25x base over 2.5 s, 37.5x base over 7 s in 원죄의 굴레), and Lemonade Alpha's 135% is true fixed damage
+(0.5x base over 2.5 s, 15x base over 7 s in 원죄의 굴레; both x0.4 since the 2026-10 tuning), and Lemonade Alpha's 135% is true fixed damage
 (`damage(..., 'fixed')`: no armour, shield, mark, vulnerability or boss multiplier).
 
 Balance after these changes (expert bot, tools/lab/winrate.js, normal): 11 / 12 wins; smoke 21 / 21.

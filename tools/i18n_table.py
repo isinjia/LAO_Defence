@@ -24,6 +24,7 @@ T = [
     ("작전 계속", "作戦続行", "Continue", "继续作战", "繼續作戰", "Continuar", "Continuar", "Продолжить"),
     ("재출격", "再出撃", "Redeploy", "再次出击", "再次出擊", "Reintentar", "Tentar de novo", "Повторить"),
     ("계속 ·", "続行 ·", "Continue ·", "继续 ·", "繼續 ·", "Continuar ·", "Continuar ·", "Продолжить ·"),
+    ("패치 노트", "パッチノート", "Patch notes", "更新说明", "更新說明", "Notas del parche", "Notas de atualização", "Список изменений"),
     ("닫기", "閉じる", "Close", "关闭", "關閉", "Cerrar", "Fechar", "Закрыть"),
     ("타이틀", "タイトル", "Title", "标题", "標題", "Título", "Título", "Титул"),
     ("전투 보고", "戦闘報告", "Battle Report", "战斗报告", "戰鬥報告", "Informe de batalla", "Relatório de batalha", "Отчёт о бое"),
