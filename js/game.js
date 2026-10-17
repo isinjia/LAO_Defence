@@ -582,7 +582,7 @@
     const full = !anyEmpty();
     if (full && !stackable().length) { UI.toast(T('칸이 모두 찼습니다. 합성하거나 판매해 자리를 만드세요'), 'warn'); SFX.play('fail'); return; }
     // the GOD rank: a flat 0.05% before the normal roll (no luck upgrade, pity or bias touches it; needs a free cell)
-    if (!full && !G.tut && DATA.byTier(GOD).length && luck('summon') < BAL.godChance) { G.gold -= cost; G.summons++; godDescends(); UI.update(true); return; }
+    if (!full && !G.tut && DATA.byTier(GOD).length && !G.cells.some((c) => c.units.some((u) => u.def.tier === GOD)) && luck('summon') < BAL.godChance) { G.gold -= cost; G.summons++; godDescends(); UI.update(true); return; } // one commander at a time
     const rolled = rollTier();
     const def = full ? pickStackable(rolled) : pickRank(rolled, 'summon');
     G.gold -= cost;

@@ -287,14 +287,14 @@
       return `${pass}/${checks.length} damage-rule checks (all: ${window.SKILL_MEASURE2.all}); score ${window.SKILL_SCORE.score}, strict ${window.SKILL_SCORE.strict}`;
     });
 
-    test('GOD: a flat 0.05% summon (luck upgrades do not change it), one per cell, never merges', () => {
+    test('GOD: a flat 0.05% summon (luck upgrades do not change it), one on the field, never merges', () => {
       eq(DATA.BAL.godChance, 0.0005, '0.05%');
       fresh(); G().gold = 1e6; G().upg.luck = 5;
       const keep = DATA.BAL.godChance; DATA.BAL.godChance = 1; // force the miracle
       GAME.summon(); GAME.summon();
       DATA.BAL.godChance = keep;
       const gods = G().cells.filter((c) => c.units.length && c.units[0].def.tier === DATA.GOD);
-      eq(gods.length, 2, 'two GOD units, each in its own cell'); eq(gods[0].units.length, 1, 'no stacking');
+      eq(gods.length, 1, 'only one GOD unit on the field'); eq(gods[0].units.length, 1, 'no stacking');
       eq(gods[0].units[0].def.id, 'commander', '사령관');
       fresh(); G().gold = 1e6; G().upg.luck = 5;
       for (let k = 0; k < 15; k++) GAME.summon();
