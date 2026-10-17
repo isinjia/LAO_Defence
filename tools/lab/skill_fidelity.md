@@ -9,7 +9,7 @@ It found 5 gaps in a first pass; all 5 were fixed, then it re-counted:
 - ✗ expressible on this board but missing or wrong
 - — nothing to act on in this game
 
-Board mappings: "ignores protection" = shields and armour ignored (`pierce`); "defense penetration n%" = shields
+Board mappings: Labiata's kill stacks past the limit are capped at 6 in all (a run here has hundreds of kills); "ignores protection" = shields and armour ignored (`pierce`); "defense penetration n%" = shields
 ignored and n% of armour (`pierce` = n); "2 rounds" = 5 s, "3 rounds" = 7 s; evasion / resistance down = a mark
 (damage taken x(1 + n)); immobile / can't act = held; AP down = slowed (enemies) or late attacks (the unit itself);
 Eternity's Rage (ward at 25% HP) = the field at 75%+ of its limit; Ramiel's 원죄의 굴레 (worn down to 중파 by her

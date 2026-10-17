@@ -2017,7 +2017,9 @@
             if (crit && u.plasma >= 3) o.shieldT = 0;
             // (2.1 / 1.7: tuned down 2026-10, her whole-row sweep comes round twice as often as other LRs' ultimates)
             damage(o, base * (k ? 1.7 : 2.1) * (1 + 0.19 * (u.plasma || 0)), d.color, crit, d, true);
-            if (!o.alive) u.plasma = (u.plasma || 0) + 1;
+            // a kill adds a stack past the limit of 3; capped at 6 here (an original battle has a handful of enemies, a run
+            // here hundreds: uncapped, 200 kills made her sweep ~39x)
+            if (!o.alive) u.plasma = Math.min(6, (u.plasma || 0) + 1);
           }
         }));
         break;
