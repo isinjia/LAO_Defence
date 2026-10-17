@@ -2285,6 +2285,13 @@
         if (u.act) stepAttack(u, dt);
         u.cd -= dt;
         if (u.hasteT > 0) { u.hasteT -= dt; u.cd -= dt * 0.5; }
+        // Labiata · 권여: waiting (here, 3 s with nothing to attack) spends every plasma stack: allies' AP +0.95 per stack
+        // (haste, 1 s per stack); stacks and her plasma attack buff start over
+        if (u.def.id === 'labiata' && u.plasma > 0 && u.lastAtk > 0 && G.time - u.lastAtk > 3) {
+          const n = u.plasma;
+          u.plasma = 0; u.powT = 0;
+          G.cells.forEach((c) => c.units.forEach((x) => { if (x !== u) { x.hasteT = Math.max(x.hasteT || 0, n); FX.ring(x.x, x.y, 0.2, 0.9, u.def.color, 0.4); } }));
+        }
         if (u.powT > 0) u.powT -= dt;
         if (u.lateT > 0) { u.lateT -= dt; u.cd += dt * 0.5; } // AP -50% (Titania after 서리 폭풍)
         if (u.sealT > 0) u.sealT -= dt;
