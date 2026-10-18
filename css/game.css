@@ -894,11 +894,15 @@ html:not(:lang(ko)) .act b, html:not(:lang(ko)) .act small { white-space: nowrap
 .pickdlg .pick .hx { width: 64px; height: 64px; }
 .pickdlg .pick b { font-size: 15px; color: #ffcf80; }
 .pickdlg .pick small { font-size: 11px; color: #aaa; line-height: 1.3; }
-/* patch notes: one version per page, ◀ ▶ (and swipe) between versions */
-.dlg.notes .npager { display: flex; align-items: center; gap: 14px; }
-.dlg.notes .npager button { width: 44px; height: 36px; font-size: 18px; color: #ffd84a; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 204, 0, 0.45); border-radius: 4px; cursor: pointer; }
-.dlg.notes .npager button:disabled { opacity: 0.3; cursor: default; }
-.dlg.notes .npager span { min-width: 64px; text-align: center; color: #bbb; font-size: 14px; }
+/* patch notes: one version per page; ◀ ▶ beside the text, a swipe, and a slide between versions */
+.dlg.notes .nbody { display: flex; align-items: center; gap: 8px; width: min(820px, 100%); }
+.dlg.notes .nbody .nlist { flex: 1; min-width: 0; overflow-x: hidden; touch-action: pan-y; }
+.dlg.notes .nside { flex: none; width: 40px; height: 64px; font-size: 20px; color: #ffd84a; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 204, 0, 0.45); border-radius: 6px; cursor: pointer; }
+.dlg.notes .nside:disabled { opacity: 0.25; cursor: default; }
+.dlg.notes section.in-r { animation: noteInR 0.25s ease-out; }
+.dlg.notes section.in-l { animation: noteInL 0.25s ease-out; }
+@keyframes noteInR { from { transform: translateX(40%); opacity: 0; } }
+@keyframes noteInL { from { transform: translateX(-40%); opacity: 0; } }
 /* phones / portrait: the title scrolls, so the notes button sits in the flow (under the record line) instead of
    fixed in the corner, where it covered 작전 개시 */
 @media (max-width: 720px), (orientation: portrait) {

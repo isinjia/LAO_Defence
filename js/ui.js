@@ -247,13 +247,12 @@
     const ov = $('#notesOv'), notes = window.NOTES || [];
     let page = 0;
     // one version per page (newest first); ◀ ▶ or a swipe moves between them
-    const show = () => {
+    const show = (dir) => {
       const n = notes[page];
-      $('#notesList').innerHTML = n ? `<section><b>ver ${n.v}</b><ul>${n.items.map((t) => `<li>${t}</li>`).join('')}</ul></section>` : '';
-      $('#notesPage').textContent = `${page + 1} / ${notes.length}`;
+      $('#notesList').innerHTML = n ? `<section class="${dir > 0 ? 'in-r' : dir < 0 ? 'in-l' : ''}"><b>ver ${n.v}</b><ul>${n.items.map((t) => `<li>${t}</li>`).join('')}</ul></section>` : '';
       $('#notesPrev').disabled = page <= 0; $('#notesNext').disabled = page >= notes.length - 1;
     };
-    const go = (d) => { const p = Math.max(0, Math.min(notes.length - 1, page + d)); if (p !== page) { page = p; show(); SFX.play('click'); } };
+    const go = (d) => { const p = Math.max(0, Math.min(notes.length - 1, page + d)); if (p !== page) { page = p; show(d); SFX.play('click'); } };
     $('#notesPrev').onclick = () => go(-1);
     $('#notesNext').onclick = () => go(1);
     const list = $('#notesList');
