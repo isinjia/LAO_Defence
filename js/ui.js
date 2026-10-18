@@ -209,7 +209,7 @@
     if (!GAME.G.daily) GAME.clearRun(); // a fresh start replaces the cut-short run (daily runs are never saved: leave it)
     renderTitle();
     // every new operation opens with the guided tutorial (skippable), then the real battle starts on a clean field
-    const begin = () => { reward(null); closeDrawer(); closePopup(); GAME.newGame(); };
+    const begin = () => { reward(null); closeDrawer(); closePopup(); GAME.newGame(); if ((BAL.diffs[GAME.G.diff] || {}).key === 'hell') pickStart(); };
     if (window.TUT && !/[?&](lab|smoke)=/.test(location.search)) TUT.run(begin); else begin();
   }
 
@@ -228,6 +228,17 @@
       $('#askOk').onclick = () => askDone(true);
       $('#askNo').onclick = () => askDone(false);
       ov.onpointerdown = (e) => { if (e.target === ov) askDone(false); };
+    });
+  }
+
+  // 헬: pick one SS to start with; the battle holds still until one is chosen
+  function pickStart() {
+    const ov = $('#pickOv'), G = GAME.G;
+    G.paused = true;
+    $('#pickList').innerHTML = DATA.byTier(3).map((d) => `<button class="pick" data-id="${d.id}">${hex(d)}<b>${d.name}</b><small>${T(d.desc)}</small></button>`).join('');
+    ov.hidden = false;
+    ov.querySelectorAll('[data-id]').forEach((b) => {
+      b.onclick = () => { ov.hidden = true; G.paused = false; GAME.startUnit(b.dataset.id); SFX.play('pickSS'); update(true); };
     });
   }
 

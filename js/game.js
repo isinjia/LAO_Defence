@@ -2902,6 +2902,7 @@
     tutSpawn: (k = 1) => { const e = spawnEnemy('normal', NORMALS[0]); e.hp = e.maxHp = BAL.hp(1) * k; return e; },
     tutClear: () => G.enemies.forEach((e) => { if (e.alive) kill(e); }),
     debugAdd: (id) => addUnit(DATA.unit[id]),
+    startUnit: (id) => { const i = addUnit(DATA.unit[id]); UI.announce(DATA.unit[id], T('출격 대원')); return i; }, // 헬: the SS picked at the start
     debugMuzzle: (u, n = 1) => muzzle(u, n),
     bench: (n = 30) => {
       const t0 = performance.now();
