@@ -894,7 +894,13 @@ html:not(:lang(ko)) .act b, html:not(:lang(ko)) .act small { white-space: nowrap
 .pickdlg .pick .hx { width: 64px; height: 64px; }
 .pickdlg .pick b { font-size: 15px; color: #ffcf80; }
 .pickdlg .pick small { font-size: 11px; color: #aaa; line-height: 1.3; }
-/* phones / portrait: the title scrolls, so the notes button sits in the flow (under the record line) instead of fixed */
+/* patch notes: one version per page, ◀ ▶ (and swipe) between versions */
+.dlg.notes .npager { display: flex; align-items: center; gap: 14px; }
+.dlg.notes .npager button { width: 44px; height: 36px; font-size: 18px; color: #ffd84a; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 204, 0, 0.45); border-radius: 4px; cursor: pointer; }
+.dlg.notes .npager button:disabled { opacity: 0.3; cursor: default; }
+.dlg.notes .npager span { min-width: 64px; text-align: center; color: #bbb; font-size: 14px; }
+/* phones / portrait: the title scrolls, so the notes button sits in the flow (under the record line) instead of
+   fixed in the corner, where it covered 작전 개시 */
 @media (max-width: 720px), (orientation: portrait) {
   #title .notesBtn { position: relative; right: auto; bottom: auto; display: block; margin: 10px auto 0; padding: 8px 18px; font-size: 14px; }
 }

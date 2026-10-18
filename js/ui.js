@@ -244,8 +244,23 @@
 
   // the title's patch notes (js/notes.js)
   function openNotes() {
-    const ov = $('#notesOv');
-    $('#notesList').innerHTML = (window.NOTES || []).map((n) => `<section><b>ver ${n.v}</b><ul>${n.items.map((t) => `<li>${t}</li>`).join('')}</ul></section>`).join('');
+    const ov = $('#notesOv'), notes = window.NOTES || [];
+    let page = 0;
+    // one version per page (newest first); ◀ ▶ or a swipe moves between them
+    const show = () => {
+      const n = notes[page];
+      $('#notesList').innerHTML = n ? `<section><b>ver ${n.v}</b><ul>${n.items.map((t) => `<li>${t}</li>`).join('')}</ul></section>` : '';
+      $('#notesPage').textContent = `${page + 1} / ${notes.length}`;
+      $('#notesPrev').disabled = page <= 0; $('#notesNext').disabled = page >= notes.length - 1;
+    };
+    const go = (d) => { const p = Math.max(0, Math.min(notes.length - 1, page + d)); if (p !== page) { page = p; show(); SFX.play('click'); } };
+    $('#notesPrev').onclick = () => go(-1);
+    $('#notesNext').onclick = () => go(1);
+    const list = $('#notesList');
+    let sx = null;
+    list.onpointerdown = (e) => { sx = e.clientX; };
+    list.onpointerup = (e) => { if (sx != null && Math.abs(e.clientX - sx) > 40) go(e.clientX < sx ? 1 : -1); sx = null; };
+    show();
     ov.hidden = false; SFX.play('click');
     const close = () => { ov.hidden = true; SFX.play('click'); };
     $('#notesClose').onclick = close;
