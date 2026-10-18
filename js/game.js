@@ -2016,7 +2016,8 @@
             const crit = ultCrit(u);
             if (crit && u.plasma >= 3) o.shieldT = 0;
             // (2.1 / 1.7: tuned down 2026-10, her whole-row sweep comes round twice as often as other LRs' ultimates)
-            damage(o, base * (k ? 1.7 : 2.1) * (1 + 0.19 * (u.plasma || 0)), d.color, crit, d, true);
+            // a boss / elite takes x3.5 (2026-10-18: after the row-sweep nerf her single-target damage was the lowest LR's)
+            damage(o, base * (k ? 1.7 : 2.1) * (1 + 0.19 * (u.plasma || 0)) * (o.kind === 'normal' ? 1 : 3.5), d.color, crit, d, true);
             // a kill adds a stack past the limit of 3; capped at 6 here (an original battle has a handful of enemies, a run
             // here hundreds: uncapped, 200 kills made her sweep ~39x)
             if (!o.alive) u.plasma = Math.min(6, (u.plasma || 0) + 1);
