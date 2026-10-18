@@ -37,28 +37,28 @@
     U('thetis', '테티스', 2, 'BR_Thetis_N', { type: 'chain', dmg: 48, rate: 1.0, range: 3.8, chain: 3, fx: 'lightning', color: 0x66ccff, sfx: 'elec', desc: '연쇄 번개 3타겟' }),
     U('hraesvelgr', '흐레스벨그', 2, 'BR_Hraesvelgr_N', { type: 'laser', dmg: 60, rate: 1.3, range: 4.2, width: 0.45, fx: 'laser', color: 0x9ab8ff, sfx: 'laserBig', desc: '대구경 관통 사격' }),
     U('undine', '운디네', 2, 'BR_Undine_N', { type: 'slow', dmg: 36, rate: 0.95, range: 3.8, slow: 0.5, slowDur: 2.0, splash: 1.3, fx: 'frost', color: 0x9feaff, sfx: 'ice', desc: '빙결 범위 둔화 50%' }),
-    U('valkyrie', '발키리', 2, 'BR_Valkyrie_N', { type: 'single', dmg: 15, rate: 0.45, range: 3.6, fx: 'bullet', color: 0x9fd0ff, sfx: 'rifle', desc: '고속 연사' }),
+    U('valkyrie', '발키리', 2, 'BR_Valkyrie_N', { dpsK: 1.6, type: 'single', dmg: 15, rate: 0.45, range: 3.6, fx: 'bullet', color: 0x9fd0ff, sfx: 'rifle', desc: '고속 연사' }),
     // ── SS ──
     U('zero', '쿠노이치 제로', 3, 'DS_KunoichiZero_N', { type: 'melee', dmg: 42, rate: 0.35, range: 2.6, splash: 0.9, crit: 0.2, fx: 'slash', color: 0xff3b6b, sfx: 'slash', desc: '고속 참격, 치명타 20%' }),
     U('hela', '헬라', 3, 'BR_Hela_N', { type: 'chain', dmg: 175, rate: 0.9, range: 4.2, chain: 5, fx: 'lightning', color: 0xc77dff, sfx: 'elec', desc: '연쇄 번개 5타겟' }),
     U('azazel', '아자젤', 3, 'DS_Azazel_N', { type: 'splash', dmg: 240, rate: 1.2, range: 4.2, splash: 1.7, fx: 'holy', color: 0xffe9a0, sfx: 'energy', desc: '성광 대폭발' }),
     U('saraqael', '사라카엘', 3, 'DS_Saraqael_N', { type: 'stun', dmg: 170, rate: 1.0, range: 4.2, splash: 1.3, stun: 0.25, stunDur: 0.8, fx: 'wave', color: 0xb28cff, sfx: 'energy', desc: '파동 범위 공격 + 25% 기절' }),
-    U('leona', '철혈의 레오나', 3, 'BR_Leona_N', { type: 'laser', dmg: 60, rate: 1.3, range: 4.4, width: 0.5, fx: 'laser', color: 0xff9ad5, sfx: 'laserBig', desc: '관통 레이저' }),
+    U('leona', '철혈의 레오나', 3, 'BR_Leona_N', { dpsK: 1.4, type: 'laser', dmg: 60, rate: 1.3, range: 4.4, width: 0.5, fx: 'laser', color: 0xff9ad5, sfx: 'laserBig', desc: '관통 레이저' }),
     // ── SSS (SS 3기 합성) ──
     U('ullr', '우르', 4, 'ST_Ullr_N', { type: 'laser', dmg: 0, rate: 1.4, range: 5.4, width: 0.55, fx: 'laser', color: 0x7fe8ff, sfx: 'laserBig', mana: 12, ult: 'rail', ultName: '전방위 사격', desc: '관통 저격 / 궁극기: 지정 범위 보호 무시 사격(목표 주변 75%), 치명타 시 +38%' }),
     U('harpy', '하르페이아', 4, 'BR_Harpy_N', { type: 'splash', dmg: 0, rate: 1.1, range: 4.6, splash: 1.5, fx: 'missile', color: 0xff8a3d, sfx: 'missile', mana: 12, ult: 'salvo', ultName: 'NARAAK 미사일', desc: '미사일 범위 공격 / 궁극기: 지정 범위 미사일, 표식·이동 불가 대상 +47.5%, 회피 -34%(받는 피해 증가)' }),
     U('eternity', '이터니티', 4, '3P_Eternity_N', { type: 'single', dmg: 0, rate: 0.4, range: 4.4, fx: 'bullet', color: 0xffd98a, sfx: 'mg', mana: 12, ult: 'guardian', ultName: '편히 잠드소서', desc: '기관총 연사 / 궁극기: 지정 범위 보호 무시 사격, 분노(필드 75% 이상 위기) 시 +80%' }),
     U('lemonadealpha', '레모네이드 알파', 4, 'PECS_LemonadeAlpha_N', { type: 'chain', dmg: 0, rate: 1.0, range: 4.8, chain: 5, fx: 'lightning', color: 0xffe14d, sfx: 'elec', mana: 12, ult: 'domain', ultName: '케스토스 히마스: 출력전개', desc: '연쇄 공격 / 궁극기: 지정 범위 보호 무시 피해 + 고정 피해, 1칸 밀쳐내기, 모든 보호 효과 해제, 회피 -61%' }),
     U('sleipnir', '슬레이프니르', 4, 'BR_Sleipnir_N', { type: 'stun', dmg: 0, rate: 1.0, range: 4.6, splash: 1.4, stun: 0.25, stunDur: 0.8, fx: 'missile', color: 0xffb070, sfx: 'missile', mana: 12, ult: 'rowlaser', ultName: '한계돌파', desc: '범위 공격 + 기절 / 궁극기: 목표 지점 돌진, 보호 무시·방어 관통, 표식 + 이동 불가' }),
-    U('blacklilith', '블랙 리리스', 4, '3P_BlackLilith_N', { type: 'melee', dmg: 0, rate: 0.4, range: 2.8, splash: 1.0, crit: 0.25, fx: 'slash', color: 0xd0405a, sfx: 'slash', mana: 12, ult: 'taunt', ultName: '듀얼 버스트', desc: '근접 참격 / 궁극기: 단일 대상 아킴보 사격 + 도발, 이미 도발된 대상 +48%, 정조준(단일 대상) +47.5%' }),
+    U('blacklilith', '블랙 리리스', 4, '3P_BlackLilith_N', { dpsK: 4.5, type: 'melee', dmg: 0, rate: 0.4, range: 2.8, splash: 1.0, crit: 0.25, fx: 'slash', color: 0xd0405a, sfx: 'slash', mana: 12, ult: 'taunt', ultName: '듀얼 버스트', desc: '근접 참격 / 궁극기: 단일 대상 아킴보 사격 + 도발, 이미 도발된 대상 +48%, 정조준(단일 대상) +47.5%' }),
     U('cyclopsprincess', '사이클롭스 프린세스', 4, 'PECS_CyclopsePrincess_N', { type: 'melee', dmg: 0, rate: 0.6, range: 2.8, splash: 1.0, crit: 0.2, fx: 'slash', color: 0xff3a5a, sfx: 'slash', mana: 12, ult: 'crimson', ultName: '영원한 진조의 섬광', desc: '마검 참격 / 궁극기: 안대를 풀고 지정 범위에 넓은 진홍빛 섬광, 피해 감소 약화 -19%(2라운드)' }),
     U('blindprincess', '블라인드 프린세스', 4, 'PECS_BlindPrincess_N', { type: 'single', dmg: 0, rate: 0.9, range: 4.4, fx: 'holy', color: 0xfff1b8, sfx: 'energy', mana: 12, ult: 'lovelight', ultName: '작열하는 사랑의 빛', desc: '성검 일격 / 궁극기: 지정 범위에 성검 강림(멀수록 최대 50% 감소), 치명타 시 강화 해제, 사이클롭스 프린세스·LRL과 함께면 +47.5%' }),
     // ── LR (SSS 3기 합성) ──
     U('brunhild', '브륀힐드', 5, 'BR_Brunhild_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.0, splash: 1.8, fx: 'fireball', color: 0xff5530, sfx: 'expM', mana: 10, ult: 'wolfpack', ultName: '핏빛 효후', desc: '화염 폭격 / 궁극기: 늑대가 지정 범위에 보호 무시 화염 피해, 효과·화염 저항 -28.5%, 치명타 시 +47.5% + 지속 화염 해제' }),
     U('tiamat', '티아멧', 5, 'ST_Tiamat_N', { type: 'laser', dmg: 0, rate: 1.25, range: 5.4, width: 0.7, fx: 'laser', color: 0x6ef0ff, sfx: 'laserBig', mana: 10, ult: 'execute', ultName: '풀 웨폰 어썰트', desc: '대구경 관통 레이저 / 궁극기: 가장 강한 적 하나에 방어막·피해 감소 무시 초고화력, 치명타 시 +29%' }),
-    U('khan', '신속의 칸', 5, 'BR_Khan_N', { type: 'single', dmg: 0, rate: 0.5, range: 5.0, crit: 0.3, fx: 'snipe', color: 0xffcf7a, sfx: 'rifle', mana: 10, ult: 'sandstorm', ultName: '데저트 스톰', desc: '고속 사격 / 궁극기: 단일 대상 보호 무시 고속 연계 공격, 표식 + 받는 피해 +19%, 치명타 시 +58%' }),
+    U('khan', '신속의 칸', 5, 'BR_Khan_N', { dpsK: 1.8, type: 'single', dmg: 0, rate: 0.5, range: 5.0, crit: 0.3, fx: 'snipe', color: 0xffcf7a, sfx: 'rifle', mana: 10, ult: 'sandstorm', ultName: '데저트 스톰', desc: '고속 사격 / 궁극기: 단일 대상 보호 무시 고속 연계 공격, 표식 + 받는 피해 +19%, 치명타 시 +58%' }),
     U('labiata', '라비아타 프로토타입', 5, '3P_Labiata_N', { type: 'melee', dmg: 0, rate: 0.38, range: 3.0, splash: 1.1, crit: 0.3, fx: 'slash', color: 0xffd36e, sfx: 'swing', mana: 10, ult: 'sweep', ultName: '백화요란', desc: '연속 타격 / 궁극기: 지정 범위(가로줄) 보호 무시 강타, 플라즈마 중첩마다 +19%, 3중첩 치명타 시 강화 해제, 처치 시 중첩 +1' }),
-    U('lrl', 'LRL', 5, 'PECS_LRL_N', { type: 'splash', dmg: 0, rate: 0.9, range: 5.0, splash: 1.6, fx: 'holy', color: 0xb46bff, sfx: 'energy', mana: 10, ult: 'eternalbeam', ultName: '사이클롭스 이터널 빔', dpsK: 3, desc: '용살자 도끼 / 궁극기: 넓은 범위에 빔, 행동력 감소(둔화), 치명타 시 방어막·피해 감소 해제, 사이클롭스 프린세스가 있으면 영원한 진조의 섬광 협동 공격' }),
+    U('lrl', 'LRL', 5, 'PECS_LRL_N', { type: 'splash', dmg: 0, rate: 0.9, range: 5.0, splash: 1.6, fx: 'holy', color: 0xb46bff, sfx: 'energy', mana: 10, ult: 'eternalbeam', ultName: '사이클롭스 이터널 빔', dpsK: 4.3, desc: '용살자 도끼 / 궁극기: 넓은 범위에 빔, 행동력 감소(둔화), 치명타 시 방어막·피해 감소 해제, 사이클롭스 프린세스가 있으면 영원한 진조의 섬광 협동 공격' }),
     // ── UR (조합, 같은 UR은 필드에 1기만) ──
     U('constantia', '콘스탄챠 S2', 6, '3P_ConstantiaS2_N', { type: 'laser', dmg: 0, rate: 1.0, range: 5.6, width: 0.7, fx: 'laser', color: 0xff6af0, sfx: 'laserBig', mana: 12, ult: 'snipe', ultName: '발목 잡기', desc: '관통 레이저 / 궁극기: 가장 강한 적 하나에 표식 + 이동 불가 + 행동력 -34%' }),
     U('titania', '티타니아 프로스트', 6, '3P_Titania_N', { type: 'chain', dmg: 0, rate: 0.9, range: 5.2, chain: 6, slow: 0.3, slowDur: 1.2, fx: 'iceChain', color: 0xaef4ff, sfx: 'ice', mana: 10, ult: 'freeze', ultName: '서리 폭풍', desc: '빙결 연쇄 / 궁극기: 지정 범위 보호 무시 냉기 피해, 행동력 감소(천년서리), 치명타 시 +38%, 사용 후 자신 행동력 -50%' }),
@@ -66,7 +66,7 @@
     U('empress', '엠프리스', 6, 'PECS_Empress_N', { type: 'splash', dmg: 0, rate: 1.0, range: 5.2, splash: 1.9, fx: 'missile', color: 0x9fe6ff, sfx: 'expM', mana: 12, ult: 'iceage', ultName: '펭귄 서프라이즈!', desc: '대형 포격 / 궁극기: 가장 강한 적에 냉기 피해(치명타 시 +43.5%), 침수(둔화)면 행동 불가 + 빙결(받는 피해 +38.5%)' }),
     U('fafnir', '파프니르', 6, 'BR_Fafnir_N', { type: 'chain', dmg: 0, rate: 0.8, range: 5.2, chain: 6, fx: 'lightning', color: 0x5aa8ff, sfx: 'elec', mana: 12, ult: 'thunder', ultName: '뇌정벽력', desc: '연쇄 번개 / 궁극기: 우레와 함께 강하해 대상과 주변(25%)에 전격, 인접한 적마다 +14.5%, 2기 이상이면 강화 효과 해제' }),
     // the skin LRL (rose eyepatch, NS3 icon; same rig): 에이미 + 사이클롭스 프린세스 + 블라인드 프린세스 (RECIPES)
-    U('lrlrose', '철의 파멸 LRL', 6, 'PECS_LRL_NS3', { type: 'splash', dmg: 0, rate: 0.9, range: 5.0, splash: 1.6, fx: 'holy', color: 0xb46bff, sfx: 'energy', mana: 10, ult: 'eternalbeam', ultName: '사이클롭스 이터널 빔', dpsK: 3, desc: '용살자 도끼 / 궁극기: 넓은 범위에 빔, 행동력 감소(둔화), 치명타 시 방어막·피해 감소 해제, 사이클롭스 프린세스가 있으면 영원한 진조의 섬광 협동 공격' }),
+    U('lrlrose', '철의 파멸 LRL', 6, 'PECS_LRL_NS3', { type: 'splash', dmg: 0, rate: 0.9, range: 5.0, splash: 1.6, fx: 'holy', color: 0xb46bff, sfx: 'energy', mana: 10, ult: 'eternalbeam', ultName: '사이클롭스 이터널 빔', dpsK: 3.3, desc: '용살자 도끼 / 궁극기: 넓은 범위에 빔, 행동력 감소(둔화), 치명타 시 방어막·피해 감소 해제, 사이클롭스 프린세스가 있으면 영원한 진조의 섬광 협동 공격' }),
     // ── GOD (소환 0.05%, 확률 강화 무관) ──
     // the commander: no rig, drawn by js/commander.js (from 라켓몬스터); img 'Commander' is that drawing's icon
     U('commander', '사령관', 7, 'Commander', { type: 'splash', dmg: 0, rate: 0.7, range: 7.0, splash: 2.2, fx: 'holy', color: 0xfff6e0, sfx: 'energy', mana: 8, ult: 'allout', ultName: '전군, 돌격하라!', drawn: true, desc: '링크 코어 투척 / 궁극기: 전 부대 공격력 2배(8초)와 모든 궁극기 즉시 충전, 이어서 전장을 덮는 흑염 운석·빛의 기둥·최후의 섬광(보호 무시)' }),
@@ -85,7 +85,9 @@
   const TIER_DPS = [12, 48, 190, 750, 2700, 9500, 14250, 60000]; // GOD: a miracle, far above everything
   const TYPE_K = { single: 1.2, melee: 1.25, splash: 0.85, chain: 0.8, laser: 0.9, slow: 0.8, stun: 0.9 };
   UNITS.forEach((u) => {
-    // dpsK: a unit whose original ultimate is weak by design carries more in its attack (LRL's beam is 0.1x)
+    // dpsK: a unit whose original ultimate is weak by design carries more in its attack (LRL's beam is 0.1x); also
+    // the ones that fell well below their rank's damage in simulated runs with no utility to show for it
+    // (tools/lab/unit_report.py, 2026-10-18: Valkyrie, Leona, Black Lilith, Khan, LRL)
     u.dmg = Math.round(TIER_DPS[u.tier] * TYPE_K[u.type] * (u.dpsK || 1) * u.rate / (1 + 1.2 * (u.crit || 0)));
     u.dps = TIER_DPS[u.tier] * TYPE_K[u.type] * (u.dpsK || 1); // single-target damage per second at upgrade level 0
   });
