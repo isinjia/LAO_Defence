@@ -201,6 +201,8 @@
     gemDrop: 0.012,
     // summon odds [C,R,E,L] per luck level
     odds: (lv) => [70 - 4 * lv, 25 + 2 * lv, 4.5 + 1.6 * lv, 0.5 + 0.4 * lv],
+    // tuna shop: one chosen SSS / one random LR (no crafted ones), a few per run (a run earns ~60-70 tuna by wave 80)
+    shop: { sss: { cost: 18, max: 2 }, lr: { cost: 40, max: 1 } },
     gamble: [
       { tier: 1, cost: 1, chance: 0.6, label: 'A급' },
       { tier: 2, cost: 1, chance: 0.2, label: 'S급' },

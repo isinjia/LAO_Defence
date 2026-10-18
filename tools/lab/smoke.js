@@ -332,6 +332,19 @@
       GAME.newGame();
     });
 
+    test('tuna shop: a chosen SSS and a random LR for tuna, limited per run', () => {
+      fresh(); const S = DATA.BAL.shop; G().gems = 1000;
+      eq(GAME.buy('sss', 'harpy'), true, 'SSS bought'); eq(G().gems, 1000 - S.sss.cost, 'SSS cost');
+      eq(GAME.findCellOf('harpy') >= 0, true, 'the chosen SSS is on the field');
+      eq(GAME.buy('sss', 'brunhild'), false, 'only SSS in the SSS slot');
+      for (let k = 1; k < S.sss.max; k++) GAME.buy('sss', 'ullr');
+      eq(GAME.shopLeft('sss'), 0, 'SSS purchases used up'); eq(GAME.buy('sss', 'ullr'), false, 'refused past the limit');
+      const g0 = G().gems; eq(GAME.buy('lr'), true, 'LR bought'); eq(G().gems, g0 - S.lr.cost, 'LR cost');
+      eq(G().cells.some((c) => c.units.some((u) => u.def.tier === DATA.LR && !u.def.crafted)), true, 'a random (not crafted) LR');
+      eq(GAME.buy('lr'), false, 'LR limit'); fresh(); eq(GAME.shopLeft('lr'), S.lr.max, 'a new run resets the limits');
+      fresh(); G().gems = 0; eq(GAME.buy('sss', 'harpy'), false, 'not without tuna');
+    });
+
     test('every SSS / LR / UR / GOD ultimate runs without errors', () => {
       fresh();
       DATA.UNITS.filter((d) => d.ult).forEach((d) => {

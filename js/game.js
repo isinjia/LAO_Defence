@@ -622,6 +622,31 @@
     UI.update(true);
   }
 
+
+  // ── tuna shop: buy one chosen SSS or one random LR, BAL.shop.*.max per run ──
+  function shopLeft(kind) { return BAL.shop[kind].max - ((G.shop && G.shop[kind]) || 0); }
+  function canShop(kind, id) {
+    const o = BAL.shop[kind];
+    if (G.paused || G.phase !== 'play' || shopLeft(kind) <= 0 || G.gems < o.cost) return false;
+    if (kind === 'sss') { const d = DATA.unit[id]; return !!(d && d.tier === 4 && hasSpaceFor(d)); }
+    return anyEmpty() || DATA.byTier(LR).some((d) => hasSpaceFor(d));
+  }
+  function buy(kind, id) {
+    const o = BAL.shop[kind];
+    if (G.paused) return false;
+    if (shopLeft(kind) <= 0) { UI.toast(T('이번 작전의 구매 횟수를 모두 썼습니다'), 'warn'); SFX.play('fail'); return false; }
+    if (G.gems < o.cost) { UI.toast(T('참치가 부족합니다'), 'warn'); SFX.play('fail'); return false; }
+    const def = kind === 'sss' ? DATA.unit[id] : pickL(DATA.byTier(LR).filter((d) => hasSpaceFor(d)), 'gamble');
+    if (!def || (kind === 'sss' && def.tier !== 4) || !hasSpaceFor(def)) { UI.toast(T('배치할 칸이 없습니다'), 'warn'); SFX.play('fail'); return false; }
+    G.gems -= o.cost;
+    G.shop[kind] = (G.shop[kind] || 0) + 1;
+    addUnit(def);
+    SFX.play('pickSS');
+    UI.announce(def, T('참치 상점'));
+    UI.update(true);
+    return true;
+  }
+
   // quiet: AUTO's own moves leave the player's selection alone (only a cell it emptied is let go)
   function keepSelection() {
     if (G.selected >= 0 && !G.cells[G.selected].units.length) { G.selected = -1; UI.onSelect(); }
@@ -2748,7 +2773,7 @@
       spawnLeft: 0, spawnT: 0, bossT: 0, boss: null, enemies: [], corpses: [], projs: [], bfx: [], sfx: [], summons: 0, pity: 0, won: false,
       upg: { atk: 0, boss: 0, eco: 0, luck: 0 }, buff: { atk: 1, crit: 0, eco: 1, time: 0, mana: 1, range: 0, mutx: 1, nullify: false }, rallyT: 0, rallyK: 1, supportPierceT: 0, supportPierceK: 0, reward: null, mut: null, bossMax: BAL.bossTime, waveMax: 3, labUlt: false, kills: 0, time: 0, selected: -1, dmgBy: {}, peak: 0,
       diff: G.daily ? 1 : G.opt.diff == null ? 1 : G.opt.diff,
-      rng: G.daily ? makeStreams(G.daily) : null, focus: null, hintUpg: false, tut: null,
+      rng: G.daily ? makeStreams(G.daily) : null, focus: null, hintUpg: false, tut: null, shop: { sss: 0, lr: 0 },
     });
     hellClear(); G.roulette = null;
     BAL.lastWave = (BAL.diffs[G.diff] || {}).waves || 80; // nightmare runs to 120
@@ -2773,7 +2798,7 @@
     const s = {
       v: 1, diff: G.diff, at: Date.now(),
       ...Object.fromEntries(['wave', 'gold', 'gems', 'waveT', 'waveMax', 'spawnLeft', 'spawnT', 'bossT', 'bossMax', 'summons', 'pity', 'kills', 'time', 'peak', 'labUlt', 'hintUpg', 'rewardAt', 'rewardWait'].map((k) => [k, G[k]])),
-      upg: G.upg, buff: G.buff, dmgBy: G.dmgBy,
+      upg: G.upg, buff: G.buff, dmgBy: G.dmgBy, shop: G.shop,
       reward: G.reward ? G.reward.map((r) => BAL.rewards.indexOf(r)) : null,
       // SSS keep their ult charge and their own AUTO
       cells: G.cells.map((c) => c.units.map((u) => (u.mana ? [u.def.id, Math.round(u.mana)] : u.def.id))),
@@ -2804,7 +2829,7 @@
     G.opt.diff = pick;
     const w = s.wave;
     ['wave', 'gold', 'gems', 'waveT', 'waveMax', 'spawnLeft', 'spawnT', 'bossT', 'bossMax', 'summons', 'pity', 'kills', 'time', 'peak', 'labUlt', 'hintUpg', 'rewardAt', 'rewardWait'].forEach((k) => { if (s[k] != null) G[k] = s[k]; });
-    Object.assign(G.upg, s.upg); Object.assign(G.buff, s.buff); G.dmgBy = s.dmgBy || {};
+    Object.assign(G.upg, s.upg); Object.assign(G.buff, s.buff); G.dmgBy = s.dmgBy || {}; G.shop = s.shop || { sss: 0, lr: 0 };
     G.waveInfo = NORMALS[(w - 1) % NORMALS.length];
     G.mut = w % 10 ? BAL.mutationFor(w) : null;
     let dropped = 0;
@@ -2893,7 +2918,7 @@
   }
 
   window.GAME = {
-    G, lay, boot, newGame, summon, gamble, merge, sell, craft, canCraft, hasUnique, upgrade, summonCost,
+    G, lay, boot, newGame, summon, gamble, buy, canShop, shopLeft, merge, sell, craft, canCraft, hasUnique, upgrade, summonCost,
     worldToScreen, simulate, autoplay, endGame, findCellOf, enemyLoad, craftRoom, enemyWeight, target, rewardScore, bossMult,
     ULT_K, hellRespond, hellTap, get hell() { return G.hell; }, toggleKeep, canSummon, bestUpgrade, upgradeValue, summonValue, wantedParts, setFocus, takeReward, autoReward, castUlt, readyUlts, ecoMult, critBonus,
     callNext, canCallNext, reroll, swapCells, isOuter, dmgMult, saveRun, savedRun, resumeRun, clearRun, REWARD_WAIT,

@@ -335,7 +335,14 @@
           <span class="rk" style="background-image:${rank(g.tier)}"></span><b>${T('{0}급 유닛', t.name)}</b><span class="pct">${Math.round(g.chance * 100)}%</span>
           <span class="cost">${tunaI}${g.cost}</span></button>`;
       });
-      h += `</div><div class="hint">${T('성공하면 해당 랭크의 무작위 유닛을 얻습니다. 참치는 엘리트·보스 처치와 5웨이브마다 얻을 수 있습니다.')}</div></div>`;
+      h += `</div><div class="hint">${T('성공하면 해당 랭크의 무작위 유닛을 얻습니다. 참치는 엘리트·보스 처치와 5웨이브마다 얻을 수 있습니다.')}</div>`;
+      // tuna shop: a chosen SSS, a random LR (limited per run)
+      const S = BAL.shop, sl = GAME.shopLeft('sss'), ll = GAME.shopLeft('lr');
+      h += `<div class="shop"><h5>${T('참치 상점')}</h5>`;
+      h += `<div class="srow"><span class="slabel">${T('SSS 지정 구매')} <small>${tunaI}${S.sss.cost} · ${T('남은 횟수 {0}', sl)}</small></span><div class="sitems">${
+        DATA.byTier(4).map((d) => `<button class="sitem" data-buy="sss" data-id="${d.id}" ${GAME.canShop('sss', d.id) ? '' : 'disabled'} title="${d.name}">${hex(d)}<i>${d.name}</i></button>`).join('')}</div></div>`;
+      h += `<div class="srow"><span class="slabel">${T('LR 무작위 구매')} <small>${tunaI}${S.lr.cost} · ${T('남은 횟수 {0}', ll)}</small></span><button class="btn o slr" data-buy="lr" ${GAME.canShop('lr') ? '' : 'disabled'}>${T('LR 구매')}<small>${tunaI}${S.lr.cost}</small></button></div>`;
+      h += `</div></div>`;
     } else if (drawer === 'upgrade') {
       h += winHead(T('강화'), T('모든 유닛에 적용되는 강화')) + '<div class="wb"><div class="cards">';
       const COL = { atk: '#ff6a4d', boss: '#ffc81e', eco: '#7dffb0', luck: '#33d1fa' };
@@ -398,6 +405,7 @@
     el.drawer.innerHTML = h;
     el.drawer.querySelector('[data-close]').onclick = closeDrawer;
     el.drawer.querySelectorAll('[data-g]').forEach((b) => { b.onclick = () => { GAME.gamble(+b.dataset.g); renderDrawer(); }; });
+    el.drawer.querySelectorAll('[data-buy]').forEach((b) => { b.onclick = () => { GAME.buy(b.dataset.buy, b.dataset.id); renderDrawer(); }; });
     el.drawer.querySelectorAll('[data-u]').forEach((b) => { b.onclick = () => { GAME.upgrade(b.dataset.u); renderDrawer(); }; });
     el.drawer.querySelectorAll('[data-r]').forEach((b) => { b.onclick = () => { GAME.craft(+b.dataset.r); closeDrawer(); }; });
     el.drawer.querySelectorAll('[data-tab]').forEach((b) => { b.onclick = () => { setTab = b.dataset.tab; renderDrawer(); }; });

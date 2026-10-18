@@ -908,3 +908,16 @@ html:not(:lang(ko)) .act b, html:not(:lang(ko)) .act small { white-space: nowrap
 @media (max-width: 720px), (orientation: portrait) {
   #title .notesBtn { position: relative; right: auto; bottom: auto; display: block; margin: 10px auto 0; padding: 8px 18px; font-size: 14px; }
 }
+
+/* tuna shop (in the 도박 window) */
+.shop { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.shop h5 { margin: 0 0 8px; font-size: 16px; color: #7ff0ff; }
+.shop .srow { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.shop .slabel { font-size: 14px; color: #ddd; }
+.shop .slabel small { color: #aaa; margin-left: 6px; }
+.shop .sitems { display: flex; flex-wrap: wrap; gap: 6px; }
+.shop .sitem { width: 76px; padding: 4px 2px; display: flex; flex-direction: column; align-items: center; gap: 2px; background: rgba(255, 61, 90, 0.08); border: 1px solid rgba(255, 61, 90, 0.45); border-radius: 6px; color: #eee; cursor: pointer; }
+.shop .sitem:disabled { opacity: 0.35; cursor: default; }
+.shop .sitem .hx { width: 48px; height: 48px; }
+.shop .sitem i { font-style: normal; font-size: 10px; line-height: 1.2; text-align: center; }
+.shop .slr { align-self: flex-start; min-width: 180px; }
