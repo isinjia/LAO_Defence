@@ -894,3 +894,7 @@ html:not(:lang(ko)) .act b, html:not(:lang(ko)) .act small { white-space: nowrap
 .pickdlg .pick .hx { width: 64px; height: 64px; }
 .pickdlg .pick b { font-size: 15px; color: #ffcf80; }
 .pickdlg .pick small { font-size: 11px; color: #aaa; line-height: 1.3; }
+/* phones / portrait: the title scrolls, so the notes button sits in the flow (under the record line) instead of fixed */
+@media (max-width: 720px), (orientation: portrait) {
+  #title .notesBtn { position: relative; right: auto; bottom: auto; display: block; margin: 10px auto 0; padding: 8px 18px; font-size: 14px; }
+}
