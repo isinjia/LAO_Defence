@@ -336,13 +336,16 @@
           <span class="cost">${tunaI}${g.cost}</span></button>`;
       });
       h += `</div><div class="hint">${T('성공하면 해당 랭크의 무작위 유닛을 얻습니다. 참치는 엘리트·보스 처치와 5웨이브마다 얻을 수 있습니다.')}</div>`;
-      // tuna shop: a chosen SSS, a random LR (limited per run)
+      // tuna shop: a random LR and a chosen SSS (limited per run), as cards like the gamble's
       const S = BAL.shop, sl = GAME.shopLeft('sss'), ll = GAME.shopLeft('lr');
-      h += `<div class="shop"><h5>${T('참치 상점')}</h5>`;
-      h += `<div class="srow"><span class="slabel">${T('SSS 지정 구매')} <small>${tunaI}${S.sss.cost} · ${T('남은 횟수 {0}', sl)}</small></span><div class="sitems">${
-        DATA.byTier(4).map((d) => `<button class="sitem" data-buy="sss" data-id="${d.id}" ${GAME.canShop('sss', d.id) ? '' : 'disabled'} title="${d.name}">${hex(d)}<i>${d.name}</i></button>`).join('')}</div></div>`;
-      h += `<div class="srow"><span class="slabel">${T('LR 무작위 구매')} <small>${tunaI}${S.lr.cost} · ${T('남은 횟수 {0}', ll)}</small></span><button class="btn o slr" data-buy="lr" ${GAME.canShop('lr') ? '' : 'disabled'}>${T('LR 구매')}<small>${tunaI}${S.lr.cost}</small></button></div>`;
-      h += `</div></div>`;
+      h += `<div class="shop"><div class="shead"><b>${T('참치 상점')}</b><span>${T('LR 무작위 구매')} ${T('남은 횟수 {0}', ll)} · ${T('SSS 지정 구매')} ${T('남은 횟수 {0}', sl)}</span></div><div class="cards scards">`;
+      h += `<button class="card slr" data-buy="lr" style="--c:${TIERS[DATA.LR].color}" ${GAME.canShop('lr') ? '' : 'disabled'}>
+        <span class="q">?</span><b>${T('LR 무작위')}</b><span class="eff">${T('남은 횟수 {0}', ll)}</span><span class="cost">${tunaI}${S.lr.cost}</span></button>`;
+      DATA.byTier(4).forEach((d) => {
+        h += `<button class="card sss" data-buy="sss" data-id="${d.id}" style="--c:${TIERS[4].color}" ${GAME.canShop('sss', d.id) ? '' : 'disabled'}>
+          ${hex(d)}<b>${d.name}</b><span class="cost">${tunaI}${S.sss.cost}</span></button>`;
+      });
+      h += `</div></div></div>`;
     } else if (drawer === 'upgrade') {
       h += winHead(T('강화'), T('모든 유닛에 적용되는 강화')) + '<div class="wb"><div class="cards">';
       const COL = { atk: '#ff6a4d', boss: '#ffc81e', eco: '#7dffb0', luck: '#33d1fa' };

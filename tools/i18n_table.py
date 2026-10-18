@@ -30,6 +30,7 @@ T = [
     ("참치 상점", "ツナショップ", "Tuna shop", "金枪鱼商店", "鮪魚商店", "Tienda de atún", "Loja de atum", "Магазин тунца"),
     ("SSS 지정 구매", "SSS指定購入", "Buy a chosen SSS", "指定购买SSS", "指定購買SSS", "Comprar un SSS elegido", "Comprar um SSS escolhido", "Купить выбранного SSS"),
     ("LR 무작위 구매", "LRランダム購入", "Buy a random LR", "随机购买LR", "隨機購買LR", "Comprar un LR al azar", "Comprar um LR aleatório", "Купить случайного LR"),
+    ("LR 무작위", "LRランダム", "Random LR", "随机LR", "隨機LR", "LR al azar", "LR aleatório", "Случайный LR"),
     ("LR 구매", "LR購入", "Buy LR", "购买LR", "購買LR", "Comprar LR", "Comprar LR", "Купить LR"),
     ("남은 횟수 {0}", "残り{0}回", "{0} left", "剩余{0}次", "剩餘{0}次", "Quedan {0}", "Restam {0}", "Осталось {0}"),
     ("이번 작전의 구매 횟수를 모두 썼습니다", "今回の作戦の購入回数を使い切りました", "No purchases left this run", "本次作战的购买次数已用完", "本次作戰的購買次數已用完", "No quedan compras en esta partida", "Sem compras restantes nesta partida", "Покупки на этот забег закончились"),
