@@ -156,16 +156,16 @@
     // tools/lab/balance_score.py: strong player 84 / 47 / 19% wins on normal / hard / very hard, score 99.9)
     diffs: [{ key: 'easy', name: '쉬움', hp0: 0.4, hp1: 0.55, bossTime: 15 }, { key: 'normal', name: '보통', hp0: 1.05, hp1: 2.6 }, { key: 'hard', name: '어려움', hp0: 1.35, hp1: 5.3 }, { key: 'veryhard', name: '매우 어려움', hp0: 1.5, hp1: 8.5 },
       // nightmare: 120 waves (the final boss at 120) and crueler bosses (cruel: BOSSES[].cruel added, stronger tricks)
-      { key: 'nightmare', name: '나이트메어', hp0: 1.5, hp1: 12, waves: 120, cruel: true },
+      { key: 'nightmare', name: '나이트메어', hp0: 1.25, hp1: 8, waves: 120, cruel: true },
       // hell: nightmare's bosses plus a roulette at each boss that adds one trick the player must answer (hellGims)
-      { key: 'hell', name: '헬', hp0: 1.7, hp1: 15, waves: 120, cruel: true, roulette: true }], // nightmare: wave 80 = very hard's 8.5x, then on to 12x
+      { key: 'hell', name: '헬', hp0: 1.25, hp1: 12, waves: 120, cruel: true, roulette: true }], // nightmare: wave 80 = very hard's 8.5x, then on to 12x
     hellGims: {
       curse: { name: '저주의 낙인', tip: '표시된 칸의 유닛을 4초 안에 다른 칸으로 옮기세요' },
       rift: { name: '균열', tip: '경로에 열린 균열을 3번 터치해 닫으세요' },
       core: { name: '약점 노출', tip: '보스 옆에 빛나는 핵을 5초 안에 터치하세요' },
       bomb: { name: '시한폭탄', tip: '폭탄이 놓인 칸을 3초 안에 터치하세요' },
       charm: { name: '매혹', tip: '하트가 뜬 칸을 터치해 유닛을 깨우세요' },
-      doom: { name: '파멸의 카운트다운', tip: '15초 안에 보스 체력을 25% 깎으세요' },
+      doom: { name: '파멸의 카운트다운', tip: '15초 안에 보스 체력을 15% 깎으세요' },
     },
     diffHp(d, w) { const o = this.diffs[d] || this.diffs[1]; return o.hp0 + (o.hp1 - o.hp0) * Math.min(1, w / this.lastWave); },
     enemySpeed: 1.55,

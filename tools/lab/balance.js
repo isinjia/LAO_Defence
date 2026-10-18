@@ -100,6 +100,7 @@
     g.opt.auto = false;
     g.labUlt = strategy !== 'smart'; // everyone but the timing bot fires ultimates at once (the default automatic mode)
     const waves = [], elites = new Set();
+    const field = {}; // seconds each unit kind spent on the field (summed over its copies): damage per field-second
     let cur = null, lastBossT = 0, hadBoss = false;
     const t0 = performance.now();
     const close = () => { if (cur) { waves.push(cur); cur = null; } };
@@ -108,6 +109,7 @@
         for (let k = 0; k < 40 && g.phase === 'play'; k++) {
           BOTS[strategy]();
           GAME.simulate(0.25, false);
+          for (const c of g.cells) for (const x of c.units) field[x.def.id] = (field[x.def.id] || 0) + 0.25;
           if (!cur || cur.w !== g.wave) {
             close();
             cur = { w: g.wave, peak: 0, gold0: g.gold, units: g.cells.reduce((a, c) => a + c.units.length, 0), sss: g.cells.filter((c) => c.units.length && c.units[0].def.tier === 4).length, upg: { ...g.upg } };
@@ -132,6 +134,7 @@
             strategy, seed, diff, win: !!g.won, wave: g.wave, time: g.time, kills: g.kills, upg: { ...g.upg },
             spend: Object.fromEntries(Object.keys(g.upg).map((k) => [k, spent(k, g.upg[k])])),
             elites: el.length, elitesKilled: el.filter((e) => !e.enraged).length, buff: { ...g.buff }, waves,
+            dmgBy: { ...g.dmgBy }, field,
           });
         }
       }

@@ -1098,10 +1098,10 @@
         UI.toast(T('매혹! 하트가 뜬 칸을 터치해 깨우세요'), 'warn');
         break;
       }
-      case 'doom': { // 15 s to take 25% of its HP, or it heals 30% behind a shield
+      case 'doom': { // 15 s to take 15% of its HP, or it heals 20% behind a shield
         h.t = 25;
         hellMark({ kind: 'doom', x: b.x, y: b.y + 1.6, t: 15, hp0: b.hp, color: 0xff2020, size: 0.8 });
-        UI.toast(T('파멸의 카운트다운! 15초 안에 보스 체력을 25% 깎으세요'), 'warn');
+        UI.toast(T('파멸의 카운트다운! 15초 안에 보스 체력을 15% 깎으세요'), 'warn');
         break;
       }
     }
@@ -1120,10 +1120,10 @@
       b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.1); FX.sparks(b.x, b.y + 0.6, 0x7dff9a, 10, 2, 0.15, 0.6);
       UI.toast(T('약점을 놓쳤습니다! 보스가 10% 회복'), 'warn');
     } else if (m.kind === 'doom') {
-      if (b.hp > m.hp0 - b.maxHp * 0.25) {
-        b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.3); b.shieldT = 5; b.shieldK = 0.1;
+      if (b.hp > m.hp0 - b.maxHp * 0.15) {
+        b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.2); b.shieldT = 5; b.shieldK = 0.1;
         FX.ring(b.x, b.y, 0.4, 2.4, 0xff2020, 0.8); SFX.play('warning');
-        UI.toast(T('카운트다운 실패! 보스가 30% 회복하고 방어막을 펼칩니다'), 'warn');
+        UI.toast(T('카운트다운 실패! 보스가 20% 회복하고 방어막을 펼칩니다'), 'warn');
       } else UI.toast(T('카운트다운을 막아냈습니다!'), 'gem');
     }
   }
@@ -1170,7 +1170,9 @@
   }
 
   // ── boss tricks ── (data.js BOSSES[].gim)
-  const cruel = () => !!(BAL.diffs[G.diff] || {}).cruel; // nightmare bosses
+  // nightmare / hell bosses: their extra trick and harsher tricks from wave 30 on (earlier, the first bosses with 20
+  // minions twice and regen could not be killed in time at all, and the berserk boss ended most runs by wave 16)
+  const cruel = () => !!(BAL.diffs[G.diff] || {}).cruel && G.wave >= 30;
   function hpTricks(e) {
     const f = e.hp / e.maxHp;
     const cr = cruel();
@@ -1370,7 +1372,7 @@
       const info = DATA.bossFor(w);
       G.boss = spawnEnemy('boss', info);
       if (cruel() && !G.buff.nullify) UI.toast(T('나이트메어 · {0}의 기믹이 강화되었습니다', info.name), 'warn');
-      if (hellOn()) startRoulette(G.boss);
+      if (hellOn() && w >= 20) startRoulette(G.boss); // the first boss comes without a roulette trick
       if (G.buff.nullify) { G.boss.gim = []; G.buff.nullify = false; UI.toast(T('기믹 해제 · {0}의 기믹이 무효화되었습니다', info.name), 'gem'); }
       G.bossT = G.bossMax = BAL.bossTime + G.buff.time + ((BAL.diffs[G.diff] || {}).bossTime || 0);
       G.waveT = G.bossT;

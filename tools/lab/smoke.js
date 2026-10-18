@@ -305,15 +305,15 @@
       const hell = DATA.BAL.diffs.findIndex((d) => d.key === 'hell');
       eq(hell >= 0 && DATA.BAL.diffs[hell].roulette && DATA.BAL.diffs[hell].waves === 120, true, 'hell: 120 waves with the roulette');
       // the roulette holds the battle, then hands its trick to the boss
-      fresh(hell); G().opt.auto = false; G().wave = 9; G().waveT = 0.01; G().spawnLeft = 0;
-      GAME.simulate(0.1, false); eq(!!G().roulette, true, 'roulette spins at the boss');
+      fresh(hell); G().opt.auto = false; G().wave = 19; G().waveT = 0.01; G().spawnLeft = 0;
+      GAME.simulate(0.1, false); eq(!!G().roulette, true, 'roulette spins at the boss (from wave 20)');
       const t0 = G().boss.d; GAME.simulate(1, false); eq(G().boss.d, t0, 'the battle holds still while it spins');
       GAME.simulate(2.5, false); eq(!!GAME.hell && ['curse', 'rift', 'core', 'bomb', 'charm', 'doom'].includes(GAME.hell.key), true, 'a trick is set');
       // every trick: unanswered it hurts, answered (GAME.hellRespond) it does not
       const trick = (key, answer) => {
         fresh(hell); G().opt.auto = false;
         ['tiamat', 'khan', 'brunhild', 'labiata'].forEach((id) => GAME.debugAdd(id));
-        G().wave = 9; G().waveT = 0.01; G().spawnLeft = 0; GAME.simulate(0.1, false);
+        G().wave = 19; G().waveT = 0.01; G().spawnLeft = 0; GAME.simulate(0.1, false);
         GAME.simulate(3, false); // the spin
         const b = G().boss; b.maxHp = 1e12; b.hp = 5e11; b.spd = 0; b.gim = []; GAME.hell.key = key; GAME.hell.t = 0.01; // the boss's own tricks (regen) left out
         G().cells.forEach((c) => c.units.forEach((u) => { u.cd = 1e9; }));
@@ -328,7 +328,7 @@
       a = trick('core', false); r = trick('core', true); eq(a.healed && r.hit, true, 'core: heals if missed, a tap hits hard');
       a = trick('charm', false); r = trick('charm', true); eq(a.charmed && !r.charmed, true, 'charm: idles until tapped');
       a = trick('rift', false); r = trick('rift', true); eq(a.spawned > r.spawned, true, 'rift: spawns until closed');
-      a = trick('doom', false); eq(a.healed, true, 'doom: heals when 25% was not taken');
+      a = trick('doom', false); eq(a.healed, true, 'doom: heals when 15% was not taken');
       GAME.newGame();
     });
 
